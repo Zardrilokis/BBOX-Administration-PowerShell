@@ -12,15 +12,15 @@ It use :
 - Powershell web request with Chrome Driver Service (https://chromedriver.chromium.org)
 
 For the moment, this version can only :
-- Get
-- Read
-- Download
+- GET
+- DOWNLOAD
 
 In the future, you will do these actions :
 - GET
 - PUT
 - POST
 - DELETE
+- DOWNLOAD
 
 All action will be do by Web request from ChromeDriver.
 
