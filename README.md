@@ -22,6 +22,6 @@ In the future, you will do these actions :
 - DELETE
 - DOWNLOAD
 
-All action will be do by Web request from ChromeDriver.
+All actions will be done by Web request from ChromeDriver.
 
-In bref, Collect, Modify, Remove, BBOX information using Bytel API Web request, with PowerShell script.
+In summary, Collect, Modify, Remove, BBOX information using Bytel API Web request, with PowerShell script.
