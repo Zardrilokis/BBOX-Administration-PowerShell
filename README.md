@@ -11,7 +11,11 @@ It use :
 - Microsoft Powershell in version 5.1.18362.1171
 - Powershell web request with Chrome Driver Service (https://chromedriver.chromium.org)
 
-For the moment, this version can only Get / Read / Download BBOX informations.
+For the moment, this version can only :
+- Get
+- Read
+- Download
+
 In the future, you will do these actions :
 - GET
 - PUT
