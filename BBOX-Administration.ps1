@@ -191,28 +191,28 @@ cls
 #region Presentation
 
 Write-Host "##################################################### Description ######################################################`n" -ForegroundColor Yellow
-Write-Host "Ce programme n'est disponible qu'en français."
-Write-Host "Il permet de récupérer, modifier, supprimer des informations sur la BBOX de Bouygues Télécom."
-Write-Host "Il affiche des informations avancées que vous ne verrez pas via l'interface web classique de votre BBOX."
-Write-Host "Et ce via une connexion locale ou distante (Sous réserve que vous ayez activé la gestion de la BBOX à distance => https://mabbox.bytel.fr/remote.html)."
-Write-Host "Le résultat peut être affiché au format HTML ou sous forme de tableau (Gridview)."
-Write-Host "Le résultat peut être exporté au format `".csv (.csv)`" ou `".JSON (.JSON)`""
-Write-Host "La seule limitation de ce programme est liée aux requetes disponibles via l'API installée sur la BBOX cible en fonction du modèle et de la version du firmware de celle-ci."
-Write-Host "Lors de l'affichage du résultat, certaines informations peuvent ne pas s'afficher, ou être manquantes :"
-Write-Host "- Soit c'est un oubli de ma part dans le cadre du développement, et je m'en excuse par avance."
-Write-Host "- Soit celui-ci est toujours en cours de développement."
-Write-Host "- Soit ces informations sont optionnelles et n'apparaissent qu'en présence de certain(e)s :"
-Write-Host "-- Modèles de BBOX"
-Write-Host "-- Version du Firmware"
-Write-Host "-- Fonctionnalités disponibles"
-Write-Host "-- Mode de connexion (Local/Distant)"
-Write-Host "Ce programme requiert l'installation de PowerShell 5.0 minimum, de Google Chrome et de Microsoft Office."
-Write-Host "Pour plus d'information, je vous invite à consulter ce site web : " -NoNewline
+Write-Host "This program is only available in French."
+Write-Host "It allows you to retrieve, modify and delete information on Bouygues Télécom's BBOX."
+Write-Host "It displays advanced information that you will not see through the classic web interface of your BBOX."
+Write-Host "And this via a local or remote connection (Provided that you have activated the remote BBOX management => https://mabbox.bytel.fr/remote.html)."
+Write-Host "The result can be displayed in HTML format or in table form (Gridview)."
+Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
+Write-Host "The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one."
+Write-Host "When displaying the result, some information may not be displayed, or may be missing :"
+Write-Host "- Either it's an oversight on my part in the context of the development, and I apologize in advance."
+Write-Host "- Either this one is still under development."
+Write-Host "- Either this information is optional and only appears in the presence of certain bbox models :"
+Write-Host "-- BBOX models"
+Write-Host "-- Firmware version"
+Write-Host "-- Available features"
+Write-Host "-- Connection mode (Local / Remote)"
+Write-Host "This program requires the installation of PowerShell 5.0 minimum and Google Chrome."
+Write-Host "For more information, I invite you to consult this website : " -NoNewline
 Write-Host "https://api.bbox.fr/doc/apirouter/index.html" -ForegroundColor Green
-Write-Host "`nAttention, ce programme est réservé pour un usage avancé du paramètrage de la BBOX et s'addresse à un public avertit !" -ForegroundColor Yellow
-Write-Host "Toutes mauvaises manipulations risque d'entrainer un dysfonctionnement partiel voir total de votre BBOX, en la rendant inutilisable. Vous êtes Avertits !" -ForegroundColor Yellow
-Write-Host "Par conséquent, je décline toutes responsabilités quant à l'utilisation de ce programme." -ForegroundColor Red
-Write-Host "Pour toutes questions ou demandes complémentaires, vous pouvez me contacter à cette adresse mail : " -NoNewline
+Write-Host "`nAttention, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !" -ForegroundColor Yellow
+Write-Host "Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !" -ForegroundColor Yellow
+Write-Host "Therefore, I accept no responsibility for the use of this program." -ForegroundColor Red
+Write-Host "For any questions or additional requests, you can contact me at this email address :" -NoNewline
 Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Please make sure log file is closed before continue." -ForegroundColor Yellow
 Write-Host "Logs location : $PSScriptRoot\Logs\Log_BBOX_Administration*.csv" -ForegroundColor Green
