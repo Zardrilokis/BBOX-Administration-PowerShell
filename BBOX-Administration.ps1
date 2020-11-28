@@ -32,7 +32,7 @@
     Author : Zardrilokis => landel.thomas@yahoo.fr
     
     Version 1.0
-    Updated Date : 2020/11/20
+    Updated Date : 2020/11/28
     Updated By   : landel.thomas@yahoo.fr
     Update       : Powershell script creation
     Update       : Add module - BBOX-Module.psm1
@@ -59,6 +59,8 @@
     Update       : Reorganize BBOX-Module.psm1 to more clarify
     Update       : Hide ChromeDriver Service console and Chrome driver Application
     Update       : Add requirement
+    Update       : Adjust remote connexion port
+    Update       : Force to create Logs Folder
     
 .LINKS
     
@@ -220,6 +222,7 @@ Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Please make sure log file is closed before continue." -ForegroundColor Yellow
 Write-Host "Logs location : $LogsPath\Log_BBOX_Administration*.csv" -ForegroundColor Green
 Write-Host "Successful tested environnements : "
+$Null = New-Item -Path "$PSScriptRoot" -Name "Logs" -ItemType Directory -Force
 Write-Log -Type INFO -Name "Get tested environnements" -Message "Importation tested environnements Status :" -NotDisplay
 Try{
     $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ","
