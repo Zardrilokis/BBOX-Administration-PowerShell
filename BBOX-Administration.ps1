@@ -1,4 +1,6 @@
-﻿<#
+﻿#Requires -Version 5.0
+
+<#
 .SYNOPSIS
     
    Get / Set BBOX informations.
@@ -56,6 +58,7 @@
     Update       : Correct information put in logs files
     Update       : Reorganize BBOX-Module.psm1 to more clarify
     Update       : Hide ChromeDriver Service console and Chrome driver Application
+    Update       : Add requirement
     
 .LINKS
     
@@ -215,7 +218,7 @@ Write-Host "Therefore, I accept no responsibility for the use of this program." 
 Write-Host "For any questions or additional requests, you can contact me at this email address :" -NoNewline
 Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Please make sure log file is closed before continue." -ForegroundColor Yellow
-Write-Host "Logs location : $PSScriptRoot\Logs\Log_BBOX_Administration*.csv" -ForegroundColor Green
+Write-Host "Logs location : $LogsPath\Log_BBOX_Administration*.csv" -ForegroundColor Green
 Write-Host "Successful tested environnements : "
 Write-Log -Type INFO -Name "Get tested environnements" -Message "Importation tested environnements Status :" -NotDisplay
 Try{
@@ -400,7 +403,7 @@ If($global:TriggerExit -eq 0){
 If($global:TriggerExit -eq 0){
 
     $UrlRoot = ""
-    $Port = $Null
+    $Port = ""
     $UrlHome = ""
     Switch($ConnexionType[0]){
         
@@ -409,7 +412,7 @@ If($global:TriggerExit -eq 0){
             }
         
         R   {$UrlRoot = Get-HostStatus -UrlRoot $UrlRoot
-             $Port =    Get-PortStatus -UrlRoot $UrlRoot -Port $Port
+             $Port =    Get-PortStatus -UrlRoot $UrlRoot
              $UrlHome = "https://$UrlRoot`:$Port/login.html"
             }
         

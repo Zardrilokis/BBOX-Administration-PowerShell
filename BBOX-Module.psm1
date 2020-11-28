@@ -29,7 +29,7 @@ function Write-Log {
     
     # Create log object 
     $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; Type=$type ; Name=$name ; Message=$Message  ; user= $(whoami) ; PID=$PID} 
-    $log | add-member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
+    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
     
     # Append to global journal
     [Object[]] $Global:journal += $log.toString()
@@ -219,11 +219,12 @@ Function Get-HostStatus {
     While(([string]::IsNullOrEmpty($UrlRoot) -and ($BBoxDnsStatus -notlike $true))){
         
         $UrlRoot = Read-Host "Enter your external BBOX IP/DNS Address, Example => example.com "
+        Write-Log -Type INFONO -Name "Checking Host" -Message "Host `"$UrlRoot`" status : "
         
         If(-not ([string]::IsNullOrEmpty($UrlRoot))){
             
-            Write-Log -Type INFONO -Name "Checking Host" -Message "Host $UrlRoot status : "
             $BBoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
+            
             If($BBoxDnsStatus -like $true){
                 
                 Write-Log -Type VALUE -Name "Checking Host" -Message "Online."
@@ -248,26 +249,25 @@ Function Get-PortStatus {
     
     Param(
         [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        [Parameter(Mandatory=$False)]
-        [String]$Port
+        [String]$UrlRoot
     )
     
     $PortStatus = ""
-    $Port = Read-Host "Enter your external remote BBOX port, Example => 80,443 "
-    
-    While(([string]::IsNullOrEmpty($Port)) -and ($Port -gt "") -and ($Port -gt "0") -and ($Port -lt "65565") -and ($PortStatus -notlike $true)){
+    While(($PortStatus -notlike $true) -and (-not ([string]::IsNullOrEmpty($UrlRoot)))){
         
-        If(-not ([string]::IsNullOrEmpty($Port))){
+        [int]$Port = Read-Host "Enter your external remote BBOX port, Example => 80,443 "
+        Write-Log -Type INFONO -Name "Checking Port" -Message "Port `"$Port`" status : "
+        
+        If(($Port -ge 1) -and ($Port -le 65566)){
             
-            Write-Log -Type INFONO -Name "Checking Port" -Message "Port $Port status : "
             $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
+            
             If($PortStatus.TcpTestSucceeded -like $true){
                 
                 Write-Log -Type VALUE -Name "Checking Port" -Message "Opened."
                 Break
             }
-            Else{Write-Log -Type WARNING -Name "Checking Port" -Message "Closed." -NotDisplay
+            Else{Write-Log -Type WARNING -Name "Checking Port" -Message "Closed."
                  Write-Host "Port $Port seems closed, please make sure :" -ForegroundColor Yellow
                  Write-host "- You enter a valid port number." -ForegroundColor Yellow
                  Write-Host "- None Firewall rule(s) block this port (https://mabbox.bytel.fr/firewall.html)." -ForegroundColor Yellow
