@@ -32,7 +32,7 @@
     Author : Zardrilokis => landel.thomas@yahoo.fr
     
     Version 1.0
-    Updated Date : 2020/11/28
+    Updated Date : 2021/02/26
     Updated By   : landel.thomas@yahoo.fr
     Update       : Powershell script creation
     Update       : Add module - BBOX-Module.psm1
@@ -61,6 +61,15 @@
     Update       : Add requirement
     Update       : Adjust remote connexion port
     Update       : Force to create Logs Folder
+    Update       : Solved problem in function : "Get-ConnexionType" when relaunch the script keep the old user selection
+    Update       : Solved display title for HTML report and CSV file
+    Update       : Add new Log type for device logs
+    Update       : Correct functions to collect log informations
+    Update       : Add new features available since version 19.2.12
+    Update       : Correct properties in function "Get-Airties"
+    Update       : Add new function : "Get-Nat" - Get Nat Configuration Information
+    Update       : Correct wifi scan when use remote BBOX connexion, function "Start-RefreshWIRELESSFrequencyNeighborhoodScan"
+    Update       : Correct Active Host session by host, function "Get-WANDAASH"
     
 .LINKS
     
@@ -196,8 +205,8 @@ cls
 #region Presentation
 
 Write-Host "##################################################### Description ######################################################`n" -ForegroundColor Yellow
-Write-Host "This program is only available in French."
-Write-Host "It allows you to retrieve, modify and delete information on Bouygues Télécom's BBOX."
+Write-Host "This program is only available in English."
+Write-Host "It allows you to retrieve, modify and delete information on Bouygues Telecom's BBOX."
 Write-Host "It displays advanced information that you will not see through the classic web interface of your BBOX."
 Write-Host "And this via a local or remote connection (Provided that you have activated the remote BBOX management => https://mabbox.bytel.fr/remote.html)."
 Write-Host "The result can be displayed in HTML format or in table form (Gridview)."
@@ -217,7 +226,7 @@ Write-Host "https://api.bbox.fr/doc/apirouter/index.html" -ForegroundColor Green
 Write-Host "`nAttention, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !" -ForegroundColor Yellow
 Write-Host "Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !" -ForegroundColor Yellow
 Write-Host "Therefore, I accept no responsibility for the use of this program." -ForegroundColor Red
-Write-Host "For any questions or additional requests, you can contact me at this email address :" -NoNewline
+Write-Host "For any questions or additional requests, you can contact me at this email address : " -NoNewline
 Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Please make sure log file is closed before continue." -ForegroundColor Yellow
 Write-Host "Logs location : $LogsPath\Log_BBOX_Administration*.csv" -ForegroundColor Green
@@ -245,6 +254,7 @@ $Pause = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyUp")
 Write-Log -Type INFO -Name "Programm initialisation" -Message "Programm initialisation started." -NotDisplay
 Write-Host "Programm Initialisation in progress : " -NoNewline -ForegroundColor Cyan
 
+# Check if ressources folder exist
 If((-not (Test-Path -Path $RessourcesPath)) -and ($global:TriggerExit -eq 0)){
     
     Write-Log -Type WARNING -Name "Programm initialisation" -Message "$RessourcesPath do not exist"
@@ -277,13 +287,13 @@ If($global:TriggerExit -eq 0){
 If($global:TriggerExit -eq 0){
     
     Write-Log -Type INFO -Name "Programm initialisation" -Message "Start Checks programm Folders/Files" -NotDisplay
-    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $ExportPath -FolderName ($ExportPath.Split('\'))[-1]
-    Test-FolderPath -FolderRoot $ExportPath -FolderPath $ExportCSVPath -FolderName ($ExportCSVPath.Split('\'))[-1]
-    Test-FolderPath -FolderRoot $ExportPath -FolderPath $ExportJSONPath -FolderName ($ExportJSONPath.Split('\'))[-1]
-    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $DownloadPath -FolderName ($DownloadPath.Split('\'))[-1]
-    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $ReportPath -FolderName ($ReportPath.Split('\'))[-1]
+    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $ExportPath         -FolderName ($ExportPath.Split('\'))[-1]
+    Test-FolderPath -FolderRoot $ExportPath   -FolderPath $ExportCSVPath      -FolderName ($ExportCSVPath.Split('\'))[-1]
+    Test-FolderPath -FolderRoot $ExportPath   -FolderPath $ExportJSONPath     -FolderName ($ExportJSONPath.Split('\'))[-1]
+    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $DownloadPath       -FolderName ($DownloadPath.Split('\'))[-1]
+    Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $ReportPath         -FolderName ($ReportPath.Split('\'))[-1]
     Test-FolderPath -FolderRoot $PSScriptRoot -FolderPath $JsonBboxconfigPath -FolderName ($JsonBboxconfigPath.Split('\'))[-1]
-    Test-FilePath -FileRoot $RessourcesPath -FilePath $PasswordPath -FileName ($PasswordPath.Split('\'))[-1]
+    Test-FilePath   -FileRoot $RessourcesPath -FilePath $PasswordPath         -FileName ($PasswordPath.Split('\'))[-1]
     Write-Log -Type INFO -Name "Programm initialisation" -Message "End Checks programm Folders/Files" -NotDisplay
 }
 
@@ -342,7 +352,6 @@ If($global:TriggerExit -ne 1){
 # Check if user connect on the correct LAN Network
 If($global:TriggerExit -eq 0){
     
-    $TriggerLANNetwork = ""
     Write-Log -Type INFONO -Name "Programm initialisation" -Message "Checking BBOX LAN network : "
     
     Try{
@@ -422,8 +431,8 @@ If($global:TriggerExit -eq 0){
         Q   {$global:TriggerExit = 1}
     }
     Write-Log -Type INFO -Name "Connexion Type" -Message "Root Bbox Url : $UrlRoot" -NotDisplay
-    Write-Log -Type INFO -Name "Connexion Type" -Message "Login Bbox page address : $UrlHome" -NotDisplay
-    Write-Log -Type INFO -Name "Connexion Type" -Message "Remote Bbox page : $Port" -NotDisplay
+    Write-Log -Type INFO -Name "Connexion Type" -Message "Login Bbox Url : $UrlHome" -NotDisplay
+    Write-Log -Type INFO -Name "Connexion Type" -Message "Remote Bbox Url : $Port" -NotDisplay
 }
 
 # Start in Background chromeDriver
@@ -466,8 +475,8 @@ While($global:TriggerExit -eq 0){
     $ExportFile = ""
     
     # Ask user action he wants to do (Get/PUT/POST/REMOVE)
-    Write-Log -Type INFO -Name "Action asked" -Message "Please select in the list action you want to do :"
-    $Action = $Pages | Where-Object {$_.Available -eq "Yes"} | Out-GridView -Title "Please select in the list action you want to do :" -OutputMode Single
+    Write-Log -Type INFO -Name "Action asked" -Message "Please select an action in the list :"
+    $Action = $Pages | Where-Object {$_.Available -eq "Yes"} | Out-GridView -Title "Please select an action in the list :" -OutputMode Single
     
     # Set value to variables
     $Info = $Action.label
@@ -485,13 +494,13 @@ While($global:TriggerExit -eq 0){
         # Build API Web Page Url
         Switch($ConnexionType){
             
-            L  {$UrlToGo = "$UrlRoot/$APIVersion/$Page"}
+            L  {$UrlToGo = "https://$UrlRoot/$APIVersion/$Page"}
             R  {$UrlToGo = "https://$UrlRoot`:$Port/$APIVersion/$Page"}
         }
         
-        If($Page -match "all"){
+        If($Page -eq "Full"){
             
-            $Page = ((Import-Csv -Path $APISummaryPath -Delimiter "," -Encoding UTF8 | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "All"))}).APIName | Select-Object -Unique) -join ";"
+            $Page = ((Import-Csv -Path $APISummaryPath -Delimiter "," -Encoding UTF8 | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "Full"))}).APIName | Select-Object -Unique) -join ";"
         }
         
         # Get and Format data for output
@@ -575,8 +584,8 @@ Write-Log -Type INFO -Name "Exit Programm" -Message "Please don't close manually
 Write-Log -Type INFO -Name "ChromeDriver Stop" -Message "Start Stop Chrome Driver." -NotDisplay
 If($global:ChromeDriver -ne $Null){Stop-ChromeDriver}
 Write-Log -Type INFO -Name "ChromeDriver Stop" -Message "End Stop Chrome Driver." -NotDisplay
-sleep 3
-$Curent_Logs_File = (Get-ChildItem -Path $LogsPath -Name "Log_BBOX_Administration*" -ErrorAction Stop | Sort-Object LastWriteTime)[-1]
+sleep 5
+$Curent_Logs_File = (Get-ChildItem -Path $LogsPath -Name "Log_BBOX_Administration*" -ErrorAction Stop | Sort-Object LastWriteTime -Descending)[0]
 Write-Log -Type INFONO -Name "Exit Programm" -Message "Log file is available here : "
 Write-Log -Type VALUE -Name "Exit Programm" -Message "$LogsPath\$Curent_Logs_File"
 Write-Log -Type INFO -Name "Exit Programm" -Message "Programm Close." -NotDisplay
