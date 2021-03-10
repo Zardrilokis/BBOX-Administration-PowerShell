@@ -32,7 +32,7 @@
     Author : Zardrilokis => landel.thomas@yahoo.fr
     
     Version 1.0
-    Updated Date : 2021/02/26
+    Updated Date : 2021/02/27
     Updated By   : landel.thomas@yahoo.fr
     Update       : Powershell script creation
     Update       : Add module - BBOX-Module.psm1
@@ -70,6 +70,9 @@
     Update       : Add new function : "Get-Nat" - Get Nat Configuration Information
     Update       : Correct wifi scan when use remote BBOX connexion, function "Start-RefreshWIRELESSFrequencyNeighborhoodScan"
     Update       : Correct Active Host session by host, function "Get-WANDAASH"
+    Update       : Modify Display date format for HTML report
+    Update       : Add new function : "Get-HOSTSPAUTH" => Get HOSTS PAUTH Information
+    Update       : Add new function : "Format-Date" => To format the custom date to the standard one / Replace in functions in BBOX-Module.psm1
     
 .LINKS
     
@@ -494,11 +497,11 @@ While($global:TriggerExit -eq 0){
         # Build API Web Page Url
         Switch($ConnexionType){
             
-            L  {$UrlToGo = "https://$UrlRoot/$APIVersion/$Page"}
-            R  {$UrlToGo = "https://$UrlRoot`:$Port/$APIVersion/$Page"}
+            L  {$UrlToGo = "$UrlRoot/$APIVersion/$Page"}
+            R  {$UrlToGo = "$UrlRoot`:$Port/$APIVersion/$Page"}
         }
         
-        If($Page -eq "Full"){
+        If($Page -ilike "Full"){
             
             $Page = ((Import-Csv -Path $APISummaryPath -Delimiter "," -Encoding UTF8 | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "Full"))}).APIName | Select-Object -Unique) -join ";"
         }
