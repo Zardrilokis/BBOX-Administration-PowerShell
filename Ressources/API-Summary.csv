@@ -48,7 +48,7 @@ GET-HOSTS,Get-HOSTS,Get HOSTS List Information,hosts,https://192.168.1.254/api/v
 GET-HOSTSID,Get-HOSTID,Get HOSTS List Information by ID,hosts,https://192.168.1.254/api/v1/hosts/{ID},GET,public,Private,host-read,No,No,List,hosts-id
 GET-HOSTSL,Get-HOSTSLite,Get HOSTSL Lite Information,hosts/lite,https://192.168.1.254/api/v1/hosts/lite,GET,public,Private,host-read,No,Yes,Table,hosts-lite
 GET-HOSTSME,Get-HOSTSMEE,Get MY HOST Information,hosts/me,https://192.168.1.254/api/v1/hosts/me,GET,public,Private,host-read,No,Yes,List,hosts-me
-GET-HOSTSP,Get-HOSTSPAUTH,Get HOSTS PAUTH Information,hosts/pauth,https://192.168.1.254/api/v1/hosts/pauth,GET,public,Private,host-read,No,No,,hosts-pauth
+GET-HOSTSP,Get-HOSTSPAUTH,Get HOSTS PAUTH Information,hosts/pauth,https://192.168.1.254/api/v1/hosts/pauth,GET,public,Private,host-read,No,Yes,Table,hosts-pauth
 GET-IPTV,Get-IPTV,Get IPTV Configuration Information,iptv,https://192.168.1.254/api/v1/iptv,GET,private,Private,diag-read,No,Yes,Table,iptv
 GET-IPTVD,Get-IPTVDiags,Get IPTV Diags Information,iptv/diags,https://192.168.1.254/api/v1/iptv/diags,GET,private,Private,diag-read,No,Yes,List,iptv-diags
 GET-LANA,Get-LANAlerts,Get LAN User Alerts Information,alerts,https://192.168.1.254/api/v1/alerts,GET,public,Private,alert-read,No,Yes,Table,alerts
