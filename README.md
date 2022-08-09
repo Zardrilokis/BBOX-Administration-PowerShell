@@ -63,4 +63,4 @@ What actions are required by user ?
 
 If the user wants to quit the program, he can use the "Cancel" button when program asking action or press "CTRL" + "break" keyboard keys.
 
-Enjoy your first experience with this porgram :)
+Enjoy your first experience with this program :)
