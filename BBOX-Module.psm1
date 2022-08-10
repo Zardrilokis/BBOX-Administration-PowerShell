@@ -1,4 +1,4 @@
-﻿
+
 # Be carefull some variables are linked from main script BBOX-Administration to :
 # - $global:JSONSettingsProgramContent
 # - $global:JSONSettingsDefaultUserContent or $JSONSettingsCurrentUserContent
