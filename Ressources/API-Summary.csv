@@ -1,18 +1,19 @@
-﻿Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
-Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;any;No;Yes;;
-Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;any;No;Yes;;
-Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;any;No;Yes;Table;Journal
-REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs;\logs;\logs;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV;\Export\CSV;\Export\CSV;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON;\Export\JSON;\Export\JSON;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal;\Journal;\Journal;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config;\Json_Bbox_Config;\Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report;\Report;\Report;Remove;Private;Private;Computer;Yes;Yes;;
+Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
+Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;;
+Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;;
+Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
+REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;;
+REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;;
+REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;;
+REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Private;Private;Computer;Yes;Yes;;
+REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;;
+REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Private;Private;Computer;Yes;Yes;;
 SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Gridview;
 SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;
-SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;HTML;
+SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;
 GET-AIRTIES;Get-Airties;Get AIRTIES Summary Information;airties;https://192.168.1.254/api/v1/airties;GET;public;Private;diag-read;No;No;List;airties
 GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode
+GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;Yes;list;airties-zerotouch
 GET-ANALYTICSJS;Get-ANALYTICSJS;Get Bouygues Telecom Remote Connexion Page information;analytics.js;https://192.168.1.254/api/v1/analytics.js;GET;public;Private;lan-read;No;No;;analytics
 GET-APIRM;Get-APIRessourcesMap;Get API Ressources List Map Information;map;https://192.168.1.254/api/v1/map;GET;private;Private;lan-read;No;Yes;Table;map
 GET-CONFIGSL;Get-BackupList;Get BACKUP List Information;configs;https://192.168.1.254/api/v1/configs;GET;public;Private;backup-read;No;Yes;Table;configs
@@ -71,7 +72,10 @@ GET-NATDMZ;Get-NATDMZ;Get NAT DMZ Configuration Information;nat/dmz;https://192.
 GET-NAT;Get-NAT;Get NAT Configuration Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;List;nat-rules-config
 GET-NATR;Get-NATRules;Get NAT Rules Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;Table;nat-rules
 GET-NATRID;Get-NATRulesID;Get NAT Rules Information by ID;nat/rules;https://192.168.1.254/api/v1/nat/rules/{id};GET;public;Private;nat-read;No;Yes;List;nat-rules-id
-GET-NOTIFICATION;Get-NOTIFICATION;Get NOTIFICATION Configuration Information;notification;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;List;notification
+GET-NOTIFICATION;Get-NOTIFICATIONConfig;Get NOTIFICATION Configuration Information;notification;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;List;notification-Config
+GET-NOTIFICATIONCA;Get-NOTIFICATIONConfigAlerts;Get NOTIFICATION Configuration Alerts List Information;notification/alerts;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-alerts
+GET-NOTIFICATIONCC;Get-NOTIFICATIONConfigContacts;Get NOTIFICATION Configuration Contacts List Information;notification/contacts;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-contacts
+GET-NOTIFICATIONCE;Get-NOTIFICATIONConfigEvents;Get NOTIFICATION Configuration Events List Information;notification/events;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-events
 GET-NOTIFICATIONA;Get-NOTIFICATIONAlerts;Get NOTIFICATION Alerts List Information;notification/alerts;https://192.168.1.254/api/v1/notification/alerts;GET;private;Private;notif-read;No;Yes;Table;notification-alerts
 GET-NOTIFICATIONC;Get-NOTIFICATIONContacts;Get NOTIFICATION Contacts Information;notification/contacts;https://192.168.1.254/api/v1/notification/contacts;GET;private;Private;notif-read;No;Yes;Table;notification-contacts
 GET-NOTIFICATIONE;Get-NOTIFICATIONEvents;Get NOTIFICATION Events Information;notification/events;https://192.168.1.254/api/v1/notification/events;GET;private;Private;notif-read;No;Yes;Table;notification-events
@@ -80,11 +84,12 @@ GET-OQCBUTTONID;Get-OQCBUTTONID;Get BBOX BUTTON Information;oqc/button;https://1
 GET-PARENTALCONTROL;Get-PARENTALCONTROL;Get PARENTAL CONTROL Configuration Information;parentalcontrol;https://192.168.1.254/api/v1/parentalcontrol;GET;private;Private;parental-read;No;Yes;List;parentalcontrol
 GET-PARENTALCONTROLS;Get-PARENTALCONTROLScheduler;Get PARENTAL CONTROL Scheduler Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;list;parentalcontrol-scheduler
 GET-PARENTALCONTROLSR;Get-PARENTALCONTROLSchedulerRules;Get PARENTAL CONTROL Scheduler Rules Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;Table;parentalcontrol-scheduler-rules
-GET-PASSRECOVERV;Get-PasswordRecoveryVerify;Get Password Recovery Verify Inofrmation;password-recovery/verify;https://192.168.1.254/api/v1/password-recovery/verify;GET;public;None;auth-write;No;No;;password-recovery-verify
+GET-PASSRECOVERV;Get-PasswordRecoveryVerify;Get Password Recovery Verify Inofrmation;password-recovery/verify;https://192.168.1.254/api/v1/password-recovery/verify;GET;public;None;auth-write;No;Yes;List;password-recovery-verify
 GET-PROFILEC;Get-PROFILEConsumption;Get PROFIL Consumption Information;profile/consumption;https://192.168.1.254/api/v1/profile/consumption;GET;private;Private;profile-read;No;Yes;List;profile-consumption
 GET-REMOTEPWOL;Get-REMOTEProxyWOL;Get REMOTE Proxy WOL Information;remote/proxywol;https://192.168.1.254/api/v1/remote/proxywol;GET;private;Private;remote;No;Yes;List;remote-proxywol
 GET-SERVICES;Get-SERVICES;Get SERVICES Configuration Information;services;https://192.168.1.254/api/v1/services;GET;public;Private;lan-read;No;Yes;Table;services
 GET-SUMMARY;Get-SUMMARY;Get SUMMARY Configuration Information;summary;https://192.168.1.254/api/v1/summary;GET;public;Private;lan-read;No;Yes;List;summary
+GET-SPEEDTESTC;GET-SPEEDTESTContext;Get Speedtest Context Configuration Information;speedtest/context;https://192.168.1.254/api/v1/speedtest/context;GET;public;Private;device-read;No;Yes;List;SPEEDTEST-Context
 GET-UPNPIGD;Get-UPNPIGD;Get UPNP IGD Configuration Information;upnp/igd;https://192.168.1.254/api/v1/upnp/igd;GET;public;Private;igd-read;No;Yes;List;upnp-igd
 GET-UPNPIGDR;Get-UPNPIGDRules;Get UPNP IGD Rules Configuration Information;upnp/igd/rules;https://192.168.1.254/api/v1/upnp/igd/rules;GET;public;Private;igd-read;No;Yes;Table;upnp-igd-rules
 GET-USBS;Get-USBStorage;Get USB Storage Configuration Information;usb/storage;https://192.168.1.254/api/v1/usb/storage;GET;private;Private;usb-read;No;Yes;Table;usb-storage
@@ -109,7 +114,8 @@ GET-WANFS;Get-WANFStats;Get WAN FTTH STATS Information;wan/ftth/stats;https://19
 GET-WANIP;Get-WANIP;Get WAN IP Configuration Information;wan/ip;https://192.168.1.254/api/v1/wan/ip;GET;public;Private;wan-read;No;Yes;List;wan-ip
 GET-WANIPS;Get-WANIPStats;Get WAN IP Stats Information;wan/ip/stats;https://192.168.1.254/api/v1/wan/ip/stats;GET;public;Private;wan-read;No;Yes;List;wan-ip-stats
 GET-WANXDSL;Get-WANXDSL;Get WAN XDSL Configuration Information;wan/xdsl;https://192.168.1.254/api/v1/wan/xdsl;GET;public;Private;wan-read;No;Yes;List;wan-xdsl
-GET-WANXDSLS;Get-WANXDSLStats;Get WAN XDSL  Stats information;wan/xdsl/stats;https://192.168.1.254/api/v1/wan/xdsl/stats;GET;public;Private;wan-read;No;Yes;List;wan-xdsl-stats
+GET-WANXDSLS;Get-WANXDSLStats;Get WAN XDSL Stats Information;wan/xdsl/stats;https://192.168.1.254/api/v1/wan/xdsl/stats;GET;public;Private;wan-read;No;Yes;List;wan-xdsl-stats
+GET-WANSFF;Get-WANSFF;Get WAN SFF Configuration Information;wan/sff;https://192.168.1.254/api/v1/wan/sff;GET;public;Private;wan-read;No;Yes;List;wan-sff
 GET-WIRELESS;Get-WIRELESS;Get WIRELESS Configuration Information;wireless;https://192.168.1.254/api/v1/wireless;GET;private;Private;wifi-read;No;Yes;List;wireless
 GET-WIRELESS24;Get-WIRELESS24;Get WIRELESS 2.4Ghz Configuration Information;wireless/24;https://192.168.1.254/api/v1/wireless/24;GET;private;Private;wifi-read;No;Yes;List;wireless-24
 GET-WIRELESS24S;Get-WIRELESS24Stats;Get WIRELESS 2.4Ghz Stats Information;wireless/24/stats;https://192.168.1.254/api/v1/wireless/24/stats;GET;private;Private;wifi-read;No;Yes;List;wireless-24-stats
@@ -123,6 +129,8 @@ GET-WIRELESSFBNH;Get-WIRELESSFrequencyNeighborhoodScan;Get WIRELESS 5.2Ghz Frequ
 GET-WIRELESSR;Get-WIRELESSRepeater;Get WIRELESS Repeater Configuration Information;wireless/repeater;https://192.168.1.254/api/v1/wireless/repeater;GET;private;Private;wifi-read;No;Yes;List;wireless-repeater
 GET-WIRELESSS;Get-WIRELESSScheduler;Get WIRELESS Scheduler Configuration Information;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;GET;private;Private;wifi-read;No;Yes;List;wireless-scheduler
 GET-WIRELESSSR;Get-WIRELESSSchedulerRules;Get WIRELESS Scheduler Rules Configuration Information;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;GET;private;Private;wifi-read;No;Yes;Table;wireless-scheduler-rules
+GET-WIRELESSVBSTB;GET-WIRELESSVideoBridgeSetTopBoxes;Get WIRELESS Video Bridge Boxes Configuration Information;wireless/videobridge;https://192.168.1.254/api/v1/wireless/videobridge;GET;private;Private;wifi-read;No;Yes;Table;wireless-video-bridge-boxes
+GET-WIRELESSVBR;GET-WIRELESSVideoBridgeRepeaters;Get WIRELESS Video Bridge Repeaters Configuration Information;wireless/videobridge;https://192.168.1.254/api/v1/wireless/videobridge;GET;private;Private;wifi-read;No;Yes;Table;wireless-video-bridge-repeaters
 GET-WIRELESSWPS;Get-WIRELESSWPS;Get WIRELESS WPS Configuration Information;wireless/wps;https://192.168.1.254/api/v1/wireless/wps;GET;public;Private;wifi-read;No;Yes;List;wireless-wps
 ;;;airties/upgrade;https://192.168.1.254/api/v1/airties/upgrade;PUT;public;Private;diag-write;Yes;No;;
 ;;;airties/remotemanager;https://192.168.1.254/api/v1/airties/remotemanager;PUT;public;Private;diag-write;Yes;No;;

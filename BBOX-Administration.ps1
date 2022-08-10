@@ -31,11 +31,11 @@
     Creation Date : 2020/04/30
     Author : Zardrilokis => Tom78_91_45@yahoo.fr
     
-    Version 2.0
-    Updated Date : 2022/01/13
+    Version 1.0
+    Updated Date : 2022/05/15
     Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Powershell script creation
-    Update       : Add module - BBOX-Module.psm1
+    Update       : Add module : ".\BBOX-Module.psm1"
     Update       : Add checks / controls
     Update       : Add WIRELESS Frequency Neighborhood Scan before export result
     Update       : Add DHCP IPV6 and Firewall IPV6 functions
@@ -79,6 +79,9 @@
     Update       : Modify function : "Get-DeviceToken" in ".\BBOX-Module.psm1"
     Update       : Add new properties in existing functions
     
+    Version 2.0
+    Updated Date : 2022/01/13
+    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Add 2 new functions : "Switch-DisplayFormat" and "Switch-ExportFormat" in ".\BBOX-Module.psm1"
     Update       : Add new requests in file : ".\Ressources\API-Summary.csv" => Switch-DisplayFormat / Switch-ExportFormat
     Update       : Add new function : "EmptyFormatedDATA" in ".\BBOX-Module.psm1"
@@ -110,7 +113,7 @@
     Update       : Correct Log file Name display when program closing
     Update       : Modify functions : "Test-FilePath" and "Test-FolderPath"
     Update       : Change "Get-BBoxJournal" function logic
-    Update       : Add new function : "Get-CPLDeviceList" in ".\BBOX-Module.psm1"
+    Update       : Add new function : "Get-CPLDeviceList" in module : ".\BBOX-Module.psm1"
     Update       : Modify function : "Get-CPL"
     Update       : Modify function : "Get-BackupList"
     Update       : Update function "Get-DeviceToken" with the date time format was changed
@@ -127,7 +130,32 @@
     Update       : Correct function : "Get-HOSTSPAUTH"
     Update       : Update function : "Get-BBoxJournal" change download files method
     Update       : Correct function : "Stop-ChromeDriver" when chrome driver not yet started
-    Update       : Correct the log name in function : "Stop-Program" 
+    Update       : Correct the log name in function : "Stop-Program"
+    
+    Version 2.1
+    Updated Date : 2022/02/16
+    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Update       : Update logs files / Correct missing information in functions from BBOX-Module.psm1
+    Update       : Correct Switch $APIName for "Default" way
+    Update       : Correct Grammatical Syntaxe
+    Update       : Change order code in function : "Start-RefreshWIRELESSFrequencyNeighborhoodScan"
+    Update       : Simplify paramerters in functions : "Export-BBoxConfiguration", "Export-BBoxConfigTestingProgram", "Switch-Info", "Get-WIRELESSFrequencyNeighborhoodScan"
+    Update       : Correct data format in function : "Get-WIRELESSFrequencyNeighborhoodScanID"
+    Update       : Optimise code logic to manage Local / remote connection with web uri
+    Update       : Remove function : "Switch-ConnectionType" in module : ".\BBOX-Module.psm1"
+    Update       : Add new function : "Get-PasswordRecoveryVerify" in module : ".\BBOX-Module.psm1"
+    Update       : Add new information in function : "Get-FIREWALLPingResponder"
+    Update       : Correct SolvedTime information in function : "Get-LANAlerts"
+    Update       : Rename function : "Get-NOTIFICATION" to "Get-NOTIFICATIONConfig"
+    Update       : Add New informations (Events/Contacts) in function : "Get-NOTIFICATIONConfig"
+    Update       : Add 3 New functions : "Get-NOTIFICATIONConfigAlerts", "Get-NOTIFICATIONConfigContacts", "Get-NOTIFICATIONConfigEvents" in module : ".\BBOX-Module.psm1"
+    Update       : Correct some headers/values in fonctions in module : ".\BBOX-Module.psm1"
+    Update       : Correct function "Get-VOIPFullCallLogLineX" in module : ".\BBOX-Module.psm1"
+    Update       : Add function "Export-GlobalOutputData" in module : ".\BBOX-Module.psm1"
+    Update       : BBOX in version 20.8.6
+    Update       : Add function "Get-WANSFF" in module : ".\BBOX-Module.psm1"
+    Update       : Add function "Get-WIRELESSVideoBridgeSetTopBoxes" and modify "Get-Status" in module : ".\BBOX-Module.psm1"
+    Update       : Add function "Get-WIRELESSVideoBridgeRepeaters" in module : ".\BBOX-Module.psm1"
     
 .LINKS
     
@@ -137,6 +165,8 @@
     https://mabbox.bytel.fr/
     https://mabbox.bytel.fr/api/v1
     http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+    https://www.bbox-mag.fr/box/firmware/
+    Personnal Dev in the code
     
 #>
 
@@ -147,9 +177,9 @@ $global:DisplayFormat  = ""
 $global:ExportFormat   = ""
 $global:OpenHTMLReport = ""
 $global:ChromeDriver   = $Null
-$global:LogsFileName   = "BBOX_Administration_Log-"
-$global:LogsPath       = "$PSScriptRoot\Logs"
-$TranscriptFilePath    = "$global:LogsPath\BBOX-Administration-Transcript-Log.txt"
+$global:LogFileName    = "BBOX_Administration_Log-"
+$global:LogFolderPath  = "$PSScriptRoot\Logs"
+$TranscriptFilePath    = "$global:LogFolderPath\BBOX-Administration-Transcript-Log.txt"
 
 # URL Settings for the ChromeDriver request
 $UrlRoot               = $Null
@@ -162,17 +192,17 @@ $BBoxDns               = "mabbox.bytel.fr"
 $Password              = $Null
 
 # Paths
-$ExportPath                              = "$PSScriptRoot\Export"
-$ExportCSVPath                           = "$ExportPath\CSV"
-$ExportJSONPath                          = "$ExportPath\JSON"
-$JournalPath                             = "$PSScriptRoot\Journal"
-$JsonBboxconfigPath                      = "$PSScriptRoot\Json_Bbox_config"
-$RessourcesPath                          = "$PSScriptRoot\Ressources"
-$ReportPath                              = "$PSScriptRoot\Report"
-$BBOXModulePath                          = "$PSScriptRoot\BBOX-Module.psm1"
-$PasswordPath                            = "$RessourcesPath\SecuredPassword.txt"
-$APISummaryPath                          = "$RessourcesPath\API-Summary.csv"
-$TestedEnvironnementPath                 = "$RessourcesPath\TestedEnvironnement.csv"
+$ExportPath              = "$PSScriptRoot\Export"
+$ExportCSVPath           = "$ExportPath\CSV"
+$ExportJSONPath          = "$ExportPath\JSON"
+$JournalPath             = "$PSScriptRoot\Journal"
+$JsonBboxconfigPath      = "$PSScriptRoot\Json_Bbox_config"
+$RessourcesPath          = "$PSScriptRoot\Ressources"
+$ReportPath              = "$PSScriptRoot\Report"
+$BBOXModulePath          = "$PSScriptRoot\BBOX-Module.psm1"
+$PasswordPath            = "$RessourcesPath\SecuredPassword.txt"
+$APISummaryPath          = "$RessourcesPath\API-Summary.csv"
+$TestedEnvironnementPath = "$RessourcesPath\TestedEnvironnement.csv"
 
 # Google Chrome / Chrome Driver Paths
 $ChromeVersionRegistry                   = "HKCU:\SOFTWARE\Google\Chrome\BLBeacon"
@@ -186,23 +216,18 @@ $ChromeDriverDefaultProfile              = "Guest Profile"
 $ChromeProgramFilesInstallation    = "$env:ProgramFiles\Google\Chrome\Application\chrome.exe"
 $ChromeProgramFilesX86Installation = "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
 
-# For switch Page/function selection 
-$Label = ""
-$Actions = @()
-
 # Trigger
-$global:TriggerExit = 0
-$TriggerLANNetwork = $Null
-$TriggerDisplayFormat = 0
-$TriggerExportFormat = 0
-$TriggerOpenHTMLReport = 0
+$global:TriggerExit           = 0
+$TriggerLANNetwork            = $Null
+$global:TriggerDisplayFormat  = 0
+$global:TriggerExportFormat   = 0
 $global:TriggerOpenHTMLReport = 0
 
 #endregion
 
 #region function
 
-# Imported by module : .\BBoxModule.psm1
+# Imported by module : ".\BBoxModule.psm1"
 
 <#
     .SYNOPSIS
@@ -223,7 +248,7 @@ function Write-Log {
         [Parameter()]
         [switch]$NotDisplay,
         [Parameter()]
-        $Logname = "$global:LogsPath\$global:LogsFileName"
+        $Logname = "$global:LogFolderPath\$global:LogFileName"
     )
     
     $logpath = $Logname + $(get-date -UFormat %Y%m%d).toString() + ".csv"
@@ -283,7 +308,7 @@ Clear-Host
 
 #region Presentation
 
-Start-Transcript -Path $TranscriptFilePath -Append -Force -ErrorAction Stop 
+Start-Transcript -Path $TranscriptFilePath -Append -Force -ErrorAction Stop
 Write-Log -Type INFO -Name "Program initialisation - Start Program" -Message "Start Program" -NotDisplay
 Write-Host "##################################################### Description ######################################################`n" -ForegroundColor Yellow
 Write-Host "This program is only available in English"
@@ -311,7 +336,7 @@ Write-Host "For any questions or additional requests, contact me to this email a
 Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Please make sure log file is closed before continue" -ForegroundColor Yellow
 Write-Host "Logs files location : "
-Write-Host "$global:LogsPath\$global:LogsFileName*.csv" -ForegroundColor Green
+Write-Host "$global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
 Write-Host "$TranscriptFilePath" -ForegroundColor Green
 Write-Host "Last success tested environnement : "
 $Null = New-Item -Path "$PSScriptRoot" -Name "Logs" -ItemType Directory -Force -ErrorAction Stop
@@ -320,7 +345,7 @@ Write-Log -Type INFO -Name "Program presentation - Get tested environnements" -M
 Try{
     $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ";" -ErrorAction Stop
     $TestedEnvironnement[0] | Format-List
-    Write-Log -Type VALUE -Name "Program presentation - Get tested environnements" -Message "Successfully" -NotDisplay
+    Write-Log -Type VALUE -Name "Program presentation - Get tested environnements" -Message "Success" -NotDisplay
 }
 Catch{
     Write-Log -Type ERROR -Name "Program presentation - Get tested environnements" -Message "Failed to get tested environnements - Due to : $($_.ToString())"
@@ -330,7 +355,7 @@ Write-Host "For other successfull tested environnement, please consult : "
 Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
 Write-Log -Type INFO -Name "Program presentation - Get tested environnements" -Message "End tested environnements" -NotDisplay
 
-Write-Host "##################################################### Description ######################################################" -ForegroundColor Yellow
+Write-Host "`n##################################################### Description ######################################################" -ForegroundColor Yellow
 
 #Pause
 
@@ -344,8 +369,8 @@ Write-Log -Type INFO -Name "Program initialisation - Start Program initialisatio
 Write-Host "Program Initialisation in progress : " -NoNewline -ForegroundColor Cyan
 
 # Check if ressources folder exist
-Write-Log -Type INFO -Name "Program initialisation - Start Ressources Folder" -Message "Start Folder Ressources check" -NotDisplay
-Write-Log -Type INFO -Name "Program initialisation - Start Ressources Folder" -Message "Ressources Folder State :" -NotDisplay
+Write-Log -Type INFO -Name "Program initialisation - Ressources Folder" -Message "Start Folder Ressources check : $RessourcesPath" -NotDisplay
+Write-Log -Type INFO -Name "Program initialisation - Ressources Folder" -Message "Ressources Folder State :" -NotDisplay
 If(($global:TriggerExit -eq 0) -and (-not (Test-Path -Path $RessourcesPath -ErrorAction Stop))){
     
     Write-Log -Type WARNING -Name "Program initialisation - Ressources Folder" -Message "Not found"
@@ -354,12 +379,12 @@ If(($global:TriggerExit -eq 0) -and (-not (Test-Path -Path $RessourcesPath -Erro
 Else{
     Write-Log -Type INFO -Name "Program initialisation - Ressources Folder" -Message "Exist" -NotDisplay
 }
-Write-Log -Type INFO -Name "Program initialisation - End Ressources Folder" -Message "End Folder Ressources check" -NotDisplay
+Write-Log -Type INFO -Name "Program initialisation - Ressources Folder" -Message "End Folder Ressources check" -NotDisplay
 
-# Import Functions with Module "BBOX-Module.psm1"
+# Import Functions with Module : "BBOX-Module.psm1"
 If($global:TriggerExit -eq 0){
     
-    Write-Log -Type INFO -Name "Program initialisation - Powershell Module Importation" -Message "Start Powershell Module Importation" -NotDisplay
+    Write-Log -Type INFO -Name "Program initialisation - Powershell Module Importation" -Message "Start Powershell Module Importation : $BBOXModulePath" -NotDisplay
     Write-Log -Type INFONO -Name "Program initialisation - Powershell Module Importation" -Message "Powershell Module Importation status : " -NotDisplay
     
     Try{
@@ -372,7 +397,7 @@ If($global:TriggerExit -eq 0){
     Start-Sleep 1
     Try{
         Import-Module -Name $BBOXModulePath -ErrorAction Stop
-        Write-Log -Type VALUE -Name "Program initialisation - Powershell Module Importation" -Message "Successfully" -NotDisplay
+        Write-Log -Type VALUE -Name "Program initialisation - Powershell Module Importation" -Message "Success" -NotDisplay
     }
     Catch{
         Write-Log -Type ERROR -Name "Program initialisation - Powershell Module Importation" -Message "Failed. Powershell Module $BBOXModulePath can't be imported due to : $($_.ToString())"
@@ -413,13 +438,13 @@ If($global:TriggerExit -eq 0){
     
     Try{
         $Actions = Import-Csv -Path $APISummaryPath -Delimiter ";" -Encoding UTF8 -ErrorAction Stop
-        Write-Log -Type VALUE -Name "Program initialisation - Referentiel Actions Availables Importation" -Message "Successfully" -NotDisplay
+        Write-Log -Type VALUE -Name "Program initialisation - Referentiel Actions Availables Importation" -Message "Success" -NotDisplay
     }
     Catch{
         Write-Log -Type ERROR -Name "Program initialisation - Referentiel Actions Availables Importation" -Message "Failed. Referentiel Actions can't be imported due to : $($_.ToString())"
         $global:TriggerExit = 1
     }
-    Write-Log -Type INFO -Name "Program initialisation - End Referentiel Actions Availables Importation" -Message "End Referentiel Actions Availables Importation" -NotDisplay
+    Write-Log -Type INFO -Name "Program initialisation - Referentiel Actions Availables Importation" -Message "End Referentiel Actions Availables Importation" -NotDisplay
 }
 
 # Check if Google Chrome is already install
@@ -431,15 +456,16 @@ If($global:TriggerExit -eq 0){
     Try{
         $ChromeVersion = (Get-ItemProperty $ChromeVersionRegistry -ErrorAction Stop).Version
         Write-Log -Type VALUE -Name "Program initialisation - Google Chrome Installation" -Message "Yes" -NotDisplay
+        Write-Log -Type INFO -Name "Program initialisation - Google Chrome Installation" -Message "End Google Chrome Installation" -NotDisplay 
         Write-Log -Type INFONO -Name "Program initialisation - Google Chrome Version" -Message "Current Google Chrome version : " -NotDisplay
         Write-Log -Type VALUE -Name "Program initialisation - Google Chrome Version" -Message "$ChromeVersion" -NotDisplay
     }
     Catch{
         Write-Log -Type WARNING -Name "Program initialisation - Google Chrome Installation" -Message "Not yet" -NotDisplay
         Write-Log -Type WARNING -Name "Program initialisation - Google Chrome Installation" -Message "Please install Google Chrome before to use this Program"
+        Write-Log -Type INFO -Name "Program initialisation - Google Chrome Installation" -Message "End Google Chrome Installation" -NotDisplay 
         $global:TriggerExit = 1
-    }
-    Write-Log -Type INFO -Name "Program initialisation - Google Chrome Installation" -Message "End Google Chrome Installation" -NotDisplay    
+    }   
 }
 
 # Get Google Chrome binary Path
@@ -532,12 +558,12 @@ If($global:TriggerExit -eq 0){
         
         Try{
             $Password = (Get-Content -Path $PasswordPath -Tail 1 -ErrorAction SilentlyContinue).Trim()
-            Write-Log -Type VALUE -Name "Password Status" -Message "Set."
-            Write-Log -Type INFO -Name "Password Status" -Message "Password file : $PasswordPath" -NotDisplay
+            Write-Log -Type VALUE -Name "Program run - Password Status" -Message "Set"
+            Write-Log -Type INFO -Name "Program run - Password Status" -Message "Password file : $PasswordPath" -NotDisplay
         }
         Catch{
             # Ask user to provide BBOX Web Interface Password
-            Write-Log -Type WARNING -Name "Password Status" -Message "Not set."
+            Write-Log -Type WARNING -Name "Program run - Password Status" -Message "Not set."
             Write-Host "Please enter your bbox password in the txt file available here : " -NoNewline
             Write-Host "$PasswordPath" -ForegroundColor Green
             Invoke-Item -Path $PasswordPath
@@ -569,27 +595,35 @@ If($global:TriggerExit -eq 0){
     
     Switch($ConnexionType[0]){
         
-        L   {$UrlRoot = "https://$BBoxDns"
+        L   {$UrlRoot = "https://$BBoxDns/$APIVersion"
              $UrlHome = "https://$BBoxDns/login.html"
             }
         
         R   {Write-Log -Type INFO -Name "Program run - Check Host" -Message "Start Check Host" -NotDisplay
-             $UrlRoot = Get-HostStatus -UrlRoot $UrlRoot
+             $DYNDNS = Get-HostStatus
              Write-Log -Type INFO -Name "Program run - Check Host" -Message "End Check Host" -NotDisplay
              Write-Log -Type INFO -Name "Program run -  Check Port" -Message "Start Check Port" -NotDisplay
-             $Port    = Get-PortStatus -UrlRoot $UrlRoot
+             $Port = Get-PortStatus -UrlRoot $DYNDNS
              Write-Log -Type INFO -Name "Program run - Check Port" -Message "End Check Port" -NotDisplay
-             $UrlHome = "https://$UrlRoot`:$Port/login.html"
+             $UrlRoot = "https://$DYNDNS`:$Port/$APIVersion"
+             $UrlHome = "https://$DYNDNS`:$Port/login.html"
             }
         
         Q   {$global:TriggerExit = 1}
     }
     
-    Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Root Bbox Url : $UrlRoot" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Login Bbox Url : $UrlHome" -NotDisplay
-    If($Port){Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Remote Bbox Url : $Port" -NotDisplay}
-    Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "End Connexion Type" -NotDisplay
+    If($ConnexionType[0] -ne "Q"){
+        Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Root Bbox Url : $UrlRoot" -NotDisplay
+        Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Login Bbox Url : $UrlHome" -NotDisplay
+        If($Port){
+            Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Remote Bbox Url : $Port" -NotDisplay
+        }
+        Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "End Connexion Type" -NotDisplay
+    }
 }
+
+# Get Already Active Goolge Chrome Process
+$Global:ActiveChromeBefore = @(Get-Process [c]hrome | ForEach-Object {$_.Id})
 
 # Start in Background chromeDriver
 If($global:TriggerExit -eq 0){
@@ -598,7 +632,7 @@ If($global:TriggerExit -eq 0){
     Write-Log -Type INFONO -Name "Program run - ChromeDriver Launch" -Message "Starting ChromeDriver as backgroung process : "
     
     Try{
-        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion "$ChromeDriverVersion" -DownloadPath $JournalPath -LogsPath $global:LogsPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
+        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion "$ChromeDriverVersion" -DownloadPath $JournalPath -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
         Write-Log -Type VALUE -Name "Program run - ChromeDriver Launch" -Message "Started"
     }
     Catch{
@@ -633,10 +667,6 @@ While($global:TriggerExit -eq 0){
     
     If($Null -ne $Action){
         
-        Write-Log -Type INFONO -Name "Program run - Action asked" -Message "Selected action : "
-        Write-Host "$Description" -ForegroundColor Green
-        Write-Log -Type VALUE -Name "Program run - Action asked" -Message "$Description" -NotDisplay
-        
         # Set value to variables
         $Label = $Action.label
         $APIName = $Action.APIName
@@ -644,49 +674,25 @@ While($global:TriggerExit -eq 0){
         $ReportType = $Action.ReportType
         $ExportFile = $Action.ExportFile
         
+        Write-Log -Type INFONO -Name "Program run - Action asked" -Message "Selected action : "
+        Write-Host "$Description" -ForegroundColor Green
+        Write-Log -Type VALUE -Name "Program run - Action asked" -Message "$Description" -NotDisplay
+        
         # Get data
         Switch ($APIName) {
             
             "Full"                 {$APISName = ($Actions | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "401|404|log.html|voip/calllog|voip/fullcalllog") -and ($_.Scope -notmatch "Computer") -and ($_.Action -notmatch "Export"))}).APIName | Select-Object -Unique
-                                    $FormatedData = @()
-                                    $FormatedData =  Export-BBoxConfiguration -APISName $APISName -ConnexionType $ConnexionType -UrlRoot $UrlRoot -APIVersion $APIVersion -Port $Port -OutputFolder $JsonBboxconfigPath
+                                    $FormatedData = Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath
                                    }
             
-            "Full_Testing_Program" {$APIName = $Actions | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "Full|401|404|Full_Testing_Program"))} | Select-Object *
-                                    $FormatedData = @()
-                                    $FormatedData =  Export-BBoxConfigTestingProgram -APISName $APIName -ConnexionType $ConnexionType -UrlRoot $UrlRoot -APIVersion $APIVersion -Port $Port -OutputFolder $JsonBboxconfigPath -Mail $Mail -JournalPath $JournalPath
-                                   }
+            "Full_Testing_Program" {$APISName = $Actions | Where-Object {(($_.Available -eq "Yes") -and ($_.APIName -notmatch "401|404|Full|Full_Testing_Program"))} | Select-Object *
+                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath -Mail $Mail -JournalPath $JournalPath
+                                }
             
-            Default                {$APIName = $Action.APIName
-                                    $UrlToGo = Switch-ConnexionType -UrlRoot $UrlRoot -Port $Port -APIVersion $APIVersion -APIName $APIName
-                                    $FormatedData = @()
-                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -ConnexionType $ConnexionType -UrlRoot $UrlRoot -APIVersion $APIVersion -Port $Port -Mail $Mail -OutputFolder $JsonBboxconfigPath -JournalPath $JournalPath -ErrorAction Continue -WarningAction Continue
-                                  }
-        }
-        
-        # Format data before choose output format
-        If((-not ([string]::IsNullOrEmpty($FormatedData))) -and ($FormatedData -ne "") -and ($FormatedData -ne " ") -and ($FormatedData -notmatch "Domain") -and ($FormatedData -notmatch "Program")){
-            
-            # Choose Export format => CSV or JSON
-            If($TriggerExportFormat -eq 0){
-                
-                $TriggerExportFormat = Switch-ExportFormat
-            }
-            
-             # Choose Display format => HTML or Table
-            If($TriggerDisplayFormat -eq 0){
-                
-                $TriggerDisplayFormat = Switch-DisplayFormat
-            }
-            
-            # Apply Export Format
-            Format-ExportResult -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -Exportfile $ExportFile -ErrorAction Stop
-            
-            # Apply Display Format
-            Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Description $Description -ReportType $ReportType -ReportPath $ReportPath -Exportfile $ExportFile -ErrorAction Stop
-        }
-        Else{
-            EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction Stop
+            Default                {$UrlToGo = "$UrlRoot/$APIName"
+                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -UrlRoot $UrlRoot -Mail $Mail -JournalPath $JournalPath -ErrorAction Continue -WarningAction Continue
+                                    Export-GlobalOutputData -FormatedData $FormatedData -TriggerExportFormat $global:TriggerExportFormat -TriggerDisplayFormat $global:TriggerDisplayFormat -APIName $APIName -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ExportFile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath
+                                }
         }
     }
     
@@ -699,7 +705,9 @@ While($global:TriggerExit -eq 0){
 }
 
 # Close all ChromeDriver instances openned
-Stop-Program -LogsPath $global:LogsPath -LogsFileName $global:LogsFileName -ErrorAction Stop
+Stop-Program -LogFolderPath $global:LogFolderPath -LogFileName $global:LogFileName -ErrorAction Stop
+$Global:ActiveChromeAfter = Get-Process Chrome | ForEach-Object {$_.Id} | Where-Object {$Global:ActiveChromeBefore -notcontains $_}
+Stop-Process -Id $Global:ActiveChromeAfter -Force -ErrorAction SilentlyContinue
 Stop-Transcript -ErrorAction Stop
 #endregion Program
 
