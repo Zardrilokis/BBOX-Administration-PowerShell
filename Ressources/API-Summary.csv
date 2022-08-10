@@ -1,7 +1,6 @@
 Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
 Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;;
 Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;;
-Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
 REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;;
 REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;;
 REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;;
@@ -11,6 +10,7 @@ REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Repor
 SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Gridview;
 SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;
 SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;
+Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
 GET-AIRTIES;Get-Airties;Get AIRTIES Summary Information;airties;https://192.168.1.254/api/v1/airties;GET;public;Private;diag-read;No;No;List;airties
 GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode
 GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;Yes;list;airties-zerotouch

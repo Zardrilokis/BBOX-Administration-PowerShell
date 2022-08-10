@@ -1,0 +1,61 @@
+﻿{
+    "Various":  {
+                    "Mail":  "tom78_91_45@yahoo.fr"
+                },
+    "BBox":  {
+                 "BBoxUrlRemote":  "https://mabbox.bytel.fr/remote.html",
+                 "BBoxUrlFirewall":  "https://mabbox.bytel.fr/firewall.html",
+                 "APIVersion":  "api/v1",
+                 "BBoxUrlDynDns":  "https://mabbox.bytel.fr/dyndns.html",
+                 "APIUrlDocumentation":  "https://api.bbox.fr/doc/apirouter/index.html",
+                 "BBoxDns":  "mabbox.bytel.fr"
+             },
+    "GoogleChrome":  {
+                         "ChromeDriverDefaultWebDriverSupportFileName":  "webdriver.support.dll",
+                         "ChromeDriverDefaultFolderName":  "Default",
+                         "ChromeProgramFilesX86InstallationPath":  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+                         "ChromeDriverRessourcesFolderName":  "ChromeDriver",
+                         "ChromeDriverDefaultProfileName":  "Guest Profile",
+                         "ChromeVersionRegistry":  "HKCU:\\SOFTWARE\\Google\\Chrome\\BLBeacon",
+                         "ChromeDriverDefaultSetupFileName":  "chromedriver.exe",
+                         "ChromeDriverDefaultWebDriverDLLFileName":  "webdriver.dll",
+                         "ChromeProgramFilesInstallationPath":  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+                     },
+    "Values":  {
+                   "LineNumber":  "1|2",
+                   "LANNetworkRemote":  "R|Q",
+                   "LANNetworkLocal":  "L|R|Q",
+                   "DisplayFormat":  "H|T",
+                   "OpenHTMLReport":  "Y|N",
+                   "ExportFormat":  "C|J"
+               },
+    "APIName":  {
+                    "APINameExclusionFull_Testing_Program":  "401|404|Full|Full_Testing_Program",
+                    "APINameExclusionFull":  "401|404|log.html|voip/calllog|voip/fullcalllog"
+                },
+    "FormatedData":  {
+                         "ExcludedValues":  "C|J|Y|H|T|Domain|Program"
+                     },
+    "HTMLReport":  {
+                       "Type":  "List|Table"
+                   },
+    "Path":  {
+                 "APISummaryFileName":  "API-Summary.csv",
+                 "JsonBboxconfigFolderName":  "Json_Bbox_config",
+                 "DownloadShellRegistryFolderName":  "{374DE290-123F-4565-9164-39C4925E467B}",
+                 "JournalFolderName":  "Journal",
+                 "RessourcesFolderName":  "Ressources",
+                 "ExportJSONFolderName":  "JSON",
+                 "ExportFolderName":  "Export",
+                 "JournalName":  "journal-1242358",
+                 "TestedEnvironnementFileName":  "TestedEnvironnement.csv",
+                 "ExportCSVFolderName":  "CSV",
+                 "ReportFolderName":  "Report",
+                 "BBOXModuleFileName":  "BBOX-Module.psm1",
+                 "DownloadShellRegistryFolder":  "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"
+             },
+    "UserConfigurationFile":  {
+                                  "CurrentUserConfigurationFileName":  "Settings-Current-User.json",
+                                  "DefaultUserConfigurationFileName":  "Settings-Default-User.json"
+                              }
+}

@@ -1,4 +1,8 @@
-﻿
+
+# Be carefull some variables are linked from main script BBOX-Administration to :
+# - $global:JSONSettingsProgramContent
+# - $global:JSONSettingsDefaultUserContent or $JSONSettingsCurrentUserContent
+
 #region GLOBAL (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
 
 <#
@@ -9,7 +13,7 @@
     Ecrit un log sur la console et sur fichier.
 #>
 function Write-Log {
-    Param(
+    Param (
         [Parameter()]
         [ValidateSet("INFO","INFONO","VALUE","WARNING","ERROR","DEBUG")]
         $Type = "INFO",
@@ -32,21 +36,21 @@ function Write-Log {
     # Append to global journal
     [Object[]] $Global:journal += $log.toString()
     
-    If(-not $NotDisplay){
+    If (-not $NotDisplay) {
         
         Switch ($Type) {
             
-            "INFO"    {Write-Host -Object "$Message" -ForegroundColor Cyan}
+            "INFO"    {Write-Host -Object "$Message" -ForegroundColor Cyan;Break}
             
-            "INFONO"  {Write-Host -Object "$Message" -ForegroundColor Cyan -NoNewline}
+            "INFONO"  {Write-Host -Object "$Message" -ForegroundColor Cyan -NoNewline;Break}
             
-            "VALUE"   {Write-Host -Object "$Message" -ForegroundColor Green}
+            "VALUE"   {Write-Host -Object "$Message" -ForegroundColor Green;Break}
             
-            "WARNING" {Write-Host -Object "$Message" -ForegroundColor Yellow}
+            "WARNING" {Write-Host -Object "$Message" -ForegroundColor Yellow;Break}
             
-            "ERROR"   {Write-Host -Object "$Message" -ForegroundColor Red}
+            "ERROR"   {Write-Host -Object "$Message" -ForegroundColor Red;Break}
             
-            "DEBUG"   {Write-Host -Object "$Message" -ForegroundColor Blue}
+            "DEBUG"   {Write-Host -Object "$Message" -ForegroundColor Blue;Break}
         }
     }
     
@@ -75,7 +79,7 @@ function Write-Log {
 # Clean folder content
 Function Remove-FolderContent {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$FolderRoot,
         
@@ -87,19 +91,20 @@ Function Remove-FolderContent {
 
     Write-Log -Type INFO -Name "Program run - Clean folder content" -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
     
-    If(Test-Path -Path $FolderPath){
+    If (Test-Path -Path $FolderPath) {
         
         Write-Log -Type INFONO -Name "Program run - Clean folder content" -Message "Cleaning `"$FolderPath`" folder content Status : " -NotDisplay
-        Try{
-            $Null = Remove-Item -Path "$FolderPath\*" -Recurse -Exclude "BBOX-Administration-Transcript-Log.txt"
+        Try {
+            $Null = Remove-Item -Path "$FolderPath\*" -Recurse -Exclude $global:TranscriptFileName
             Write-Log -Type VALUE -Name "Program run - Clean folder content" -Message "Success" -NotDisplay
         }
-        Catch{
-            Write-Log -Type ERROR -Name "Program run - Clean folder content" -Message "Failed. $FolderPath folder can't be cleaned due to : $($_.ToString())"
+        Catch {
+            Write-Log -Type ERROR -Name "Program run - Clean folder content" -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
             $global:TriggerExit = 1
         }
     }
-    Else{Write-Log -Type INFONO -Name "Program run - Clean folder content" -Message "`"$FolderPath`" folder state : " -NotDisplay
+    Else {
+         Write-Log -Type INFONO -Name "Program run - Clean folder content" -Message "`"$FolderPath`" folder state : " -NotDisplay
          Write-Log -Type VALUE -Name "Program run - Clean folder content" -Message "Not found" -NotDisplay
     }
     Write-Log -Type INFO -Name "Program run - Clean folder content" -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
@@ -108,7 +113,7 @@ Function Remove-FolderContent {
 # Test and create folder if not yet existing
 Function Test-FolderPath {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$FolderRoot,
         
@@ -122,22 +127,23 @@ Function Test-FolderPath {
     $FolderName = ($FolderName.Split('\'))[-1]
     
     Write-Log -Type INFO -Name "Program initialisation - Program Folders check" -Message "Start folder check : $FolderPath" -NotDisplay
-    Write-Log -Type INFONO -Name "Program initialisation - Program Folders check" -Message "Folder state : " -NotDisplay
+    Write-Log -Type INFONO -Name "Program initialisation - Program Folders check" -Message "Folder : $FolderPath , state : " -NotDisplay
     
-    If(-not (Test-Path -Path $FolderPath)){
+    If (-not (Test-Path -Path $FolderPath)) {
         
-        Write-Log -Type WARNING -Name "Program initialisation - Program Folders check" -Message "Doesn't exist" -NotDisplay
-        Write-Log -Type INFONO -Name "Program initialisation - Program Folders check" -Message "Creation  folder status : " -NotDisplay
-        Try{
+        Write-Log -Type WARNING -Name "Program initialisation - Program Folders check" -Message "Doesn't exists" -NotDisplay
+        Write-Log -Type INFONO -Name "Program initialisation - Program Folders check" -Message "Creation folder : $FolderPath , status : " -NotDisplay
+        Try {
             $Null = New-Item -Path $FolderRoot -Name $FolderName -ItemType Directory -Force
             Write-Log -Type VALUE -Name "Program initialisation - Program Folders check" -Message "Success" -NotDisplay
         }
-        Catch{
-            Write-Log -Type ERROR -Name "Program initialisation - Program Folders check" -Message "Failed, $FolderPath folder can't be created due to : $($_.ToString())"
+        Catch {
+            Write-Log -Type ERROR -Name "Program initialisation - Program Folders check" -Message "Failed, `"$FolderPath`" folder can't be created due to : $($_.ToString())"
             $global:TriggerExit = 1
         }
     }
-    Else{Write-Log -Type VALUE -Name "Program initialisation - Program Folders check" -Message "Already exists" -NotDisplay
+    Else {
+        Write-Log -Type VALUE -Name "Program initialisation - Program Folders check" -Message "Already exists" -NotDisplay
     }
     Write-Log -Type INFO -Name "Program initialisation - Program Folders check" -Message "End folder check : $FolderName" -NotDisplay
 }
@@ -145,7 +151,7 @@ Function Test-FolderPath {
 # Test and create file if not yet existing
 Function Test-FilePath {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$FileRoot,
         
@@ -159,22 +165,23 @@ Function Test-FilePath {
     $FileName = ($FileName.Split('\'))[-1]
     
     Write-Log -Type INFO -Name "Program initialisation - Program Files check" -Message "Start file check : $FilePath" -NotDisplay
-    Write-Log -Type INFONO -Name "Program initialisation - Program Files check" -Message "File state : " -NotDisplay
+    Write-Log -Type INFONO -Name "Program initialisation - Program Files check" -Message "File : $FilePath , state : " -NotDisplay
     
-    If(-not (Test-Path -Path $FilePath)){
+    If (-not (Test-Path -Path $FilePath)) {
     
-        Write-Log -Type WARNING -Name "Program initialisation - Program Files check" -Message "Doesn't exist" -NotDisplay
+        Write-Log -Type WARNING -Name "Program initialisation - Program Files check" -Message "Doesn't exists" -NotDisplay
         Write-Log -Type INFONO -Name "Program initialisation - Program Files check" -Message "Creation file status : " -NotDisplay
-        Try{
+        Try {
             $Null = New-Item -Path $FileRoot -Name $FileName -ItemType File -Force
             Write-Log -Type VALUE -Name "Program initialisation - Program Files check" -Message "Success" -NotDisplay
         }
-        Catch{
-            Write-Log -Type ERROR -Name "Program initialisation - Program Files check" -Message "Failed, $FilePath file can't be created due to : $($_.ToString())" -NotDisplay
+        Catch {
+            Write-Log -Type ERROR -Name "Program initialisation - Program Files check" -Message "Failed, `"$FilePath`" file can't be created due to : $($_.ToString())"
             $global:TriggerExit = 1
         }
     }
-    Else{Write-Log -Type VALUE -Name "Program initialisation - Program Files check" -Message "Already exists" -NotDisplay
+    Else {
+        Write-Log -Type VALUE -Name "Program initialisation - Program Files check" -Message "Already exists"  -NotDisplay
     }
     Write-Log -Type INFO -Name "Program initialisation - Program Files check" -Message "End file check : $FileName" -NotDisplay
 }
@@ -182,7 +189,7 @@ Function Test-FilePath {
 # Used only to detect ChromeDriver version
 Function Get-ChromeDriverVersion {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeVersion
     )
@@ -190,26 +197,30 @@ Function Get-ChromeDriverVersion {
     $ChromeMainVersion = $ChromeVersion.split(".")[0]
     Write-Log -Type INFONO -Name "Program initialisation - Chrome Driver Version" -Message "ChromeDriver version selected : " -NotDisplay
 
-    Switch($ChromeMainVersion){
+    Switch ($ChromeMainVersion) {
         
         "93"{
                 $ChromeDriverVersion = "93.0.4577.63"
                 Write-Log -Type VALUE -Name "Program initialisation - Chrome Driver Version" -Message "$ChromeDriverVersion" -NotDisplay
+                Break
                }
         
         "94"{
                 $ChromeDriverVersion = "94.0.4606.61"
                 Write-Log -Type VALUE -Name "Program initialisation - Chrome Driver Version" -Message "$ChromeDriverVersion" -NotDisplay
+                Break
                }
 
         "95"{
                 $ChromeDriverVersion = "95.0.4638.17"
                 Write-Log -Type VALUE -Name "Program initialisation - Chrome Driver Version" -Message "$ChromeDriverVersion" -NotDisplay
+                Break
                }
 
         Default{
                 $ChromeDriverVersion = "Default"
                 Write-Log -Type VALUE -Name "Program initialisation - Chrome Driver Version" -Message "$ChromeDriverVersion ($ChromeMainVersion)" -NotDisplay
+                Break
                }
     }
     
@@ -219,28 +230,31 @@ Function Get-ChromeDriverVersion {
 # Used only to define bbox connexion type
 Function Get-ConnexionType {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$TriggerLANNetwork
     )
     
-    Switch($TriggerLANNetwork){
+    Switch ($TriggerLANNetwork) {
     
         '1'        {Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "(L) Localy / (R) Remotly / (Q) Quit the Program"
-                    $ConnexionTypeChoice = "L|R|Q"
+                    $ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkLocal
+                    Break
                    }
         
         '0'        {Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "(R) Remotly / (Q) Quit the Program"
-                    $ConnexionTypeChoice = "R|Q"
+                    $ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkRemote
+                    Break
                    }
         
         Default    {Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "(R) Remotly / (Q) Quit the Program"
-                    $ConnexionTypeChoice = "R|Q"
+                    $ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkLocal
+                    Break
                    }
     }
     
     $ConnexionType = ""
-    While($ConnexionType -notmatch $ConnexionTypeChoice){
+    While ($ConnexionType -notmatch $ConnexionTypeChoice) {
     
         $ConnexionType = Read-Host "Enter your choice"
          Write-Log -Type INFO -Name "Program run - Connexion Type" -Message "Connexion Type chosen by user : $ConnexionType" -NotDisplay
@@ -252,36 +266,41 @@ Function Get-ConnexionType {
 # Used only to check if external Bbox DNS is online
 Function Get-HostStatus {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$False)]
         [String]$UrlRoot
     )
     
-    $BBoxDnsStatus = ""
-    While(([string]::IsNullOrEmpty($UrlRoot) -and ($BBoxDnsStatus -notlike $true))){
+    $BBoxDnsStatus = $null
+    While (([string]::IsNullOrEmpty($UrlRoot) -and ($BBoxDnsStatus -notlike $true))) {
         
         $UrlRoot = Read-Host "Enter your external BBOX IP/DNS Address, Example : example.com "
-        Write-Log -Type INFONO -Name "Program run - Check Host" -Message "Host `"$UrlRoot`" status : "
+        Write-Log -Type INFONO -Name "Program run - Check Host" -Message "Host `"$UrlRoot`" status : " -NotDisplay
         
-        If(-not ([string]::IsNullOrEmpty($UrlRoot))){
+        If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
             
             $BBoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
             
-            If($BBoxDnsStatus -like $true){
+            If ($BBoxDnsStatus -like $true) {
                 
-                Write-Log -Type VALUE -Name "Program run - Check Host" -Message "Online"
+                Write-Log -Type VALUE -Name "Program run - Check Host" -Message "Online"-NotDisplay
+                $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
+                $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
+                $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
                 Break
             }
-            Else{Write-Log -Type WARNING -Name "Program run - Check Host" -Message "Offline"
-                 Write-Host "Host $UrlRoot seems not Online, please make sure :" -ForegroundColor Yellow
+            Else {Write-Log -Type WARNING -Name "Program run - Check Host" -Message "Offline" -NotDisplay
+                 Write-Host "Host : $UrlRoot , seems not Online ; please make sure :" -ForegroundColor Yellow
                  Write-Host "- You enter a valid DNS address or IP address" -ForegroundColor Yellow
-                 Write-Host "- `"PingResponder`" service is enabled (https://mabbox.bytel.fr/firewall.html)" -ForegroundColor Yellow
-                 Write-Host "- `"DYNDNS`" service is enabled and properly configured (https://mabbox.bytel.fr/dyndns.html)" -ForegroundColor Yellow
-                 Write-Host "- `"Remote`" service is enabled and properly configured (https://mabbox.bytel.fr/remote.html)" -ForegroundColor Yellow
-                 $UrlRoot = ""
+                 Write-Host "- `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.BBoxUrlFirewall))" -ForegroundColor Yellow
+                 Write-Host "- `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))" -ForegroundColor Yellow
+                 Write-Host "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -ForegroundColor Yellow
+                 $UrlRoot = $null
             }
         }
-        Else{Write-Log -Type WARNING -Name "Program run - Check Host" -Message "This field can't be empty or null"}
+        Else {
+            Write-Log -Type WARNING -Name "Program run - Check Host" -Message "This field can't be empty or null"
+        }
     }
     Return $UrlRoot
 }
@@ -289,35 +308,41 @@ Function Get-HostStatus {
 # Used only to check if external Bbox Port is open
 Function Get-PortStatus {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlRoot
     )
     
     $PortStatus = ""
-    While(($PortStatus -notlike $true) -and (-not ([string]::IsNullOrEmpty($UrlRoot)))){
+    While (($PortStatus -notlike $true) -and (-not ([string]::IsNullOrEmpty($UrlRoot)))) {
         
         [int]$Port = Read-Host "Enter your external remote BBOX port, Example : 80,443, default is 8560 "
-        Write-Log -Type INFONO -Name "Program run - Check Port" -Message "Port `"$Port`" status : "
+        Write-Log -Type INFONO -Name "Program run - Check Port" -Message "Port `"$Port`" status : " -NotDisplay
         
-        If(($Port -ge 1) -and ($Port -le 65535)){
+        If (($Port -ge 1) -and ($Port -le 65535)) {
             
             $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
             
-            If($PortStatus.TcpTestSucceeded -like $true){
+            If ($PortStatus.TcpTestSucceeded -like $true) {
                 
-                Write-Log -Type VALUE -Name "Program run - Check Port" -Message "Opened"
+                Write-Log -Type VALUE -Name "Program run - Check Port" -Message "Opened" -NotDisplay
+                $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
+                $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
+                $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
                 Break
             }
-            Else{Write-Log -Type WARNING -Name "Program run - Check Port" -Message "Closed"
+            Else {
+                 Write-Log -Type WARNING -Name "Program run - Check Port" -Message "Closed" -NotDisplay
                  Write-Host "Port $Port seems closed, please make sure :" -ForegroundColor Yellow
                  Write-host "- You enter a valid port number" -ForegroundColor Yellow
-                 Write-Host "- None Firewall rule(s) block this port (https://mabbox.bytel.fr/firewall.html)" -ForegroundColor Yellow
-                 Write-Host "- `"Remote`" service is enabled and properly configured (https://mabbox.bytel.fr/remote.html)" -ForegroundColor Yellow
+                 Write-Host "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))" -ForegroundColor Yellow
+                 Write-Host "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -ForegroundColor Yellow
                  $Port = ""
             }
         }
-        Else{Write-Log -Type WARNING -Name "Program run - Check Port" -Message "This field can't be empty or null or must be in the range between 1 and 65565"}
+        Else {
+            Write-Log -Type WARNING -Name "Program run - Check Port" -Message "This field can't be empty or null or must be in the range between 1 and 65565"
+        }
     }
     Return $Port
 }
@@ -327,7 +352,7 @@ Function Get-PortStatus {
 # Used only to Start ChromeDriver
 Function Start-ChromeDriver {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeDriverVersion,
         
@@ -355,7 +380,7 @@ Function Start-ChromeDriver {
     #$env:PATH += ";$Temp"
 
     # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
-    Add-Type -Path "$ChromeDriverPath\$ChromeDriverVersion\WebDriver.dll"
+    Add-Type -Path "$ChromeDriverPath\$ChromeDriverVersion\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)"
     
     # Create new Chrome Drive Service
     $ChromeDriverService = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService()
@@ -405,7 +430,7 @@ Function Start-ChromeDriver {
 # Used only to stop ChromeDriver, linked to : "Stop-Program"
 Function Stop-ChromeDriver {
     
-    Param()
+    Param ()
     
     # Close all ChromeDriver instances openned
     $global:ChromeDriver.Close()
@@ -417,7 +442,7 @@ Function Stop-ChromeDriver {
 # Used only to Refresh WIRELESS Frequency Neighborhood Scan, linked to : "Format-Date1970"
 function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$APIName,
         [Parameter(Mandatory=$True)]
@@ -434,39 +459,43 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     
     Write-Log -Type INFONO -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "WIRELESS Frequency Neighborhood Lastscan : " -NotDisplay
     
-    If($Lastscan -eq 0){
+    If ($Lastscan -eq 0) {
         
         Write-Log -Type VALUE -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "Never" -NotDisplay
     }
-    Else{
+    Else {
         Write-Log -Type VALUE -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "$(Format-Date1970 -Seconds $Lastscan)" -NotDisplay
     }
     
     $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("api/v1/$APIName","diagnostic.html")))
     Start-Sleep -Seconds 1
     
-    Switch($APIName){
+    Switch ($APIName) {
         
-        wireless/24/neighborhood {($global:ChromeDriver.FindElementsByClassName("scan24") | Where-Object -Property text -eq "Scanner").click()}
+        wireless/24/neighborhood {($global:ChromeDriver.FindElementsByClassName("scan24") | Where-Object -Property text -eq "Scanner").click();Break}
             
-        wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName("scan5") | Where-Object -Property text -eq "Scanner").click()}
+        wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName("scan5") | Where-Object -Property text -eq "Scanner").click();Break}
     }
     
     Write-Log -Type WARNING -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "Attention, le scan peut provoquer une coupure temporaire de votre réseau Wi-Fi."
     Write-Log -Type WARNING -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "Souhaitez-vous continuer? : " -NotDisplay
     
-    While($ActionState -notmatch "Y|N"){
+    While ($ActionState -notmatch "Y|N") {
             
         $ActionState = Read-Host "Souhaitez-vous continuer ? (Y) Yes / (N) No"
         Write-Log -Type INFO -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "Action chosen by user : $ActionState" -NotDisplay
     }
 
-    If($ActionState[0] -eq "Y"){
+    If ($ActionState[0] -eq "Y") {
         
-        Start-Sleep -Seconds 1
-        
-        ($global:ChromeDriver.FindElementsByClassName("cta-1") | Where-Object -Property text -eq "Rafraîchir").click()
-        ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq "OK").click()
+        # addd
+        Try {
+            ($global:ChromeDriver.FindElementsByClassName("cta-1") | Where-Object -Property text -eq "Rafraîchir").click()
+            ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq "OK").click()
+        }
+        Catch {
+            ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq "OK").click()
+        }
         
         Write-Log -Type INFONO -Name "Program run - WIRELESS Frequency Neighborhood scan" -Message "Refresh WIRELESS Frequency Neighborhood scan : " -NotDisplay
         Start-Sleep -Seconds 20
@@ -478,7 +507,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
 # Used only to Refresh WIRELESS Frequency Neighborhood Scan ID and linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-WIRELESSFrequencyNeighborhoodScanID"
 Function Get-WIRELESSFrequencyNeighborhoodScan {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -501,19 +530,19 @@ Function Get-WIRELESSFrequencyNeighborhoodScan {
 # Used only to get BBOX LAN Switch Port State, linked to : "Get-DeviceFullLog"
 Function Get-LanPortState {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$LanPortState
     )
     
-    Switch($State){
+    Switch ($State) {
     
-        0          {$Value = "Disable"}
-        1          {$Value = "Enable"}
-        2          {$Value = "Enable"}
-        3          {$Value = "Enable"}
-        4          {$Value = "Enable"}
-        Default    {$Value = "Unknow"}
+        0          {$Value = "Disable";Break}
+        1          {$Value = "Enable";Break}
+        2          {$Value = "Enable";Break}
+        3          {$Value = "Enable";Break}
+        4          {$Value = "Enable";Break}
+        Default    {$Value = "Unknow";Break}
     }
     
     Return $Value
@@ -522,13 +551,12 @@ Function Get-LanPortState {
 # Used only to connect to BBox Web interface
 Function Connect-BBOX {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlHome,
         
         [Parameter(Mandatory=$True)]
         [String]$Password
-        
     )
     
     # Open Web Site Home Page 
@@ -551,7 +579,7 @@ Function Connect-BBOX {
 # Used only to get information from API page content, linked to many functions
 Function Get-BBoxInformation {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -560,13 +588,13 @@ Function Get-BBoxInformation {
     Write-Log -Type INFO -Name "Program run - Get Information" -Message "Get informations requested from url : $UrlToGo" -NotDisplay
     Write-Log -Type INFO -Name "Program run - Get Information" -Message "Request status :" -NotDisplay
     
-    Try{
+    Try {
         # Go to the web page to get information we need
         $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
         Write-Log -Type INFO -Name "Program run - Get Information" -Message "Success" -NotDisplay
     }
-    Catch{
-        Write-Log -Type ERROR -Name "Program run - Get Information" -Message "Failed - Due to : $($_.ToString())"
+    Catch {
+        Write-Log -Type ERROR -Name "Program run - Get Information" -Message "Failed, due to : $($_.ToString())"
         Write-Host "Please check your local/internet network connection" -ForegroundColor Yellow
         Return "0"
         Break
@@ -577,14 +605,14 @@ Function Get-BBoxInformation {
     Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "Start convert data from Html to plaintxt format" -NotDisplay
     Write-Log -Type INFONO -Name "Program run - Convert HTML" -Message "HTML Conversion status : " -NotDisplay
     
-    Try{
+    Try {
         # Get Web page Content
         $Html = $global:ChromeDriver.PageSource
         # Convert $Html To Text
         $Plaintxt = ConvertFrom-HtmlToText -Html $Html
         Write-Log -Type VALUE -Name "Program run - Convert HTML" -Message "Success" -NotDisplay
     }
-    Catch{
+    Catch {
         Write-Log -Type ERROR -Name "Program run - Convert HTML" -Message "Failed to convert to HTML, due to : $($_.ToString())"
         Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "End convert data from Html to plaintxt format" -NotDisplay
         Return "0"
@@ -595,34 +623,34 @@ Function Get-BBoxInformation {
     Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
     Write-Log -Type INFONO -Name "Program run - Convert JSON" -Message "JSON Conversion status : " -NotDisplay
     
-    Try{
+    Try {
         # Convert $Plaintxt as JSON to array
-        $Json = $Plaintxt | ConvertFrom-Json
+        $Json = $Plaintxt | ConvertFrom-Json -ErrorAction Stop
         Write-Log -Type VALUE -Name "Program run - Convert JSON" -Message "Success" -NotDisplay
     }
-    Catch{
+    Catch {
         Write-Log -Type ERROR -Name "Program run - Convert JSON" -Message "Failed - Due to : $($_.ToString())"
         Return "0"
     }
     
     Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
     
-    If($Json.exception.domain -and ($Json.exception.domain -ne "v1/device/log")){
+    If ($Json.exception.domain -and ($Json.exception.domain -ne "v1/device/log")) {
         
         Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "Start get API error code" -NotDisplay
         Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API error code : "
-        Try{
+        Try {
             $ErrorCode = Get-ErrorCode -Json $Json
             Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message "$($ErrorCode.ToString())" -NotDisplay
             Return $ErrorCode | Format-Table
         }
-        Catch{
+        Catch {
             Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
         }
 
         Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API error code" -NotDisplay
     }
-    Else{
+    Else {
         Return $Json
     }
 }
@@ -632,7 +660,7 @@ Function ConvertFrom-HtmlToText {
     
     # Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [System.String]$Html
     )
@@ -687,7 +715,7 @@ Function ConvertFrom-HtmlToText {
 # Used only to select function to get data from BBOX web API or do actions
 Function Switch-Info {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$Label,
         
@@ -707,61 +735,61 @@ Function Switch-Info {
         [String]$JournalPath
     )
     
-        Switch($Label){
+        Switch ($Label) {
             
             # Error Code 
-            Get-ErrorCode        {$FormatedData = Get-ErrorCode -UrlToGo $UrlToGo}
+            Get-ErrorCode        {$FormatedData = Get-ErrorCode -UrlToGo $UrlToGo;Break}
             
-            Get-ErrorCodeTest    {$FormatedData = Get-ErrorCodeTest -UrlToGo $UrlToGo}
+            Get-ErrorCodeTest    {$FormatedData = Get-ErrorCodeTest -UrlToGo $UrlToGo;Break}
             
             # Airties
-            Get-Airties          {$FormatedData = Get-Airties -UrlToGo $UrlToGo -APIName $APIName}
+            Get-Airties          {$FormatedData = Get-Airties -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-AirtiesL         {$FormatedData = Get-AirtiesLANmode -UrlToGo $UrlToGo}
+            Get-AirtiesL         {$FormatedData = Get-AirtiesLANmode -UrlToGo $UrlToGo;Break}
             
             # Backup
-            GET-CONFIGSL         {$FormatedData = Get-BackupList -UrlToGo $UrlToGo -APIName $APIName}
+            GET-CONFIGSL         {$FormatedData = Get-BackupList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # DHCP
-            GET-DHCP             {$FormatedData = Get-DHCP -UrlToGo $UrlToGo -APIName $APIName}
+            GET-DHCP             {$FormatedData = Get-DHCP -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-DHCPC            {$FormatedData = Get-DHCPClients -UrlToGo $UrlToGo}
+            GET-DHCPC            {$FormatedData = Get-DHCPClients -UrlToGo $UrlToGo;Break}
             
-            GET-DHCPCID          {$FormatedData = Get-DHCPClientsID -UrlToGo $UrlToGo}
+            GET-DHCPCID          {$FormatedData = Get-DHCPClientsID -UrlToGo $UrlToGo;Break}
             
-            GET-DHCPAO           {$FormatedData = Get-DHCPActiveOptions -UrlToGo $UrlToGo}
+            GET-DHCPAO           {$FormatedData = Get-DHCPActiveOptions -UrlToGo $UrlToGo;Break}
             
-            GET-DHCPO            {$FormatedData = Get-DHCPOptions -UrlToGo $UrlToGo}
+            GET-DHCPO            {$FormatedData = Get-DHCPOptions -UrlToGo $UrlToGo;Break}
             
-            GET-DHCPOID          {$FormatedData = Get-DHCPOptionsID -UrlToGo $UrlToGo}
+            GET-DHCPOID          {$FormatedData = Get-DHCPOptionsID -UrlToGo $UrlToGo;Break}
             
-            Get-DHCPSTBO         {$FormatedData = Get-DHCPSTBOptions -UrlToGo $UrlToGo}
+            Get-DHCPSTBO         {$FormatedData = Get-DHCPSTBOptions -UrlToGo $UrlToGo;Break}
             
-            Get-DHCPv6PFD        {$FormatedData = Get-DHCPv6PrefixDelegation -UrlToGo $UrlToGo}
+            Get-DHCPv6PFD        {$FormatedData = Get-DHCPv6PrefixDelegation -UrlToGo $UrlToGo;Break}
 
-            Get-DHCPv6O          {$FormatedData = Get-DHCPv6Options -UrlToGo $UrlToGo}
+            Get-DHCPv6O          {$FormatedData = Get-DHCPv6Options -UrlToGo $UrlToGo;Break}
             
             # DNS
-            GET-DNSS             {$FormatedData = Get-DNSStats -UrlToGo $UrlToGo}
+            GET-DNSS             {$FormatedData = Get-DNSStats -UrlToGo $UrlToGo;Break}
             
             # DEVICE
-            GET-DEVICE           {$FormatedData = Get-Device -UrlToGo $UrlToGo -APIName $APIName}
+            GET-DEVICE           {$FormatedData = Get-Device -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-DEVICELOG        {$FormatedData = Get-DeviceLog -UrlToGo $UrlToGo}
+            GET-DEVICELOG        {$FormatedData = Get-DeviceLog -UrlToGo $UrlToGo;Break}
 
-            GET-DEVICEFLOG       {$FormatedData = Get-DeviceFullLog -UrlToGo $UrlToGo}
+            GET-DEVICEFLOG       {$FormatedData = Get-DeviceFullLog -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICEFTLOG      {$FormatedData = Get-DeviceFullTechnicalLog -UrlToGo $UrlToGo}
+            GET-DEVICEFTLOG      {$FormatedData = Get-DeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICEC          {$FormatedData = Get-DeviceCpu -UrlToGo $UrlToGo}
+            GET-DEVICEC          {$FormatedData = Get-DeviceCpu -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICEM          {$FormatedData = Get-DeviceMemory -UrlToGo $UrlToGo}
+            GET-DEVICEM          {$FormatedData = Get-DeviceMemory -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICELED        {$FormatedData = Get-DeviceLED -UrlToGo $UrlToGo}
+            GET-DEVICELED        {$FormatedData = Get-DeviceLED -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICES          {$FormatedData = Get-DeviceSummary -UrlToGo $UrlToGo}
+            GET-DEVICES          {$FormatedData = Get-DeviceSummary -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICET          {$FormatedData = Get-DeviceToken -UrlToGo $UrlToGo}
+            GET-DEVICET          {$FormatedData = Get-DeviceToken -UrlToGo $UrlToGo;Break}
             
             SET-DEVICER          {$Token = Get-DeviceToken -UrlToGo $UrlToGo
                                   $Token = ($Token | Where-Object {$_.Description -like 'Token'}).value
@@ -769,6 +797,7 @@ Function Switch-Info {
                                   $UrlToGo = "$UrlToGo$Token"
                                   Write-Host "Send reboot command ..."
                                   #Set-BBoxInformation -UrlToGo $UrlToGo
+                                  Break
                                  }
             
             SET-DEVICEFR         {$Token = Get-DeviceToken -UrlToGo $UrlToGo
@@ -777,231 +806,233 @@ Function Switch-Info {
                                   $UrlToGo = "$UrlToGo$Token"
                                   Write-Host "Send Factory reset command ..."
                                   #Set-BBoxInformation -UrlToGo $UrlToGo
+                                  Break
                                  }
             
             # DYNDNS
-            GET-DYNDNS           {$FormatedData = Get-DYNDNS -UrlToGo $UrlToGo -APIName $APIName}
+            GET-DYNDNS           {$FormatedData = Get-DYNDNS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-DYNDNSPL         {$FormatedData = Get-DYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName}
+            GET-DYNDNSPL         {$FormatedData = Get-DYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-DYNDNSC          {$FormatedData = Get-DYNDNSClient -UrlToGo $UrlToGo -APIName $APIName}
+            GET-DYNDNSC          {$FormatedData = Get-DYNDNSClient -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-DYNDNSCID        {$FormatedData = Get-DYNDNSClientID -UrlToGo $UrlToGo}
+            GET-DYNDNSCID        {$FormatedData = Get-DYNDNSClientID -UrlToGo $UrlToGo;Break}
 
             # FIREWALL
-            GET-FIREWALL         {$FormatedData = Get-FIREWALL -UrlToGo $UrlToGo -APIName $APIName}
+            GET-FIREWALL         {$FormatedData = Get-FIREWALL -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-FIREWALLR        {$FormatedData = Get-FIREWALLRules -UrlToGo $UrlToGo}
+            GET-FIREWALLR        {$FormatedData = Get-FIREWALLRules -UrlToGo $UrlToGo;Break}
             
-            GET-FIREWALLRID      {$FormatedData = Get-FIREWALLRulesID -UrlToGo $UrlToGo}
+            GET-FIREWALLRID      {$FormatedData = Get-FIREWALLRulesID -UrlToGo $UrlToGo;Break}
             
-            GET-FIREWALLGM       {$FormatedData = Get-FIREWALLGamerMode -UrlToGo $UrlToGo}
+            GET-FIREWALLGM       {$FormatedData = Get-FIREWALLGamerMode -UrlToGo $UrlToGo;Break}
             
-            GET-FIREWALLPR       {$FormatedData = Get-FIREWALLPingResponder -UrlToGo $UrlToGo}
+            GET-FIREWALLPR       {$FormatedData = Get-FIREWALLPingResponder -UrlToGo $UrlToGo;Break}
             
-            Get-FIREWALLv6R      {$FormatedData = Get-FIREWALLv6Rules -UrlToGo $UrlToGo}
+            Get-FIREWALLv6R      {$FormatedData = Get-FIREWALLv6Rules -UrlToGo $UrlToGo;Break}
             
-            GET-FIREWALLv6RID    {$FormatedData = Get-FIREWALLv6RulesID -UrlToGo $UrlToGo}
+            GET-FIREWALLv6RID    {$FormatedData = Get-FIREWALLv6RulesID -UrlToGo $UrlToGo;Break}
             
-            Get-FIREWALLv6L      {$FormatedData = Get-FIREWALLv6Level -UrlToGo $UrlToGo}
+            Get-FIREWALLv6L      {$FormatedData = Get-FIREWALLv6Level -UrlToGo $UrlToGo;Break}
             
             # API
-            GET-APIRM            {$FormatedData = Get-APIRessourcesMap -UrlToGo $UrlToGo -UrlRoot $UrlRoot}
+            GET-APIRM            {$FormatedData = Get-APIRessourcesMap -UrlToGo $UrlToGo -UrlRoot $UrlRoot;Break}
             
             # HOST
-            GET-HOSTS            {$FormatedData = Get-HOSTS -UrlToGo $UrlToGo -APIName $APIName}
+            GET-HOSTS            {$FormatedData = Get-HOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-HOSTSID          {$FormatedData = Get-HOSTSID -UrlToGo $UrlToGo}
+            GET-HOSTSID          {$FormatedData = Get-HOSTSID -UrlToGo $UrlToGo;Break}
             
-            GET-HOSTSME          {$FormatedData = Get-HOSTSME -UrlToGo $UrlToGo}
+            GET-HOSTSME          {$FormatedData = Get-HOSTSME -UrlToGo $UrlToGo;Break}
             
-            Get-HOSTSL           {$FormatedData = Get-HOSTSLite -UrlToGo $UrlToGo}
+            Get-HOSTSL           {$FormatedData = Get-HOSTSLite -UrlToGo $UrlToGo;Break}
             
-            Get-HOSTSP           {$FormatedData = Get-HOSTSPAUTH -UrlToGo $UrlToGo}
+            Get-HOSTSP           {$FormatedData = Get-HOSTSPAUTH -UrlToGo $UrlToGo;Break}
             
             # LAN
-            GET-LANIP            {$FormatedData = Get-LANIP -UrlToGo $UrlToGo -APIName $APIName}
+            GET-LANIP            {$FormatedData = Get-LANIP -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-LANS             {$FormatedData = Get-LANStats -UrlToGo $UrlToGo}
+            GET-LANS             {$FormatedData = Get-LANStats -UrlToGo $UrlToGo;Break}
             
-            GET-LANA             {$FormatedData = Get-LANAlerts -UrlToGo $UrlToGo -APIName $APIName}
+            GET-LANA             {$FormatedData = Get-LANAlerts -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # NAT
-            GET-NAT              {$FormatedData = Get-NAT -UrlToGo $UrlToGo}
+            GET-NAT              {$FormatedData = Get-NAT -UrlToGo $UrlToGo;Break}
             
-            GET-NATDMZ           {$FormatedData = Get-NATDMZ -UrlToGo $UrlToGo}
+            GET-NATDMZ           {$FormatedData = Get-NATDMZ -UrlToGo $UrlToGo;Break}
             
-            GET-NATR             {$FormatedData = Get-NATRules -UrlToGo $UrlToGo}
+            GET-NATR             {$FormatedData = Get-NATRules -UrlToGo $UrlToGo;Break}
             
-            GET-NATRID           {$FormatedData = Get-NATRulesID -UrlToGo $UrlToGo}
+            GET-NATRID           {$FormatedData = Get-NATRulesID -UrlToGo $UrlToGo;Break}
             
             # Parental Control
-            GET-PARENTALCONTROL  {$FormatedData = Get-ParentalControl -UrlToGo $UrlToGo -APIName $APIName}
+            GET-PARENTALCONTROL  {$FormatedData = Get-ParentalControl -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-PARENTALCONTROLS {$FormatedData = Get-ParentalControlScheduler -UrlToGo $UrlToGo}
+            GET-PARENTALCONTROLS {$FormatedData = Get-ParentalControlScheduler -UrlToGo $UrlToGo;Break}
             
-            GET-PARENTALCONTROLSR{$FormatedData = Get-ParentalControlSchedulerRules -UrlToGo $UrlToGo}
+            GET-PARENTALCONTROLSR{$FormatedData = Get-ParentalControlSchedulerRules -UrlToGo $UrlToGo;Break}
             
             # PROFILE
-            GET-PROFILEC         {$FormatedData = Get-ProfileConsumption -UrlToGo $UrlToGo}
+            GET-PROFILEC         {$FormatedData = Get-ProfileConsumption -UrlToGo $UrlToGo;Break}
             
             # REMOTE
-            GET-REMOTEPWOL       {$FormatedData = Get-REMOTEProxyWOL -UrlToGo $UrlToGo}
+            GET-REMOTEPWOL       {$FormatedData = Get-REMOTEProxyWOL -UrlToGo $UrlToGo;Break}
             
             # SERVICES
-            GET-SERVICES         {$FormatedData = Get-SERVICES -UrlToGo $UrlToGo -APIName $APIName}
+            GET-SERVICES         {$FormatedData = Get-SERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-IPTV             {$FormatedData = Get-IPTV -UrlToGo $UrlToGo -APIName $APIName}
+            GET-IPTV             {$FormatedData = Get-IPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-IPTVD            {$FormatedData = Get-IPTVDiags -UrlToGo $UrlToGo}
+            GET-IPTVD            {$FormatedData = Get-IPTVDiags -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATION     {$FormatedData = Get-NOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName}
+            GET-NOTIFICATION     {$FormatedData = Get-NOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-NOTIFICATIONCA   {$FormatedData = Get-NOTIFICATIONConfigAlerts -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONCA   {$FormatedData = Get-NOTIFICATIONConfigAlerts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONCC   {$FormatedData = Get-NOTIFICATIONConfigContacts -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONCC   {$FormatedData = Get-NOTIFICATIONConfigContacts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONCE   {$FormatedData = Get-NOTIFICATIONConfigEvents -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONCE   {$FormatedData = Get-NOTIFICATIONConfigEvents -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONA    {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONA    {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONC    {$FormatedData = Get-NOTIFICATIONContacts -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONC    {$FormatedData = Get-NOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONE    {$FormatedData = Get-NOTIFICATIONEvents -UrlToGo $UrlToGo}
+            GET-NOTIFICATIONE    {$FormatedData = Get-NOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
             
             # UPNP IGD
-            GET-UPNPIGD          {$FormatedData = Get-UPNPIGD -UrlToGo $UrlToGo}
+            GET-UPNPIGD          {$FormatedData = Get-UPNPIGD -UrlToGo $UrlToGo;Break}
             
-            GET-UPNPIGDR         {$FormatedData = Get-UPNPIGDRules -UrlToGo $UrlToGo}
+            GET-UPNPIGDR         {$FormatedData = Get-UPNPIGDRules -UrlToGo $UrlToGo;Break}
             
             # USB
-            GET-DEVICEUSBP       {$FormatedData = Get-DeviceUSBPrinter -UrlToGo $UrlToGo}
+            GET-DEVICEUSBP       {$FormatedData = Get-DeviceUSBPrinter -UrlToGo $UrlToGo;Break}
             
-            GET-DEVICEUSBD       {$FormatedData = Get-DeviceUSBDevices -UrlToGo $UrlToGo}
+            GET-DEVICEUSBD       {$FormatedData = Get-DeviceUSBDevices -UrlToGo $UrlToGo;Break}
             
-            GET-USBS             {$FormatedData = Get-USBStorage -UrlToGo $UrlToGo}
+            GET-USBS             {$FormatedData = Get-USBStorage -UrlToGo $UrlToGo;Break}
             
             # VOIP
-            GET-VOIP             {$FormatedData = Get-VOIP -UrlToGo $UrlToGo -APIName $APIName}
+            GET-VOIP             {$FormatedData = Get-VOIP -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-VOIPD            {$FormatedData = Get-VOIPDiag -UrlToGo $UrlToGo}
+            GET-VOIPD            {$FormatedData = Get-VOIPDiag -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPDU           {$FormatedData = Get-VOIPDiagUSB -UrlToGo $UrlToGo}
+            GET-VOIPDU           {$FormatedData = Get-VOIPDiagUSB -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPDH           {$FormatedData = Get-VOIPDiagHost -UrlToGo $UrlToGo}
+            GET-VOIPDH           {$FormatedData = Get-VOIPDiagHost -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPS            {$FormatedData = Get-VOIPScheduler -UrlToGo $UrlToGo}
+            GET-VOIPS            {$FormatedData = Get-VOIPScheduler -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPSR           {$FormatedData = Get-VOIPSchedulerRules -UrlToGo $UrlToGo}
+            GET-VOIPSR           {$FormatedData = Get-VOIPSchedulerRules -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPCL           {$FormatedData = Get-VOIPCallLogLine -UrlToGo $UrlToGo}
+            GET-VOIPCL           {$FormatedData = Get-VOIPCallLogLine -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPFCL          {$FormatedData = Get-VOIPFullCallLogLine -UrlToGo $UrlToGo}
+            GET-VOIPFCL          {$FormatedData = Get-VOIPFullCallLogLine -UrlToGo $UrlToGo;Break}
             
-            GET-VOIPALN          {$FormatedData = Get-VOIPAllowedListNumber -UrlToGo $UrlToGo}
+            GET-VOIPALN          {$FormatedData = Get-VOIPAllowedListNumber -UrlToGo $UrlToGo;Break}
             
             # CPL
-            GET-CPL              {$FormatedData = Get-CPL -UrlToGo $UrlToGo -APIName $APIName}
+            GET-CPL              {$FormatedData = Get-CPL -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-CPLDL            {$FormatedData = Get-CPLDeviceList -UrlToGo $UrlToGo -APIName $APIName}
+            GET-CPLDL            {$FormatedData = Get-CPLDeviceList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # WAN
-            GET-WANA             {$FormatedData = Get-WANAutowan -UrlToGo $UrlToGo}
+            GET-WANA             {$FormatedData = Get-WANAutowan -UrlToGo $UrlToGo;Break}
             
-            GET-WAND             {$FormatedData = Get-WANDiags -UrlToGo $UrlToGo}
+            GET-WAND             {$FormatedData = Get-WANDiags -UrlToGo $UrlToGo;Break}
             
-            GET-WANDS            {$FormatedData = Get-WANDiagsSessions -UrlToGo $UrlToGo}
+            GET-WANDS            {$FormatedData = Get-WANDiagsSessions -UrlToGo $UrlToGo;Break}
 
-            GET-WANDSHAS         {$FormatedData = Get-WANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo}
+            GET-WANDSHAS         {$FormatedData = Get-WANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo;Break}
             
-            Get-WANDAAS          {$FormatedData = Get-WANDiagsAllActiveSessions -UrlToGo $UrlToGo}
+            Get-WANDAAS          {$FormatedData = Get-WANDiagsAllActiveSessions -UrlToGo $UrlToGo;Break}
 
-            Get-WANDAASH         {$FormatedData = Get-WANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo}
+            Get-WANDAASH         {$FormatedData = Get-WANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo;Break}
             
-            GET-WANFS            {$FormatedData = Get-WANFTTHStats -UrlToGo $UrlToGo}
+            GET-WANFS            {$FormatedData = Get-WANFTTHStats -UrlToGo $UrlToGo;Break}
             
-            GET-WANIP            {$FormatedData = Get-WANIP -UrlToGo $UrlToGo}
+            GET-WANIP            {$FormatedData = Get-WANIP -UrlToGo $UrlToGo;Break}
             
-            GET-WANIPS           {$FormatedData = Get-WANIPStats -UrlToGo $UrlToGo}
+            GET-WANIPS           {$FormatedData = Get-WANIPStats -UrlToGo $UrlToGo;Break}
             
-            Get-WANXDSL          {$FormatedData = Get-WANXDSL -UrlToGo $UrlToGo}
+            Get-WANXDSL          {$FormatedData = Get-WANXDSL -UrlToGo $UrlToGo;Break}
 
-            Get-WANXDSLS         {$FormatedData = Get-WANXDSLStats -UrlToGo $UrlToGo}
+            Get-WANXDSLS         {$FormatedData = Get-WANXDSLStats -UrlToGo $UrlToGo;Break}
 
-            Get-WANSFF           {$FormatedData = Get-WANSFF -UrlToGo $UrlToGo}
+            Get-WANSFF           {$FormatedData = Get-WANSFF -UrlToGo $UrlToGo;Break}
             
             # WIRELESS
-            Get-WIRELESS         {$FormatedData = Get-WIRELESS -UrlToGo $UrlToGo -APIName $APIName}
+            Get-WIRELESS         {$FormatedData = Get-WIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-WIRELESS24       {$FormatedData = Get-WIRELESS24Ghz -UrlToGo $UrlToGo}
+            GET-WIRELESS24       {$FormatedData = Get-WIRELESS24Ghz -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESS24S      {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo}
+            GET-WIRELESS24S      {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESS5        {$FormatedData = Get-WIRELESS5Ghz -UrlToGo $UrlToGo}
+            GET-WIRELESS5        {$FormatedData = Get-WIRELESS5Ghz -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESS5S       {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo}
+            GET-WIRELESS5S       {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSACL      {$FormatedData = Get-WIRELESSACL -UrlToGo $UrlToGo}
+            GET-WIRELESSACL      {$FormatedData = Get-WIRELESSACL -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSACLR     {$FormatedData = Get-WIRELESSACLRules -UrlToGo $UrlToGo}
+            GET-WIRELESSACLR     {$FormatedData = Get-WIRELESSACLRules -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSACLRID   {$FormatedData = Get-WIRELESSACLRulesID -UrlToGo $UrlToGo}
+            GET-WIRELESSACLRID   {$FormatedData = Get-WIRELESSACLRulesID -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSWPS      {$FormatedData = GET-WIRELESSWPS -UrlToGo $UrlToGo}
+            GET-WIRELESSWPS      {$FormatedData = GET-WIRELESSWPS -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -UrlRoot $UrlRoot -APIName $APIName}
+            GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -UrlRoot $UrlRoot -APIName $APIName;Break}
             
-            GET-WIRELESSS        {$FormatedData = Get-WIRELESSScheduler -UrlToGo $UrlToGo}
+            GET-WIRELESSS        {$FormatedData = Get-WIRELESSScheduler -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSSR       {$FormatedData = Get-WIRELESSSchedulerRules -UrlToGo $UrlToGo}
+            GET-WIRELESSSR       {$FormatedData = Get-WIRELESSSchedulerRules -UrlToGo $UrlToGo;Break}
             
-            Get-WIRELESSR        {$FormatedData = Get-WIRELESSRepeater -UrlToGo $UrlToGo}
+            Get-WIRELESSR        {$FormatedData = Get-WIRELESSRepeater -UrlToGo $UrlToGo;Break}
             
-            Get-WIRELESSVBSTB    {$FormatedData = Get-WIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo}
+            Get-WIRELESSVBSTB    {$FormatedData = Get-WIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo;Break}
             
-            Get-WIRELESSVBR      {$FormatedData = Get-WIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo}
+            Get-WIRELESSVBR      {$FormatedData = Get-WIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo;Break}
             
             # SUMMARY
-            Get-SUMMARY          {$FormatedData = Get-SUMMARY -UrlToGo $UrlToGo}
+            Get-SUMMARY          {$FormatedData = Get-SUMMARY -UrlToGo $UrlToGo;Break}
             
             # USERSAVE
-            Get-USERSAVE         {$FormatedData = Get-USERSAVE -UrlToGo $UrlToGo -APIName $APIName}
+            Get-USERSAVE         {$FormatedData = Get-USERSAVE -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # Password-Recovery-Verify
-            GET-PASSRECOVERV     {$FormatedData = Get-PasswordRecoveryVerify -UrlToGo $UrlToGo}
+            GET-PASSRECOVERV     {$FormatedData = Get-PasswordRecoveryVerify -UrlToGo $UrlToGo;Break}
             
             # BBOXJournal
-            Get-BBoxJournal      {$FormatedData = Get-BBoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath}
+            Get-BBoxJournal      {$FormatedData = Get-BBoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath;Break}
             
             # Remove-FolderContent
-            Remove-FCLogs        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCLogs        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCExportCSV   {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCExportCSV   {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCExportJSON  {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCExportJSON  {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCJournal     {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCJournal     {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCJBC         {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCJBC         {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCReport      {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName}
+            Remove-FCReport      {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
             # DisplayFormat
-            Switch-DF            {$FormatedData = Switch-DisplayFormat}
+            Switch-DF            {$FormatedData = Switch-DisplayFormat;Break}
             
             # ExportFormat
-            Switch-EF            {$FormatedData = Switch-ExportFormat}
+            Switch-EF            {$FormatedData = Switch-ExportFormat;Break}
             
             # OpenHTMLReport
-            Switch-OHR           {$FormatedData = Switch-OpenHTMLReport}
+            Switch-OHR           {$FormatedData = Switch-OpenHTMLReport;Break}
             
             # Exit
-            Q                    {$global:TriggerExit = 1}
+            Q                    {$global:TriggerExit = 1;Break}
             
             # Default
             Default              {Write-Host "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail for more information" -ForegroundColor Yellow
                                   $FormatedData = "Program"
                                   Pause
+                                  Break
                                  }
         }
     
@@ -1011,7 +1042,7 @@ Function Switch-Info {
 # Used only to quit the Program
 Function Stop-Program {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$LogFolderPath,
         
@@ -1020,10 +1051,12 @@ Function Stop-Program {
     )
     
     Write-Log -Type INFO -Name "Stop Program" -Message "Program exiting ..." -NotDisplay
-    Write-Log -Type WARNING -Name "Stop Program" -Message "Please don't close this windows manually !"
+    Write-Log -Type WARNING -Name "Stop Program" -Message "Please don't close windows manually !"
     Write-Log -Type INFO -Name "Stop Program" -Message "We are closing background processes before quit the program"
     Write-Log -Type INFO -Name "ChromeDriver Stop" -Message "Start Stop Chrome Driver" -NotDisplay
-    If($Null -ne $global:ChromeDriver){Stop-ChromeDriver}
+    If ($Null -ne $global:ChromeDriver) {
+        Stop-ChromeDriver
+    }
     Write-Log -Type INFO -Name "ChromeDriver Stop" -Message "End Stop Chrome Driver" -NotDisplay
     Start-Sleep 2
     $Current_Log_File = "$LogFolderPath\" + (Get-ChildItem -Path $LogFolderPath -Name "$LogFileName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
@@ -1034,352 +1067,93 @@ Function Stop-Program {
 
 #endregion GLOBAL
 
+#region Json file configuration management
 
-#region Export data (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
+Function Get-JSONSettingsCurrentUserContent {
 
-# Used only to export Full BBOX Configuration to JSON files
-function Export-BboxConfiguration {
-    
     Param(
-        [Parameter(Mandatory=$True)]
-        [Array]$APISName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$OutputFolder
-    ) 
-    
-    Foreach($APIName in $APISName){
-        
-        $UrlToGo = "$UrlRoot/$APIName"
-        
-        # Get information from BBOX API
-        Write-Log -Type INFO -Name "Program run - Get Information" -Message "Get $APIName configuration ..."
-        $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-        
-        # Export result as JSON file
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $Exportfile = $APIName.replace("/","-")
-        $FullPath = "$OutputFolder\$Date-$Exportfile.json"
-        Write-Log -Type INFO -Name "Program run - Export Bbox Configuration To JSON" -Message "Start Export Bbox Configuration To JSON" -NotDisplay
-        Write-Log -Type INFONO -Name "Program run - Export Bbox Configuration To JSON" -Message "Export configuration to : "
-        Write-Log -Type VALUE -Name "Program run - Export Bbox Configuration To JSON" -Message "$FullPath"
-        Write-Log -Type INFONO -Name "Program run - Export Bbox Configuration To JSON" -Message "Export Bbox Configuration To JSON status : " -NotDisplay
-        Try{
-            $Json | ConvertTo-Json | Out-File -FilePath $FullPath -Force
-            Write-Log -Type VALUE -Name "Program run - Export Bbox Configuration To JSON" -Message "Success" -NotDisplay
-        }
-        Catch{
-            Write-Log -Type WARNING -Name "Program run - Export Bbox Configuration To JSON" -Message "Failed, due to $($_.tostring())"
-        }
-        
-        Write-Log -Type INFO -Name "Program run - Export Bbox Configuration To JSON" -Message "End Export Bbox Configuration To JSON" -NotDisplay
-    }
-    Return "Program"
-}
 
-# Used only to export Full BBOX Configuration to JSON files
-function Export-BBoxConfigTestingProgram {
-    
-    Param(
-        
-        [Parameter(Mandatory=$True)]
-        [Array]$APISName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Mail,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$OutputFolder
     )
-    
-    Write-Log -Type INFO -Name "Program run - Testing Program" -Message "Start Testing Program"
-    
-    Foreach($APIName in $APISName){
-        
-        Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Tested action : "
-        Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "$($APIName.Label)"   
-        
-        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
-        
-        # Get information from BBOX API
-        $FormatedData = @()
-        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -UrlRoot $UrlRoot -Mail $Mail -JournalPath $JournalPath
-        
-        # Export result as CSV file
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        
-        If($APIName.ExportFile -and $FormatedData){
-            
-            $FullPath = "$OutputFolder\$Date-$($APIName.ExportFile).csv"
-            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "Start Export Bbox Configuration To CSV" -NotDisplay
-            Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Export configuration to : "
-            Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "$FullPath"
-            Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Export Bbox Configuration To CSV status : " -NotDisplay
-            
-            Try{
-                $FormatedData | Export-Csv -Path $FullPath -Encoding UTF8 -Force -NoTypeInformation -Delimiter ";" -ErrorAction Continue
-                Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "Success" -NotDisplay
-            }
-            Catch{
-                Write-Log -Type WARNING -Name "Program run - Testing Program" -Message "Failed, due to $($_.tostring())"
-            }
-            
-            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "End Export Bbox Configuration To CSV" -NotDisplay
-        }
-        Else{
-            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "No data were found, export can't be possible" -NotDisplay
-        }
+
+    Write-Log -Type INFO -Name "Program initialisation - Json Current User Settings Importation" -Message "Start Json Current User Settings Importation" -NotDisplay
+    Write-Log -Type INFONO -Name "Program initialisation - Json Current User Settings Importation" -Message "Json Current User Settings Importation Status : " -NotDisplay
+    Try {
+        $global:JSONSettingsCurrentUserContent = Get-Content -Path $global:JSONSettingsCurrentUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $global:DisplayFormat         = $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat
+        $global:ExportFormat          = $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat
+        $global:OpenHTMLReport        = $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport
+        $global:Password              = $global:JSONSettingsCurrentUserContent.Credentials.NewPassword
+        $global:TriggerExportFormat   = $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat
+        $global:TriggerDisplayFormat  = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
+        $global:TriggerOpenHTMLReport = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
+        Write-Log -Type VALUE -Name "Program initialisation - Json Current User Settings Importation" -Message "Success" -NotDisplay
     }
-    
-    Write-Log -Type INFO -Name "Program run - Testing Program" -Message "End Testing Program"
-    Return "Program"
+    Catch {
+        Write-Log -Type WARNING -Name "Program initialisation - Json Current User Settings Importation" -Message "Failed, due to : $($_.ToString())"
+    }
+    Write-Log -Type INFO -Name "Program initialisation - Json Current User Settings Importation" -Message "End Json Current User Settings Importation" -NotDisplay
 }
 
-# Used only to export BBOX Journal
-Function Get-BBoxJournal {
-    
+Function Get-JSONSettingsDefaultUserContent {
+
     Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath
+
     )
-        
-    # Loading Journal Home Page
-    $UrlToGo = $UrlToGo -replace "/api/v1"
-    Write-Log -Type DEBUG -Name "Program run - Download Bbox Journal to export" -Message "$UrlToGo" -NotDisplay
-    $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-    Start-Sleep 5
-    
-    # Download Journal file from BBOX
-    Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "Start download Bbox Journal" -NotDisplay
-    $global:ChromeDriver.FindElementByClassName("download").click()
-    Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Download Journal in progress ... : "
-    
-    # Waiting end of journal's download
-    Start-Sleep 8
-    
-    $JournalName = "journal-1242358"
-    Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "User download folder : " -NotDisplay
-    Try{
-        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders" -Name "{374DE290-123F-4565-9164-39C4925E467B}" -ErrorAction SilentlyContinue
-        Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "$UserDownloadFolderDefault" -NotDisplay
+
+    Write-Log -Type INFO -Name "Program initialisation - Json Default User Settings Importation" -Message "Start Json Default User Settings Importation" -NotDisplay
+    Write-Log -Type INFONO -Name "Program initialisation - Json Default User Settings Importation" -Message "Json Default User Settings Importation Status : "
+    Try {
+        $global:JSONSettingsDefaultUserContent = Get-Content -Path $global:JSONSettingsDefaultUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $global:DisplayFormat         = $global:JSONSettingsDefaultUserContent.DisplayFormat.DisplayFormat
+        $global:ExportFormat          = $global:JSONSettingsDefaultUserContent.ExportFormat.ExportFormat
+        $global:OpenHTMLReport        = $global:JSONSettingsDefaultUserContent.OpenHTMLReport.OpenHTMLReport
+        $global:Password              = $global:JSONSettingsDefaultUserContent.Credentials.NewPassword
+        $global:TriggerExportFormat   = $global:JSONSettingsDefaultUserContent.Trigger.ExportFormat
+        $global:TriggerDisplayFormat  = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
+        $global:TriggerOpenHTMLReport = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
+        Write-Log -Type VALUE -Name "Program initialisation - Json Default User Settings Importation" -Message "Success"
     }
-    Catch{
-        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+    Catch {
+        Write-Log -Type WARNING -Name "Program initialisation - Json Default User Settings Importation" -Message "Failed, due to : $($_.ToString())"
+        $global:TriggerExit = 1
     }
-    
-    If(Test-Path -Path $UserDownloadFolderDefault){
-        
-        Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Journal download location : " -NotDisplay
-        Try{
-            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$JournalName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-            $UserDownloadFileFullPath = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
-            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "$UserDownloadFileFullPath" -NotDisplay
-        }
-        Catch{
-            Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unknown, due to : $($_.tostring())" -NotDisplay
-        }
-    }
-    else {
-        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unable to find user download folder" -NotDisplay
-    }
-    
-    If(-not ([string]::IsNullOrEmpty($UserDownloadFileFullPath))){
-        
-        If(Test-Path -Path $UserDownloadFileFullPath){
-            
-            # Move Journal file from Download folder to journal folder : "$PSScriptRoot\Journal"
-            $DownloadedJournalDestination = "$JournalPath\$UserDownloadFolderDefaultFileName"
-            Move-Item -Path $UserDownloadFileFullPath -Destination $DownloadedJournalDestination -Force
-            
-            # Getting last Journal file version
-            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "Finish"
-            Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Bbox Journal has been downloaded to : "
-            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message $DownloadedJournalDestination
-            Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "End download Bbox Journal" -NotDisplay
-            
-            # Export Journal data as CSV file to to correct folder
-            If(Test-path -Path $DownloadedJournalDestination){
-                
-                $FormatedData = Import-Csv -Path $DownloadedJournalDestination -Delimiter ';' -Encoding UTF8
-            }
-            Else{
-                $FormatedData = $null
-            }
-            
-            Return $FormatedData
-        }
-    }
-    Else{
-        Write-Host "Failed, due to time out." -ForegroundColor Yellow
-        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Failed to download Journal" -NotDisplay
-        Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "End download Bbox Journal" -NotDisplay
-        Return "Program"
-    }
+    Write-Log -Type INFO -Name "Program initialisation - Json Default User Settings Importation" -Message "End Json Default User Settings Importation" -NotDisplay
 }
 
-# Used only to change Export Format, linked to : "Format-ExportResult"
-Function Switch-ExportFormat {
-    
-    # Choose Export Format : CSV or JSON
-    $global:ExportFormat = ""
-    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Start data export format" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Please choose an export format : (C) CSV or (J) JSON"
-    
-    While($global:ExportFormat[0] -notmatch "C|J"){
-        
-        $Temp = Read-Host "Enter your choice"
-            
-        Switch($Temp){
-                
-            C    {$global:ExportFormat = "C"}
-            J    {$global:ExportFormat = "J"}
-        }
-    }
-    
-    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "End data export format" -NotDisplay
-    Return "Program"
-}
+#endregion Json file configuration management
 
-# Used only to format export result function user choice, linked to : "Export-toCSV" and "Export-toJSON"
-Function Format-ExportResult {
-    
-    Param(
-        [Parameter(Mandatory=$False)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportCSVPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportJSONPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-    Switch($global:ExportFormat){
-        
-        'C' {# Export result to CSV
-             Export-toCSV -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile
-            }
-        'J' {# Export result to JSON
-             Export-toJSON -FormatedData $FormatedData -APIName $APIName -ExportJSONPath $ExportJSONPath -Exportfile $Exportfile
-            }
-    }
-}
+#region Manage Output Display after data export
 
-# Used only to export result to CSV File, linked to : "Format-ExportResult"
-Function Export-toCSV {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportCSVPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-    Write-Log -Type INFO -Name "Program run - Export Result CSV" -Message "Start export result as CSV" -NotDisplay
-    
-    Try{
-        # Define Export file path
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $ExportPath = "$ExportCSVPath\$Date-$Exportfile.csv"
-        $FormatedData | Export-Csv -Path $ExportPath -Encoding UTF8 -Delimiter ";" -NoTypeInformation -Force
-        Write-Log -Type INFONO -Name "Program run - Export Result CSV" -Message "CSV Data have been exported to : " -NotDisplay
-        Write-Log -Type VALUE -Name "Program run - Export Result CSV" -Message "$ExportPath" -NotDisplay
-    }
-    Catch{
-        Write-Log -Type ERROR -Name "Program run - Export Result CSV" -Message "Failed to export data to : $ExportPath due to : $($_.ToString())"
-    }
-    
-    Write-Log -Type INFO -Name "Program run - Export Result CSV" -Message "End export result as CSV" -NotDisplay
-}
-
-# Used only to export result to JSON File, linked to : "Format-ExportResult"
-Function Export-toJSON {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportJSONPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-     Write-Log -Type INFO -Name "Program run - Export Result JSON" -Message "Start export result as JSON" -NotDisplay
-     
-     Try{
-        # Define Export file path
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $FullPath = "$ExportJSONPath\$Date-$Exportfile.json"
-        $FormatedData | ConvertTo-Json | Out-File -FilePath $FullPath -Force
-        Write-Log -Type INFONO -Name "Program run - Export Result JSON" -Message "JSON Data have been exported to : " -NotDisplay
-        Write-Log -Type VALUE -Name "Program run - Export Result JSON" -Message "$FullPath" -NotDisplay
-    }
-    Catch{
-        Write-Log -Type ERROR -Name "Program run - Export Result JSON" -Message "Failed to export data to : $FullPath due to : $($_.ToString())"
-    }
-    
-    Write-Log -Type INFO -Name "Program run - Export Result JSON" -Message "End export result as JSON" -NotDisplay
-}
-
-# Used only to change Display Format, linked to : "Format-DisplayResult"
+# Used only to change Display Format, linked to : "Export-GlobalOutputData"
 Function Switch-DisplayFormat {
 
     # Choose Display Format : HTML or Table
     $global:DisplayFormat = ""
     Write-Log -Type INFO -Name "Program run - Choose Display Format" -Message "Start data display format" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Choose Display Format" -Message "Please choose a display format : (H) HTML or (T) Table/Gridview"
+    Write-Log -Type INFO -Name "Program run - Choose Display Format" -Message "Please choose a display format : (H) HTML or (T) Table/Gridview (Can be changed later)"
         
-    While($global:DisplayFormat[0] -notmatch "H|T"){
+    While ($global:DisplayFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.DisplayFormat) {
             
         $Temp = Read-Host "Enter your choice"
             
-        Switch($Temp){
+        Switch ($Temp) {
                 
-            H    {$global:DisplayFormat = "H"}
-            T    {$global:DisplayFormat = "T"}
+            H    {$global:DisplayFormat = "H";Break}
+            T    {$global:DisplayFormat = "T";Break}
         }
     }
         
+    $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat = $global:DisplayFormat
+    $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     Write-Log -Type VALUE -Name "Program run - Choose Display Format" -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
     Write-Log -Type INFO -Name "Program run - Choose Display Format" -Message "End data display format" -NotDisplay
     Return "Program"
 }
 
-# Used only to format display result function user choice, linked to : "Export-HTMLReport" and "Out-GridviewDisplay" and "Open-HTMLReport"
+# Used only to format display result function user choice, linked to : "Export-GlobalOutputData" and "Export-HTMLReport" and "Out-GridviewDisplay" and "Open-HTMLReport"
 Function Format-DisplayResult {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
         
@@ -1399,29 +1173,207 @@ Function Format-DisplayResult {
         [String]$Exportfile
     )
     
-    Switch($global:DisplayFormat){
+    Switch ($global:DisplayFormat) {
         
         'H' {# Display result by HTML Report
              Export-HTMLReport -DataReported $FormatedData -ReportTitle "BBOX Configuration Report - $APIName" -ReportType $ReportType -ReportPath $ReportPath -ReportFileName $Exportfile -HTMLTitle "BBOX Configuration Report" -ReportPrecontent $APIName -Description $Description
+             Break
             }
         
         'T' {# Display result by Out-Gridview
              Out-GridviewDisplay -FormatedData $FormatedData -APIName $APIName -Description $Description
+             Break
             }
     }
     Write-Log -Type INFO -Name "Program run - Display Result" -Message "End display result" -NotDisplay
 
 }
 
-# Used only to create HTML Report, linked to : "Format-DisplayResult"
-function Export-HTMLReport {
+# Used only to export result to CSV File, linked to : "Format-ExportResult"
+Function Export-toCSV {
     
-    Param(
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportCSVPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+    Write-Log -Type INFO -Name "Program run - Export Result CSV" -Message "Start export result as CSV" -NotDisplay
+    
+    Try {
+        # Define Export file path
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $ExportPath = "$ExportCSVPath\$Date-$Exportfile.csv"
+        $FormatedData | Export-Csv -Path $ExportPath -Encoding UTF8 -Delimiter ";" -NoTypeInformation -Force
+        Write-Log -Type INFONO -Name "Program run - Export Result CSV" -Message "CSV Data have been exported to : " -NotDisplay
+        Write-Log -Type VALUE -Name "Program run - Export Result CSV" -Message "$ExportPath" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Name "Program run - Export Result CSV" -Message "Failed to export data to : `"$ExportPath`", due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Name "Program run - Export Result CSV" -Message "End export result as CSV" -NotDisplay
+}
+
+# Used only to export result to JSON File, linked to : "Format-ExportResult"
+Function Export-toJSON {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportJSONPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+     Write-Log -Type INFO -Name "Program run - Export Result JSON" -Message "Start export result as JSON" -NotDisplay
+     
+     Try {
+        # Define Export file path
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $FullPath = "$ExportJSONPath\$Date-$Exportfile.json"
+        $FormatedData | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
+        Write-Log -Type INFONO -Name "Program run - Export Result JSON" -Message "JSON Data have been exported to : " -NotDisplay
+        Write-Log -Type VALUE -Name "Program run - Export Result JSON" -Message "$FullPath" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Name "Program run - Export Result JSON" -Message "Failed to export data to : `"$FullPath`", due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Name "Program run - Export Result JSON" -Message "End export result as JSON" -NotDisplay
+}
+
+# Used only to change Export Format, linked to : "Export-GlobalOutputData"
+Function Switch-ExportFormat {
+    
+    # Choose Export Format : CSV or JSON
+    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Start data export format" -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Please choose an export format : (C) CSV or (J) JSON (Can be changed later)"
+    
+    While ($global:ExportFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.ExportFormat) {
+        
+        $Temp = Read-Host "Enter your choice"
+            
+        Switch ($Temp) {
+            
+            C    {$global:ExportFormat = "C";Break}
+            J    {$global:ExportFormat = "J";Break}
+        }
+    }
+    
+    $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat = $global:ExportFormat
+    $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Choose Export Result" -Message "End data export format" -NotDisplay
+    Return "Program"
+}
+
+# Used only to format export result function user choice, linked to : "Export-GlobalOutputData" and "Export-toCSV" and "Export-toJSON"
+Function Format-ExportResult {
+    
+    Param (
+        [Parameter(Mandatory=$False)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportCSVPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportJSONPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+    Switch ($global:ExportFormat) {
+        
+        'C' {# Export result to CSV
+             Export-toCSV -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile;Break
+            }
+        'J' {# Export result to JSON
+             Export-toJSON -FormatedData $FormatedData -APIName $APIName -ExportJSONPath $ExportJSONPath -Exportfile $Exportfile;Break
+            }
+    }
+}
+
+# Used only to open or not HTML Report, linked to : "Export-HTMLReport" and "Open-HTMLReport"
+Function Switch-OpenHTMLReport {
+    
+    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Start Switch Open HTML Report" -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Do you want to open HTML Report at each time ? : (Y) Yes or (N) No"
+    $global:OpenHTMLReport = ""
+    While ($global:OpenHTMLReport[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenHTMLReport) {
+        
+        $Temp = Read-Host "Enter your choice "
+        
+        Switch ($Temp) {
+                
+            Y    {$global:OpenHTMLReport = "Y";Break}
+            N    {$global:OpenHTMLReport = "N";Break}
+        }
+    }
+    
+    $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport = $global:OpenHTMLReport
+    $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "End Switch Open HTML Report" -NotDisplay
+    Return "Program"
+}
+
+# Used only to open HTML Report, linked to : "Export-HTMLReport"
+Function Open-HTMLReport {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$Path
+    )
+    
+    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
+    Write-Log -Type INFONO -Name "Program run - Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
+    
+    If ($global:OpenHTMLReport -eq "Y") {
+        
+        Try {
+            Start-Process $Path
+            Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message "Success" -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Name "Program run - Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
+        }
+    }
+    Else {
+        Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
+    }
+    
+    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "End Open HTML Report" -NotDisplay
+}
+
+# Used only to create HTML Report, linked to : "Format-DisplayResult" and "Switch-OpenHTMLReport" and "Open-HTMLReport"
+Function Export-HTMLReport {
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [Array]$DataReported,
         
         [Parameter(Mandatory=$True)]
-        [ValidateSet("List", "Table")]
+        [ValidateSet("List","Table")]
         [String]$ReportType,
         
         [Parameter(Mandatory=$True)]
@@ -1496,17 +1448,19 @@ function Export-HTMLReport {
     $ReportAuthor = "Report generated by : $env:USERNAME, from : $env:COMPUTERNAME, at : $(Get-Date) (Local Time)."
     $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
     
-    Switch($ReportPrecontent){
+    Switch ($ReportPrecontent) {
         
         "lan/ip"    {$LANIP     = $DataReported[0] | ConvertTo-Html -As List -PreContent "<h2> LAN Configuration </h2><br/>"
                      $LANSwitch = $DataReported[1] | ConvertTo-Html -As Table -PreContent "<h2> LAN Switch Configuration </h2><br/>"
                      $HTML      = ConvertTo-HTML -Body "$Title $PreContent $LANIP $LANSwitch" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
+                     Break
                     }
         
         "wan/diags" {$DNS  = $DataReported.DNS  | ConvertTo-Html -As Table -PreContent "<h2> WAN DNS Statistics </h2>"
                      $HTTP = $DataReported.HTTP | ConvertTo-Html -As Table -PreContent "<h2> WAN HTTP Statistics </h2>"
                      $PING = $DataReported.PING | ConvertTo-Html -As Table -PreContent "<h2> WAN PING Statistics </h2>"
                      $HTML = ConvertTo-HTML -Body "$Title $PreContent $DNS $HTTP $PING" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
+                     Break
                     }
         
         "wan/autowan"{$Config          = $DataReported[0] | ConvertTo-Html -As Table -PreContent "<h2> Auto WAN Configuration </h2>"
@@ -1514,9 +1468,11 @@ function Export-HTMLReport {
                      $ProfilesDetailed = $DataReported[2] | ConvertTo-Html -As Table -PreContent "<h2> WAN Profiles Détailled </h2>"
                      $Services         = $DataReported[3] | ConvertTo-Html -As Table -PreContent "<h2> WAN PING Statistics </h2>"
                      $HTML             = ConvertTo-HTML -Body "$Title $PreContent $Config $Services $Profiles $ProfilesDetailed" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
+                     Break
                     }
         
         Default     {$HTML = ConvertTo-Html -Body "$Title $PreContent $($DataReported | ConvertTo-Html -As "$ReportType")" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
+                     Break
                     }
     }
     
@@ -1525,21 +1481,23 @@ function Export-HTMLReport {
     Write-Log -Type INFO -Name "Program run - Export HTML Report" -Message "Start export HTML report" -NotDisplay
     Write-Log -Type INFONO -Name "Program run - Export HTML Report" -Message "Export HTML report status : " -NotDisplay
     
-    Try{
+    Try {
         $HTML | Out-File -FilePath $FullReportPath -Force -Encoding utf8
         Write-Log -Type VALUE -Name "Program run - Export HTML Report" -Message "Success" -NotDisplay
         Write-Log -Type INFONO -Name "Program run - Export HTML Report" -Message "HTML Report has been exported to : " -NotDisplay
         Write-Log -Type VALUE -Name "Program run - Export HTML Report" -Message "$FullReportPath" -NotDisplay
     }
-    Catch{
-        Write-Log -Type WARNING -Name "Program run - Export HTML Report" -Message "Failed, to export HTML report : $FullReportPath , due to $($_.tostring())" -NotDisplay
+    Catch {
+        Write-Log -Type WARNING -Name "Program run - Export HTML Report" -Message "Failed, to export HTML report : `"$FullReportPath`", due to $($_.tostring())" -NotDisplay
     }
     
     Write-Log -Type INFO -Name "Program run - Export HTML Report" -Message "End export HTML report" -NotDisplay
     
-    If($global:TriggerOpenHTMLReport -eq 0){
+    If ($global:TriggerOpenHTMLReport -eq 0) {
         
         $global:TriggerOpenHTMLReport = Switch-OpenHTMLReport
+        $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport = $global:TriggerOpenHTMLReport
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     }
 
     Open-HTMLReport -Path $FullReportPath
@@ -1548,7 +1506,7 @@ function Export-HTMLReport {
 # Used only to Out-Gridview Display, linked to : "Format-DisplayResult"
 Function Out-GridviewDisplay {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
         
@@ -1561,78 +1519,225 @@ Function Out-GridviewDisplay {
     
     Write-Log -Type INFO -Name "Program run - Out-Gridview Display" -Message "Start Out-Gridview Display" -NotDisplay
     
-    Switch($APIName){
+    Switch ($APIName) {
                 
         "lan/ip"   {$FormatedData[0] | Out-GridView -Title "$Description - LAN Configuration"
                     $FormatedData[1] | Out-GridView -Title "$Description - Bbox Switch Port Configuration"
+                    Break
                    }
         
         "wan/diags"{$FormatedData.DNS  | Out-GridView -Title "$Description - DNS"
                     $FormatedData.HTTP | Out-GridView -Title "$Description - HTTP"
                     $FormatedData.Ping | Out-GridView -Title "$Description - PING"
+                    Break
                    }
                     
-        Default    {$FormatedData | Out-GridView -Title $Description -Wait}
+        Default    {$FormatedData | Out-GridView -Title $Description -Wait;Break}
                 
     }
     
     Write-Log -Type INFO -Name "Program run - Out-Gridview Display" -Message "End Out-Gridview Display" -NotDisplay
 }
 
-# Used only to open or not HTML Report, linked to : "Open-HTMLReport"
-Function Switch-OpenHTMLReport {
+#endregion Manage Output Display
+
+#region Export data (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
+
+# Used only to export Full BBOX Configuration to JSON files
+function Export-BboxConfiguration {
     
-    $global:OpenHTMLReport = ""
-    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Start Switch Open HTML Report" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Please choose if want to open HTML Report at each time or not : (Y) Yes or (N) No"
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$APISName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlRoot,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$OutputFolder
+    ) 
     
-    While($global:OpenHTMLReport[0] -notmatch "Y|N"){
+    Foreach ($APIName in $APISName) {
         
-        $Temp = Read-Host "Enter your choice"
+        $UrlToGo = "$UrlRoot/$APIName"
         
-        Switch($Temp){
-                
-            Y    {$global:OpenHTMLReport = "Y"}
-            N    {$global:OpenHTMLReport = "N"}
+        # Get information from BBOX API
+        Write-Log -Type INFO -Name "Program run - Get Information" -Message "Get $APIName configuration ..."
+        $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+        
+        # Export result as JSON file
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $Exportfile = $APIName.replace("/","-")
+        $FullPath = "$OutputFolder\$Date-$Exportfile.json"
+        Write-Log -Type INFO -Name "Program run - Export Bbox Configuration To JSON" -Message "Start Export Bbox Configuration To JSON" -NotDisplay
+        Write-Log -Type INFONO -Name "Program run - Export Bbox Configuration To JSON" -Message "Export configuration to : "
+        Write-Log -Type VALUE -Name "Program run - Export Bbox Configuration To JSON" -Message "$FullPath"
+        Write-Log -Type INFONO -Name "Program run - Export Bbox Configuration To JSON" -Message "Export Bbox Configuration To JSON status : " -NotDisplay
+        Try {
+            $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
+            Write-Log -Type VALUE -Name "Program run - Export Bbox Configuration To JSON" -Message "Success" -NotDisplay
         }
+        Catch {
+            Write-Log -Type WARNING -Name "Program run - Export Bbox Configuration To JSON" -Message "Failed, due to $($_.tostring())"
+        }
+        
+        Write-Log -Type INFO -Name "Program run - Export Bbox Configuration To JSON" -Message "End Export Bbox Configuration To JSON" -NotDisplay
     }
-    
-    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Switch Open HTML Report" -Message "End Switch Open HTML Report" -NotDisplay
     Return "Program"
 }
 
-# Used only to open HTML Report, linked to : "Export-HTMLReport" and "Switch-OpenHTMLReport"
-Function Open-HTMLReport {
+# Used only to export Full BBOX Configuration to JSON files
+function Export-BBoxConfigTestingProgram {
     
-    Param([Parameter(Mandatory=$True)]
-        [String]$Path
+    Param (
+        
+        [Parameter(Mandatory=$True)]
+        [Array]$APISName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlRoot,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Mail,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$OutputFolder
     )
     
-    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
-    Write-Log -Type INFONO -Name "Program run - Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Testing Program" -Message "Start Testing Program"
     
-    If($global:OpenHTMLReport -eq "y"){
+    Foreach ($APIName in $APISName) {
         
-        Try{
-            Start-Process $Path
-            Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message "Success" -NotDisplay
+        Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Tested action : "
+        Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "$($APIName.Label)"   
+        
+        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
+        
+        # Get information from BBOX API
+        $FormatedData = @()
+        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -UrlRoot $UrlRoot -Mail $Mail -JournalPath $JournalPath
+        
+        # Export result as CSV file
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        
+        If ($APIName.ExportFile -and $FormatedData) {
+            
+            $FullPath = "$OutputFolder\$Date-$($APIName.ExportFile).csv"
+            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "Start Export Bbox Configuration To CSV" -NotDisplay
+            Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Export configuration to : "
+            Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "$FullPath"
+            Write-Log -Type INFONO -Name "Program run - Testing Program" -Message "Export Bbox Configuration To CSV status : " -NotDisplay
+            
+            Try {
+                $FormatedData | Export-Csv -Path $FullPath -Encoding UTF8 -Force -NoTypeInformation -Delimiter ";" -ErrorAction Continue
+                Write-Log -Type VALUE -Name "Program run - Testing Program" -Message "Success" -NotDisplay
+            }
+            Catch {
+                Write-Log -Type WARNING -Name "Program run - Testing Program" -Message "Failed, due to $($_.tostring())"
+            }
+            
+            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "End Export Bbox Configuration To CSV" -NotDisplay
         }
-        Catch{
-            Write-Log -Type WARNING -Name "Program run - Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
+        Else {
+            Write-Log -Type INFO -Name "Program run - Testing Program" -Message "No data were found, export can't be possible" -NotDisplay
         }
-    }
-    Else{
-        Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
     }
     
-    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
+    Write-Log -Type INFO -Name "Program run - Testing Program" -Message "End Testing Program"
+    Return "Program"
 }
 
-# Used only to manage errors when there is no data to Export/Display, linked to many functions
+# Used only to export BBOX Journal
+Function Get-BBoxJournal {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath
+    )
+        
+    # Loading Journal Home Page
+    $UrlToGo = $UrlToGo -replace $global:JSONSettingsProgramContent.bbox.APIVersion
+    $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
+    Start-Sleep 5
+    
+    # Download Journal file from BBOX
+    Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "Start download Bbox Journal" -NotDisplay
+    $global:ChromeDriver.FindElementByClassName("download").click()
+    Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Download Journal in progress ... : "
+    
+    # Waiting end of journal's download
+    Start-Sleep 8
+    
+    $JournalName = $global:JSONSettingsProgramContent.Path.JournalName
+    Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "User download folder : " -NotDisplay
+    Try {
+        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder -Name $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName -ErrorAction SilentlyContinue
+        Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "$UserDownloadFolderDefault" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+    }
+    
+    If (Test-Path -Path $UserDownloadFolderDefault) {
+        
+        Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Journal download location : " -NotDisplay
+        Try {
+            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$JournalName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+            $UserDownloadFileFullPath = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
+            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "$UserDownloadFileFullPath" -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+        }
+    }
+    Else {
+        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Unable to find user download folder" -NotDisplay
+    }
+    
+    If (-not ([string]::IsNullOrEmpty($UserDownloadFileFullPath))) {
+        
+        If (Test-Path -Path $UserDownloadFileFullPath) {
+            
+            # Move Journal file from Download folder to journal folder : "$PSScriptRoot\Journal"
+            $DownloadedJournalDestination = "$JournalPath\$UserDownloadFolderDefaultFileName"
+            Move-Item -Path $UserDownloadFileFullPath -Destination $DownloadedJournalDestination -Force
+            
+            # Getting last Journal file version
+            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message "Finish"
+            Write-Log -Type INFONO -Name "Program run - Download Bbox Journal to export" -Message "Bbox Journal has been downloaded to : "
+            Write-Log -Type VALUE -Name "Program run - Download Bbox Journal to export" -Message $DownloadedJournalDestination
+            Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "End download Bbox Journal" -NotDisplay
+            
+            # Export Journal data as CSV file to to correct folder
+            If (Test-path -Path $DownloadedJournalDestination) {
+                
+                $FormatedData = Import-Csv -Path $DownloadedJournalDestination -Delimiter ';' -Encoding UTF8
+            }
+            Else {
+                $FormatedData = $null
+            }
+            
+            Return $FormatedData
+        }
+    }
+    Else {
+        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Failed, due to time out."
+        Write-Log -Type WARNING -Name "Program run - Download Bbox Journal to export" -Message "Failed to download Journal" -NotDisplay
+        Write-Log -Type INFO -Name "Program run - Download Bbox Journal to export" -Message "End download Bbox Journal" -NotDisplay
+        Return "Program"
+    }
+}
+
+# Used only to manage errors when there is no data to Export/Display, linked to : "Export-GlobalOutputData"
 Function EmptyFormatedDATA {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$False)]
         [Array]$FormatedData
     )
@@ -1640,31 +1745,31 @@ Function EmptyFormatedDATA {
     Write-Log -Type INFO -Name "Program run - Display Result" -Message "Start display result" -NotDisplay
     Write-Log -Type INFO -Name "Program run - Export Result" -Message "Start export result" -NotDisplay
     
-    Switch($FormatedData){
+    Switch ($FormatedData) {
         
-        $Null   {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data were found, no need to Export/Display" -NotDisplay;break}
+        $Null   {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data were found, no need to Export/Display" -NotDisplay;Break}
         
-        Domain  {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message "Due to error, the result can't be displayed / exported" -NotDisplay;break}
+        ""      {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data were found, no need to Export/Display" -NotDisplay;Break}
+        
+        " "      {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data were found, no need to Export/Display" -NotDisplay;Break}
+        
+        Domain  {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message "Due to error, the result can't be displayed / exported" -NotDisplay;Break}
                 
-        Program {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data need to be exported or displayed" -NotDisplay;break}
+        Program {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message "No data need to be exported or displayed" -NotDisplay;Break}
         
-        Default {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message "Unknow Error, seems dev missing, result : $($FormatedData.tostring())"}
+        Default {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message "Unknow Error, seems dev missing, result : $($FormatedData.tostring())";Break}
     }
 
     Write-Log -Type INFO -Name "Program run - Export Result" -Message "End export result" -NotDisplay
     Write-Log -Type INFO -Name "Program run - Display Result" -Message "End display result" -NotDisplay
 }
 
+# Used only to manage data Export/Display, linked to : "Switch-ExportFormat" and "Switch-DisplayFormat" and "Format-ExportResult" and "Format-DisplayResult" and "EmptyFormatedDATA"
 function Export-GlobalOutputData {
-    param (
-        [Parameter(Mandatory=$True)]
+    
+    Param (
+        [Parameter(Mandatory=$False)]
         $FormatedData,
-
-        [Parameter(Mandatory=$True)]
-        [string]$TriggerExportFormat,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$TriggerDisplayFormat,
         
         [Parameter(Mandatory=$True)]
         [string]$APIName,
@@ -1675,7 +1780,7 @@ function Export-GlobalOutputData {
         [Parameter(Mandatory=$True)]
         [string]$ExportJSONPath,
         
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$False)]
         [string]$ExportFile,
         
         [Parameter(Mandatory=$True)]
@@ -1689,76 +1794,79 @@ function Export-GlobalOutputData {
     )
     
     # Format data before choose output format
-    If(($null -ne $FormatedData) -and ($FormatedData -ne "") -and ($FormatedData -ne " ") -and ($FormatedData -notmatch "Domain") -and ($FormatedData -notmatch "Program")){
+    If (($null -ne $FormatedData) -and ($FormatedData -ne "") -and ($FormatedData -ne " ") -and ($FormatedData -notmatch $($global:JSONSettingsProgramContent.FormatedData.ExcludedValues -split "|"))) {
         
         # Choose Export format => CSV or JSON
-        If($global:TriggerExportFormat -eq 0){
+        If ($global:TriggerExportFormat -eq 0) {
             
             $global:TriggerExportFormat = Switch-ExportFormat
+            $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat = $global:TriggerExportFormat
+            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
         
          # Choose Display format => HTML or Table
-        If($global:TriggerDisplayFormat -eq 0){
+        If ($global:TriggerDisplayFormat -eq 0) {
             
             $global:TriggerDisplayFormat = Switch-DisplayFormat
+            $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat = $global:TriggerDisplayFormat
+            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
         
         # Apply Export Format
-        Format-ExportResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ErrorAction Continue -WarningAction Continue
+        Format-ExportResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
         
         # Apply Display Format
-        Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction Continue -WarningAction Continue
+        Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     }
-    Else{
-        EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction Continue -WarningAction Continue
+    Else {
+        EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     }
 }
 
 #endregion Export data
 
-
 #region Features (Functions used by functions in the PSM1 file : ".\BBOX-Module.psm1")
 
 Function Get-State {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$False)]
         [String]$State
     )
     
-    Switch($State){
+    Switch ($State) {
     
-        ""         {$Value = "BYTEL Dev Error"}
-        " "        {$Value = "BYTEL Dev Error"}
-        .          {$Value = "Not available with your device / BYTEL Dev Error"}
-        -1         {$Value = "Error"}
-        0          {$Value = "Disable"}
-        1          {$Value = "Enable"}
-        2          {$Value = "Enable"}
-        3          {$Value = "Enable"}
-        4          {$Value = "Enable"}
-        55         {$Value = "Enable"}
-        on         {$Value = "Enable"}
-        off        {$Value = "Disable"}
-        Up         {$Value = "Enable"}
-        Down       {$Value = "Disable"}
-        None       {$Value = "None"}
-        True       {$Value = "Yes"}
-        False      {$Value = "No"}
-        Idle       {$Value = "Idle"}
-        Configured {$Value = "Configured"}
-        Connected  {$Value = "Connected"}
-        Discover   {$Value = "Discover"}
-        Disabled   {$Value = "Disabled"}
-        Disable    {$Value = "Disable"}
-        Enabled    {$Value = "Enabled"}
-        Enable     {$Value = "Enable"}
-        Empty      {$Value = "Empty"}
-        Error      {$Value = "Error"}
-        running    {$Value = "running"}
-        Forbidden  {$Value = "Forbidden"}
-        Allowed    {$Value = "Allowed"}
-        Default    {$Value = "Unknow / Dev Error"}
+        ""         {$Value = "BYTEL Dev Error";Break}
+        " "        {$Value = "BYTEL Dev Error";Break}
+        .          {$Value = "Not available with your device / BYTEL Dev Error";Break}
+        -1         {$Value = "Error";Break}
+        0          {$Value = "Disable";Break}
+        1          {$Value = "Enable";Break}
+        2          {$Value = "Enable";Break}
+        3          {$Value = "Enable";Break}
+        4          {$Value = "Enable";Break}
+        55         {$Value = "Enable";Break}
+        on         {$Value = "Enable";Break}
+        off        {$Value = "Disable";Break}
+        Up         {$Value = "Enable";Break}
+        Down       {$Value = "Disable";Break}
+        None       {$Value = "None";Break}
+        True       {$Value = "Yes";Break}
+        False      {$Value = "No";Break}
+        Idle       {$Value = "Idle";Break}
+        Configured {$Value = "Configured";Break}
+        Connected  {$Value = "Connected";Break}
+        Discover   {$Value = "Discover";Break}
+        Disabled   {$Value = "Disabled";Break}
+        Disable    {$Value = "Disable";Break}
+        Enabled    {$Value = "Enabled";Break}
+        Enable     {$Value = "Enable";Break}
+        Empty      {$Value = "Empty";Break}
+        Error      {$Value = "Error";Break}
+        running    {$Value = "running";Break}
+        Forbidden  {$Value = "Forbidden";Break}
+        Allowed    {$Value = "Allowed";Break}
+        Default    {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
@@ -1766,42 +1874,42 @@ Function Get-State {
 
 Function Get-Status {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$False)]
         [String]$Status
     )
     
-    Switch($Status){
+    Switch ($Status) {
     
-        ""           {$Value = "Can't be define because service is disabled / BYTEL Dev Error"}
-        .            {$Value = "Not available with your device / BYTEL Dev Error"}
-        -1           {$Value = "Error"}
-        0            {$Value = "Disable"}
-        1            {$Value = "Enable"}
-        2            {$Value = "Enable"}
-        3            {$Value = "Enable"}
-        4            {$Value = "Enable"}
-        55           {$Value = "Enable"}
-        on           {$Value = "Enable"}
-        off          {$Value = "Disable"}
-        Up           {$Value = "Enable"}
-        Down         {$Value = "Disable"}
-        None         {$Value = "None"}
-        True         {$Value = "Yes"}
-        False        {$Value = "No"}
-        Idle         {$Value = "Idle"}
-        Configured   {$Value = "Configured"}
-        Connected    {$Value = "Connected"}
-        Disconnected {$Value = "Disconnected"}
-        Discover     {$Value = "Discover"}
-        Disabled     {$Value = "Disabled"}
-        Disable      {$Value = "Disable"}
-        Enabled      {$Value = "Enabled"}
-        Enable       {$Value = "Enable"}
-        Empty        {$Value = "Empty"}
-        Error        {$Value = "Error"}
-        Ready        {$Value = "Ready"}
-        Default      {$Value = "Unknow / Dev Error"}
+        ""           {$Value = "Can't be define because service is disabled / BYTEL Dev Error";Break}
+        .            {$Value = "Not available with your device / BYTEL Dev Error";Break}
+        -1           {$Value = "Error";Break}
+        0            {$Value = "Disable";Break}
+        1            {$Value = "Enable";Break}
+        2            {$Value = "Enable";Break}
+        3            {$Value = "Enable";Break}
+        4            {$Value = "Enable";Break}
+        55           {$Value = "Enable";Break}
+        on           {$Value = "Enable";Break}
+        off          {$Value = "Disable";Break}
+        Up           {$Value = "Enable";Break}
+        Down         {$Value = "Disable";Break}
+        None         {$Value = "None";Break}
+        True         {$Value = "Yes";Break}
+        False        {$Value = "No";Break}
+        Idle         {$Value = "Idle";Break}
+        Configured   {$Value = "Configured";Break}
+        Connected    {$Value = "Connected";Break}
+        Disconnected {$Value = "Disconnected";Break}
+        Discover     {$Value = "Discover";Break}
+        Disabled     {$Value = "Disabled";Break}
+        Disable      {$Value = "Disable";Break}
+        Enabled      {$Value = "Enabled";Break}
+        Enable       {$Value = "Enable";Break}
+        Empty        {$Value = "Empty";Break}
+        Error        {$Value = "Error";Break}
+        Ready        {$Value = "Ready";Break}
+        Default      {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
@@ -1809,16 +1917,16 @@ Function Get-Status {
 
 Function Get-YesNoAsk {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$YesNoAsk
     )
     
-    Switch($YesNoAsk){
+    Switch ($YesNoAsk) {
     
-        0       {$Value = "No"}
-        1       {$Value = "Yes"}
-        Default {$Value = "Unknow / Dev Error"}
+        0       {$Value = "No";Break}
+        1       {$Value = "Yes";Break}
+        Default {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
@@ -1827,64 +1935,29 @@ Function Get-YesNoAsk {
 # Used only to get USB folder type, linked to : "Get-USBStorage"
 Function Get-USBFolderType {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$USBFolderType
     )
     
-    Switch($USBFolderType){
+    Switch ($USBFolderType) {
     
-        0       {$Value = "Directory"}
-        1       {$Value = "Photo"}
-        2       {$Value = "Video"}
-        3       {$Value = "Music"}
-        4       {$Value = "Document"}
-        10      {$Value = "Other"}
-        Default {$Value = "Unknow / Dev Error"}
+        0       {$Value = "Directory";Break}
+        1       {$Value = "Photo";Break}
+        2       {$Value = "Video";Break}
+        3       {$Value = "Music";Break}
+        4       {$Value = "Document";Break}
+        10      {$Value = "Other";Break}
+        Default {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
 }
 
-# Format Custom Date/Time, linked to many functions
-function Format-Date {
-    
-    Param(
-        [Parameter(Mandatory=$False)]
-        [String]$String
-    )
-    
-    If(-not ([string]::IsNullOrEmpty($String))){
-        
-        $Date = $($String.Split("T"))[0]
-        $TimeExtend = $($String.Split("T"))[1]
-        
-        If($TimeExtend[-1] -contains 'Z'){
-            
-            $Time = $TimeExtend.Replace('Z','')
-            $TimeZone = "GDMT"
-        }
-        Else{
-        
-            $Time = $($TimeExtend.Split("+"))[0]
-            $TimeZone = $($TimeExtend.Split("+"))[1]
-            
-            Switch($TimeZone){
-                
-                0100    {$TimeZone = "GDMT+1"}
-                0200    {$TimeZone = "GDMT+2"}
-                Default {$TimeZone = "GDMT"}
-            }
-        }
-        Return "$Date - $Time - $TimeZone"    
-    }
-    Else{Return ""}
-}
-
 # Format Custom Date/Time, linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-VOIPCallLogLineX" and "Get-VOIPFullCallLogLineX"
 function Format-Date1970 {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$Seconds
     )
@@ -1897,16 +1970,16 @@ function Format-Date1970 {
 # Used only to get USB right, linked to : "Get-DeviceUSBDevices"
 Function Get-USBRight {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$USBRight
     )
     
-    Switch($USBRight){
+    Switch ($USBRight) {
     
-        0       {$Value = "Read Only"}
-        1       {$Value = "Read/Right"}
-        Default {$Value = "Unknow / Dev Error"}
+        0       {$Value = "Read Only";Break}
+        1       {$Value = "Read/Right";Break}
+        Default {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
@@ -1915,18 +1988,18 @@ Function Get-USBRight {
 # Used only to know which call type, linked to : "Get-VOIPCallLogLineX"
 Function Get-VoiceCallType {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$VoiceCallType
     )
     
-    Switch($VoiceCallType){
+    Switch ($VoiceCallType) {
     
-        in        {$Value = "Incoming"}
-        in_reject {$Value = "Incoming Rejected (`"Unknow`" active rule)"}
-        in_barred {$Value = "Incoming Out Range Call (Active rule)"}
-        out       {$Value = "Outgoing"}
-        Default   {$Value = "Unknow / Dev Error - $VoiceCallType"}
+        in        {$Value = "Incoming";Break}
+        in_reject {$Value = "Incoming Rejected (`"Unknow`" active rule)";Break}
+        in_barred {$Value = "Incoming Out Range Call (Active rule)";Break}
+        out       {$Value = "Outgoing";Break}
+        Default   {$Value = "Unknow / Dev Error - $VoiceCallType";Break}
     }
     
     Return $Value
@@ -1935,19 +2008,19 @@ Function Get-VoiceCallType {
 # Used only to get Powersatus for leds, linked to : "Get-DeviceLED"
 Function Get-PowerStatus {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$PowerStatus
     )
     
-    Switch($PowerStatus){
+    Switch ($PowerStatus) {
         
-        on      {$Value = "Light up"}
-        off     {$Value = "Light down"}
-        Up      {$Value = "Light up"}
-        Down    {$Value = "Light down"}
-        blink   {$Value = "Light blinking"}
-        Default {$Value = "Unknow / Dev Error"}
+        on      {$Value = "Light up";Break}
+        off     {$Value = "Light down";Break}
+        Up      {$Value = "Light up";Break}
+        Down    {$Value = "Light down";Break}
+        blink   {$Value = "Light blinking";Break}
+        Default {$Value = "Unknow / Dev Error";Break}
     }
     
     Return $Value
@@ -1956,16 +2029,16 @@ Function Get-PowerStatus {
 # Used only to get phone line linked to : Get-DeviceLog
 Function Get-PhoneLine {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$Phoneline
     )
     
-    Switch($Phoneline){
+    Switch ($Phoneline) {
     
-        1       {$Value = "Line 1"}
-        2       {$Value = "Line 2"}
-        Default {$Value = "Unknow"}
+        1       {$Value = "Line 1";Break}
+        2       {$Value = "Line 2";Break}
+        Default {$Value = "Unknow";Break}
     }
     
     Return $Value
@@ -1977,7 +2050,7 @@ Function Get-PhoneLineID {
     Write-Host "`nWhich Phone line do you want to select ?"
     Write-Host "(1) Main line`n(2) Second line"
     
-    While($LineID -notmatch "1|2"){
+    While ($LineID -notmatch $global:JSONSettingsProgramContent.Values.LineNumber) {
         
         $LineID = Read-Host "Enter value"
     }
@@ -1988,7 +2061,7 @@ Function Get-PhoneLineID {
 # Used by Function : Switch-Info, linked to "Get-PhoneLineID" and "Get-VOIPCalllogLineX"
 Function Get-VOIPCallLogLine {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2002,7 +2075,7 @@ Function Get-VOIPCallLogLine {
 # Used by Function : Switch-Info, linked to "Get-PhoneLineID" and "Get-VOIPFullcalllogLineX"
 Function Get-VOIPFullCallLogLine {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2016,7 +2089,7 @@ Function Get-VOIPFullCallLogLine {
 # Used only to set (PUT/POST) information
 Function Set-BBoxInformation {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlHome,
         
@@ -2076,14 +2149,13 @@ Function Set-BBoxInformation {
 
 #endregion Features
 
-
 #region Switch-Info (Functions used only in the PSM1 file : ".\BBOX-Module.psm1")
 
 #region Errors code
 
 Function Get-ErrorCode {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [Array]$Json
     )
@@ -2098,8 +2170,8 @@ Function Get-ErrorCode {
     $ErrorLine = New-Object -TypeName PSObject
     $ErrorLine | Add-Member -Name "Domain"      -MemberType Noteproperty -Value $Json.domain
     $ErrorLine | Add-Member -Name "Code"        -MemberType Noteproperty -Value $Json.code
-    $ErrorLine | Add-Member -Name "ErrorName"   -MemberType Noteproperty -Value $Json.errors.name
-    $ErrorLine | Add-Member -Name "ErrorReason" -MemberType Noteproperty -Value $Json.errors.reason
+    $ErrorLine | Add-Member -Name "ErrorName"   -MemberType Noteproperty -Value $Json.errors[0].name
+    $ErrorLine | Add-Member -Name "ErrorReason" -MemberType Noteproperty -Value $Json.errors[0].reason
     
     # Add lines to $Array
     $Array += $ErrorLine
@@ -2109,7 +2181,7 @@ Function Get-ErrorCode {
 
 Function Get-ErrorCodeTest {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2127,8 +2199,8 @@ Function Get-ErrorCodeTest {
     $ErrorLine = New-Object -TypeName PSObject
     $ErrorLine | Add-Member -Name "Domain"      -MemberType Noteproperty -Value $Json.exception.domain
     $ErrorLine | Add-Member -Name "Code"        -MemberType Noteproperty -Value $Json.exception.code
-    $ErrorLine | Add-Member -Name "ErrorName"   -MemberType Noteproperty -Value $Json.exception.errors.name
-    $ErrorLine | Add-Member -Name "ErrorReason" -MemberType Noteproperty -Value $Json.exception.errors.reason
+    $ErrorLine | Add-Member -Name "ErrorName"   -MemberType Noteproperty -Value $Json.exception.errors[0].name
+    $ErrorLine | Add-Member -Name "ErrorReason" -MemberType Noteproperty -Value $Json.exception.errors[0].reason
     
     # Add lines to $Array
     $Array += $ErrorLine
@@ -2142,7 +2214,7 @@ Function Get-ErrorCodeTest {
 
 Function Get-PasswordRecoveryVerify {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2172,7 +2244,7 @@ Function Get-PasswordRecoveryVerify {
 # Depreciated
 function Get-Airties {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2200,9 +2272,9 @@ function Get-Airties {
     $Airties | Add-Member -Name "Zero Touch Status"               -MemberType Noteproperty -Value $(Get-Status -Status $Json.zerotouch.enable) # New Since version : 20.2.16
     $Airties | Add-Member -Name "Device Serial Number"            -MemberType Noteproperty -Value $Json.device.serialnumber
     $Airties | Add-Member -Name "Device Firmware Main Version"    -MemberType Noteproperty -Value $Json.device.main.version
-    $Airties | Add-Member -Name "Device Firmware Main Date"       -MemberType Noteproperty -Value $(Format-Date -String $Json.device.main.date)
+    $Airties | Add-Member -Name "Device Firmware Main Date"       -MemberType Noteproperty -Value $Json.device.main.date
     $Airties | Add-Member -Name "Device Firmware Running Version" -MemberType Noteproperty -Value $Json.device.running.version
-    $Airties | Add-Member -Name "Device Firmware Running date"    -MemberType Noteproperty -Value $(Format-Date -String $Json.device.running.date)
+    $Airties | Add-Member -Name "Device Firmware Running date"    -MemberType Noteproperty -Value $Json.device.running.date
     $Airties | Add-Member -Name "IP Address"                      -MemberType Noteproperty -Value $Json.lanmode.ip
     $Airties | Add-Member -Name "IP Lan Address"                  -MemberType Noteproperty -Value $Json.lanmode.iplan
 
@@ -2214,7 +2286,7 @@ function Get-Airties {
 
 function Get-AirtiesLANMode {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2245,7 +2317,7 @@ function Get-AirtiesLANMode {
 
 Function Get-APIRessourcesMap {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2264,19 +2336,19 @@ Function Get-APIRessourcesMap {
     
     $API = 0
     
-    While($API -lt ($Json.Count)){
+    While ($API -lt ($Json.Count)) {
         
         # If Method is only PUT (Set) or POST (Modify)
-        If($Json[$API].method -notlike "GET"){             
+        If ($Json[$API].method -notlike "GET") {             
                 
             $Params = 0
             
-            While($Params -lt $Json[$API].params.count){
+            While ($Params -lt $Json[$API].params.count) {
                 
                 # Create New PSObject and add values to array    
                 $APILine = New-Object -TypeName PSObject
-                $APILine | Add-Member -Name "API name"           -MemberType Noteproperty -Value "api/$(($Json[$API]).api)"
-                $APILine | Add-Member -Name "API url"            -MemberType Noteproperty -Value "$UrlRoot/api/$(($Json[$API]).api)"
+                $APILine | Add-Member -Name "API name"           -MemberType Noteproperty -Value $($Json[$API]).api
+                $APILine | Add-Member -Name "API url"            -MemberType Noteproperty -Value "$UrlRoot$$(($Json[$API]).api) -replace ("V1",""))"
                 $APILine | Add-Member -Name "Action"             -MemberType Noteproperty -Value ($Json[$API]).method
                 $APILine | Add-Member -Name "Local permissions"  -MemberType Noteproperty -Value ($Json[$API]).permission.local
                 $APILine | Add-Member -Name "Remote permissions" -MemberType Noteproperty -Value ($Json[$API]).permission.remote
@@ -2301,10 +2373,10 @@ Function Get-APIRessourcesMap {
         }
         
         # If Method is only GET (read)
-        Else{
+        Else {
             $APILine = New-Object -TypeName PSObject
-            $APILine | Add-Member -Name "API name"           -MemberType Noteproperty -Value "api/$(($Json[$API]).api)"
-            $APILine | Add-Member -Name "API url"            -MemberType Noteproperty -Value "$UrlRoot/api/$(($Json[$API]).api)"
+            $APILine | Add-Member -Name "API name"           -MemberType Noteproperty -Value $($Json[$API]).api
+            $APILine | Add-Member -Name "API url"            -MemberType Noteproperty -Value "$UrlRoot$$(($Json[$API]).api) -replace ("V1",""))"
             $APILine | Add-Member -Name "Action"             -MemberType Noteproperty -Value ($Json[$API]).method
             $APILine | Add-Member -Name "Local permissions"  -MemberType Noteproperty -Value ($Json[$API]).permission.local
             $APILine | Add-Member -Name "Remote permissions" -MemberType Noteproperty -Value ($Json[$API]).permission.remote
@@ -2337,7 +2409,7 @@ Function Get-APIRessourcesMap {
 
 Function Get-BackupList {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2355,17 +2427,17 @@ Function Get-BackupList {
     $Json = $Json.$APIName
         
     # Check if there local BBox configurations save
-    If($Json.Count -ne "0"){
+    If ($Json.Count -ne "0") {
         
         $Config = 0
         
-        While($Config -lt $Json.count){
+        While ($Config -lt $Json.count) {
             
             # Create New PSObject and add values to array
             $ConfigLine = New-Object -TypeName PSObject
             $ConfigLine | Add-Member -Name "ID"                      -MemberType Noteproperty -Value $Json[$Config].id
             $ConfigLine | Add-Member -Name "Backup Name"             -MemberType Noteproperty -Value $Json[$Config].name
-            $ConfigLine | Add-Member -Name "Backup Creation Date"    -MemberType Noteproperty -Value $(Format-Date -String $Json[$Config].date)
+            $ConfigLine | Add-Member -Name "Backup Creation Date"    -MemberType Noteproperty -Value $Json[$Config].date
             $ConfigLine | Add-Member -Name "Backup Firmware Version" -MemberType Noteproperty -Value $Json[$Config].firmware
             
             # Add lines to $Array
@@ -2378,7 +2450,7 @@ Function Get-BackupList {
         Return $Array
     }
     # Check if BBox Cloud Synchronisation Service is Active and if user allow it
-    Else{
+    Else {
         Write-Log -Type WARNING -Name "Program run - Get BBOX Configuration Save" -Message "No local backups in BBox configuration were found."
         $APIName = "usersave"
         $UrlToGo = $UrlToGo.Replace("configs","$APIName")
@@ -2406,7 +2478,7 @@ Function Get-BackupList {
 
 Function Get-USERSAVE {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2448,7 +2520,7 @@ Function Get-USERSAVE {
 
 Function Get-CPL {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2478,7 +2550,7 @@ Function Get-CPL {
 
 Function Get-CPLDeviceList {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2495,44 +2567,45 @@ Function Get-CPLDeviceList {
     # Select $JSON header
     $Json = $Json.$APIName
     
-    If($Json.$APIName.count -ne 0){
+    If ($Json.$APIName.count -ne 0) {
         
-        $Id = 0
-        While($Id -ne $Json.$APIName.count){
+        $Index = 0
+        While ($Index -ne $Json.$APIName.count) {
             # Create New PSObject and add values to array
             $CPLLine = New-Object -TypeName PSObject
-            $CPLLine | Add-Member -Name "Master ID"                -MemberType Noteproperty -Value $Json[$Id].list.id
-            $CPLLine | Add-Member -Name "Master MACAddress"        -MemberType Noteproperty -Value $Json[$Id].list.macaddress
-            $CPLLine | Add-Member -Name "Master Manufacturer"      -MemberType Noteproperty -Value $Json[$Id].list.manufacturer
-            $CPLLine | Add-Member -Name "Master Speed"             -MemberType Noteproperty -Value $Json[$Id].list.speed
-            $CPLLine | Add-Member -Name "Master Chipset"           -MemberType Noteproperty -Value $Json[$Id].list.chipset
-            $CPLLine | Add-Member -Name "Master Version"           -MemberType Noteproperty -Value $Json[$Id].list.version
-            $CPLLine | Add-Member -Name "Master Port"              -MemberType Noteproperty -Value $Json[$Id].list.port
+            $CPLLine | Add-Member -Name "Master ID"                -MemberType Noteproperty -Value $Json[$Index].list.id
+            $CPLLine | Add-Member -Name "Master MACAddress"        -MemberType Noteproperty -Value $Json[$Index].list.macaddress
+            $CPLLine | Add-Member -Name "Master Manufacturer"      -MemberType Noteproperty -Value $Json[$Index].list.manufacturer
+            $CPLLine | Add-Member -Name "Master Speed"             -MemberType Noteproperty -Value $Json[$Index].list.speed
+            $CPLLine | Add-Member -Name "Master Chipset"           -MemberType Noteproperty -Value $Json[$Index].list.chipset
+            $CPLLine | Add-Member -Name "Master Version"           -MemberType Noteproperty -Value $Json[$Index].list.version
+            $CPLLine | Add-Member -Name "Master Port"              -MemberType Noteproperty -Value $Json[$Index].list.port
             
-            If(-not ([string]::IsNullOrEmpty($Json[$Id].list.active))){
-                $CPLLine | Add-Member -Name "Master State"         -MemberType Noteproperty -Value (Get-State -State $Json[$Id].list.active)
-                $CPLLine | Add-Member -Name "Plug State"           -MemberType Noteproperty -Value (Get-State -State $Json[$Id].list.associateddevice.active)
+            If (-not ([string]::IsNullOrEmpty($Json[$Index].list.active))) {
+                $CPLLine | Add-Member -Name "Master State"         -MemberType Noteproperty -Value (Get-State -State $Json[$Index].list.active)
+                $CPLLine | Add-Member -Name "Plug State"           -MemberType Noteproperty -Value (Get-State -State $Json[$Index].list.associateddevice.active)
             }
-            Else{$CPLLine | Add-Member -Name "Master State"        -MemberType Noteproperty -Value ""
-                 $CPLLine | Add-Member -Name "Plug State"          -MemberType Noteproperty -Value ""
+            Else {
+                $CPLLine | Add-Member -Name "Master State"        -MemberType Noteproperty -Value ""
+                $CPLLine | Add-Member -Name "Plug State"          -MemberType Noteproperty -Value ""
             }
             
-            $CPLLine | Add-Member -Name "Plug MAC Address"         -MemberType Noteproperty -Value $Json[$Id].list.associateddevice.macaddress
-            $CPLLine | Add-Member -Name "Plug Manufacturer"        -MemberType Noteproperty -Value $Json[$Id].list.associateddevice.manufacturer
-            $CPLLine | Add-Member -Name "Plug Chipset"             -MemberType Noteproperty -Value $Json[$Id].list.associateddevice.chipset
-            $CPLLine | Add-Member -Name "Plug Speed"               -MemberType Noteproperty -Value $Json[$Id].list.associateddevice.speed
-            $CPLLine | Add-Member -Name "Plug Version"             -MemberType Noteproperty -Value $Json[$Id].list.associateddevice.version
-            $CPLLine | Add-Member -Name "End Stations MAC Address" -MemberType Noteproperty -Value $Json[$Id].list.endstations.macaddress
+            $CPLLine | Add-Member -Name "Plug MAC Address"         -MemberType Noteproperty -Value $Json[$Index].list.associateddevice.macaddress
+            $CPLLine | Add-Member -Name "Plug Manufacturer"        -MemberType Noteproperty -Value $Json[$Index].list.associateddevice.manufacturer
+            $CPLLine | Add-Member -Name "Plug Chipset"             -MemberType Noteproperty -Value $Json[$Index].list.associateddevice.chipset
+            $CPLLine | Add-Member -Name "Plug Speed"               -MemberType Noteproperty -Value $Json[$Index].list.associateddevice.speed
+            $CPLLine | Add-Member -Name "Plug Version"             -MemberType Noteproperty -Value $Json[$Index].list.associateddevice.version
+            $CPLLine | Add-Member -Name "End Stations MAC Address" -MemberType Noteproperty -Value $Json[$Index].list.endstations.macaddress
             
             # Add lines to $Array
             $Array += $CPLLine
                 
             # Go to next line
-            $Id++
+            $Index++
         }
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -2543,7 +2616,7 @@ Function Get-CPLDeviceList {
 
 Function Get-Device {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -2560,12 +2633,16 @@ Function Get-Device {
     # Select $JSON header
     $Json = $Json.$APIName
     
-    If(-not ([string]::IsNullOrEmpty($Json.temperature.status))){$TemperatureStatus = Get-Status -Status $Json.temperature.status}
-    Else{$TemperatureStatus = ""}
+    If (-not ([string]::IsNullOrEmpty($Json.temperature.status))) {
+        $TemperatureStatus = Get-Status -Status $Json.temperature.status
+    }
+    Else {
+        $TemperatureStatus = ""
+    }
     
     # Create New PSObject and add values to array
     $DeviceLine = New-Object -TypeName PSObject
-    $DeviceLine | Add-Member -Name "Date"                      -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $DeviceLine | Add-Member -Name "Date"                      -MemberType Noteproperty -Value $Json.now
     $DeviceLine | Add-Member -Name "Status"                    -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $DeviceLine | Add-Member -Name "Nb Boots since 1st use"    -MemberType Noteproperty -Value $Json.numberofboots
     $DeviceLine | Add-Member -Name "Bbox Model"                -MemberType Noteproperty -Value $Json.modelname
@@ -2578,15 +2655,15 @@ Function Get-Device {
     $DeviceLine | Add-Member -Name "Luminosity Grade (%) "     -MemberType Noteproperty -Value $Json.display.luminosity
     $DeviceLine | Add-Member -Name "Front Screen Displayed"    -MemberType Noteproperty -Value $Json.display.state
     $DeviceLine | Add-Member -Name "MAIN Firmware Version"     -MemberType Noteproperty -Value $Json.main.version
-    $DeviceLine | Add-Member -Name "MAIN Firmware Date"        -MemberType Noteproperty -Value $(Format-Date -String $Json.main.date)
+    $DeviceLine | Add-Member -Name "MAIN Firmware Date"        -MemberType Noteproperty -Value $Json.main.date
     $DeviceLine | Add-Member -Name "RECOVERY Firmware Version" -MemberType Noteproperty -Value $Json.reco.version
-    $DeviceLine | Add-Member -Name "RECOVERY Firmware Date"    -MemberType Noteproperty -Value $(Format-Date -String $Json.reco.date)
-    $DeviceLine | Add-Member -Name "RUNNING Firmware Version"  -MemberType Noteproperty -Value $Json.running.version                     # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
-    $DeviceLine | Add-Member -Name "RUNNING Firmware Date"     -MemberType Noteproperty -Value $(Format-Date -String $Json.running.date) # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
+    $DeviceLine | Add-Member -Name "RECOVERY Firmware Date"    -MemberType Noteproperty -Value $Json.reco.date
+    $DeviceLine | Add-Member -Name "RUNNING Firmware Version"  -MemberType Noteproperty -Value $Json.running.version # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
+    $DeviceLine | Add-Member -Name "RUNNING Firmware Date"     -MemberType Noteproperty -Value $Json.running.date    # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
     $DeviceLine | Add-Member -Name "BACKUP Version"            -MemberType Noteproperty -Value $Json.bcck.version
     $DeviceLine | Add-Member -Name "BOOTLOADER 1 Version"      -MemberType Noteproperty -Value $Json.ldr1.version
     $DeviceLine | Add-Member -Name "BOOTLOADER 2 Version"      -MemberType Noteproperty -Value $Json.ldr2.version
-    $DeviceLine | Add-Member -Name "First use date"            -MemberType Noteproperty -Value $(Format-Date -String $Json.firstusedate)
+    $DeviceLine | Add-Member -Name "First use date"            -MemberType Noteproperty -Value $Json.firstusedate
     $DeviceLine | Add-Member -Name "Last boot Time"            -MemberType Noteproperty -Value (Get-Date).AddSeconds(- $Json.uptime)
     $DeviceLine | Add-Member -Name "IPV4 Status"               -MemberType Noteproperty -Value (Get-Status -Status $Json.using.ipv4)
     $DeviceLine | Add-Member -Name "IPV6 Status"               -MemberType Noteproperty -Value (Get-Status -Status $Json.using.ipv6)
@@ -2602,7 +2679,7 @@ Function Get-Device {
 
 Function Get-DeviceLog {
 
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -2616,375 +2693,460 @@ Function Get-DeviceLog {
     # Select $JSON header
     $Json = $Json.log
     
-    $log = 0
-    $ID = 0
+    $Line = 0
+    $Index = 0
     
-    While($log -lt $Json.count){
+    While ($Line -lt $Json.count) {
         
-        $Date = $(Format-Date -String $Json[$log].date)
+        $Date = $Json[$Line].date
         
-        If ((-not (([string]::IsNullOrEmpty($Json[$log].param)))) -and ($Json[$log].param -match ";" )){
+        If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ";" )) {
             
-            $Params = ($Json[$log].param).split(";")
+            $Params = ($Json[$Line].param).split(";")
         }
         
-        Switch($Json[$log].log){
+        Switch ($Json[$Line].log) {
             
-            CONNTRACK_ERROR            {$Details = "Le nombre de sessions IP est trop élevé : $($Json[$log].param)"
+            CONNTRACK_ERROR            {$Details = "Le nombre de sessions IP est trop élevé : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            CONNTRACK_OK               {$Details = "Le nombre de sessions IP est redevenu normal : $($Json[$log].param)"
+            CONNTRACK_OK               {$Details = "Le nombre de sessions IP est redevenu normal : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DHCP_POOL_OK               {$Details = "Le dimensionnement de plage DHCP est redevenu suffisant : $($Json[$log].param)"
+            DHCP_POOL_OK               {$Details = "Le dimensionnement de plage DHCP est redevenu suffisant : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            DHCP_POOL_TOO_SMALL        {$Details = "Le dimensionnement de plage DHCP est trop petit : $($Json[$log].param)"
+            DHCP_POOL_TOO_SMALL        {$Details = "Le dimensionnement de plage DHCP est trop petit : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            MEMORY_ERROR               {$Details = "Le taux d'utilisation de la mémoire est trop élevé : $($Json[$log].param)"
+            MEMORY_ERROR               {$Details = "Le taux d'utilisation de la mémoire est trop élevé : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            MEMORY_OK                  {$Details = "Le taux d'utilisation de la mémoire est redevenu normal : $($Json[$log].param)"
+            MEMORY_OK                  {$Details = "Le taux d'utilisation de la mémoire est redevenu normal : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }            
             
             DEVICE_NEW                 {$Details = "Un nouveau périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) à été ajouté sur le réseau"
                                         $LogType = "Périphérique"
+                                        Break
                                        }
             
             DEVICE_UP                  {$Details = "Connexion du périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) sur le réseau"
                                         $LogType = "Périphérique"
+                                        Break
                                        }
             
             DEVICE_DOWN                {$Details = "Déconnexion du périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) sur le réseau"
                                         $LogType = "Périphérique"
+                                        Break
                                        }
             
-            DHCLIENT_ACK               {$Details = "Assignation d'une adresse IP : $($Json[$log].param)"
+            DHCLIENT_ACK               {$Details = "Assignation d'une adresse IP : $($Json[$Line].param)"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
-            DHCLIENT_REQUEST           {$Details = "Réception d'une requête de la part d'un client : $($Json[$log].param)"
+            DHCLIENT_REQUEST           {$Details = "Réception d'une requête de la part d'un client : $($Json[$Line].param)"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
-            DHCLIENT_DISCOVER          {$Details = "Envoie d'une requête en brodcast : $($Json[$log].param)"
+            DHCLIENT_DISCOVER          {$Details = "Envoie d'une requête en brodcast : $($Json[$Line].param)"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
-            DIAG_DNS_FAILURE           {$Details = "Echec des tests d'autodiagnostic DNS : $($Json[$log].param)"
+            DIAG_DNS_FAILURE           {$Details = "Echec des tests d'autodiagnostic DNS : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_DNS_SUCCESS           {$Details = "Tests d'autodiagnostic DNS réussis : $($Json[$log].param)"
+            DIAG_DNS_SUCCESS           {$Details = "Tests d'autodiagnostic DNS réussis : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_HTTP_FAILURE          {$Details = "Echec des tests d'autodiagnostic HTTP : $($Json[$log].param)"
+            DIAG_HTTP_FAILURE          {$Details = "Echec des tests d'autodiagnostic HTTP : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_HTTP_SUCCESS          {$Details = "Tests d'autodiagnostic HTTP réussis : $($Json[$log].param)"
+            DIAG_HTTP_SUCCESS          {$Details = "Tests d'autodiagnostic HTTP réussis : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_PING_FAILURE          {$Details = "Echec des tests d'autodiagnostic PING : $($Json[$log].param)"
+            DIAG_PING_FAILURE          {$Details = "Echec des tests d'autodiagnostic PING : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_PING_SUCCESS          {$Details = "Tests d'autodiagnostic PING réussis : $($Json[$log].param)"
+            DIAG_PING_SUCCESS          {$Details = "Tests d'autodiagnostic PING réussis : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_TIMEOUT               {$Details = "Tests d'autodiagnostic d'accès Internet expirés : $($Json[$log].param)"
+            DIAG_TIMEOUT               {$Details = "Tests d'autodiagnostic d'accès Internet expirés : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_FAILURE               {$Details = "Echec des tests d'autodiagnostic d'accès Internet : $($Json[$log].param)"
+            DIAG_FAILURE               {$Details = "Echec des tests d'autodiagnostic d'accès Internet : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DIAG_SUCCESS               {$Details = "Diagnostic réalisé avec succès : $($Json[$log].param)"
+            DIAG_SUCCESS               {$Details = "Diagnostic réalisé avec succès : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DISPLAY_STATE              {$Details = "Changement d'Ã©tat de la Bbox : $($Json[$log].param)"
+            DISPLAY_STATE              {$Details = "Changement d'Ã©tat de la Bbox : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            DSL_DOWN                   {$Details = "Ligne DSL désynchronisée : $($Json[$log].param)"
+            DSL_DOWN                   {$Details = "Ligne DSL désynchronisée : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DSL_EXCHANGE               {$Details = "Synchronisation DSL en cours : $($Json[$log].param)"
+            DSL_EXCHANGE               {$Details = "Synchronisation DSL en cours : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            DSL_UP                     {$Details = "Signal DSL acquis. EN Attente d'obtention de l'adresse IP publique : $($Json[$log].param)"
+            DSL_UP                     {$Details = "Signal DSL acquis. En attente d'obtention de l'adresse IP publique : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
             LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
-            LAN_PORT_UP                {$Details = "Un ou plusieurs équipements ont été connecté sur le port : $($Json[$log].param) du switch de la box"
+            LAN_PORT_UP                {$Details = "Un ou plusieurs équipements ont été connecté sur le port : $($Json[$Line].param) du switch de la box"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
-            LAN_PORT_DOWN              {$Details = "Plus aucun équipement n'est connecté sur le port : $($Json[$log].param) du switch de la box"
+            LAN_PORT_DOWN              {$Details = "Plus aucun équipement n'est connecté sur le port : $($Json[$Line].param) du switch de la box"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
             LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"
                                         $LogType = "Réseau"
+                                        Break
                                        }
             
             LOGIN_LOCAL                {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0])"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_LOCAL_FAILED         {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a échoué"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_LOCAL_LOCKED         {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a été bloqué"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_REMOTE               {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0])"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_REMOTE_FAILED        {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a échoué"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_REMOTE_LOCKED        {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a été bloqué"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
             LOGIN_CDC                  {$Details = "Accès distant à l'interface d'administration par le service client Bouygues Telecom depuis l'adresse IP : $($Params[0])"
                                         $LogType = "Administration"
+                                        Break
                                        }
             
-            USER_CHANGEPWD             {$Details = "Changement du mot de passe d'administration de la BBOX : $($Json[$log].param))"
+            USER_CHANGEPWD             {$Details = "Changement du mot de passe d'administration de la BBOX : $($Json[$Line].param))"
                                         $LogType = "Réseau local"
+                                        Break
                                        }
             
-            MAIL_ERROR                 {$Details = "Erreur lors de l'envoi d'un e-mail de notification à l'adresse mail : $($Json[$log].param)"
+            MAIL_ERROR                 {$Details = "Erreur lors de l'envoi d'un e-mail de notification à l'adresse mail : $($Json[$Line].param)"
                                         $LogType = "Notification"
+                                        Break
                                        }
             
-            MAIL_SENT                  {$Details = "Envoi d'un e-mail de notification à l'adresse mail : $($Json[$log].param)"
+            MAIL_SENT                  {$Details = "Envoi d'un e-mail de notification à l'adresse mail : $($Json[$Line].param)"
                                         $LogType = "Notification"
+                                        Break
                                        }
             
-            NTP_SYNCHRONIZATION        {$Details = "L'heure et la date ont été obtenues - Synchronisation du temps : $($Json[$log].param)"
+            NTP_SYNCHRONIZATION        {$Details = "L'heure et la date ont été obtenues - Synchronisation du temps : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            VOIP_DIAG_ECHOTEST_OFF     {$Details = "Test d'écho arrêté : $($Json[$log].param)"
+            VOIP_DIAG_ECHOTEST_OFF     {$Details = "Test d'écho arrêté : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_DIAG_ECHOTEST_ON      {$Details = "Test d'écho démarré : $($Json[$log].param)"
+            VOIP_DIAG_ECHOTEST_ON      {$Details = "Test d'écho démarré : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_DIAG_RINGTEST_OFF     {$Details = "Test de sonnerie arrêté : $($Json[$log].param)"
+            VOIP_DIAG_RINGTEST_OFF     {$Details = "Test de sonnerie arrêté : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_DIAG_RINGTEST_ON      {$Details = "Test de sonnerie démarré : $($Json[$log].param)"
+            VOIP_DIAG_RINGTEST_ON      {$Details = "Test de sonnerie démarré : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_INCOMING_CALL_RINGING {$Details = "Appel en cours du $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_INCOMING_CALL_RINGING {$Details = "Appel en cours du : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_INCOMING_CALL_MISSED  {$Details = "Appel entrant manqué du $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_INCOMING_CALL_MISSED  {$Details = "Appel entrant manqué du : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_INCOMING_CALL_START   {$Details = "Communication entrante en cours avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_INCOMING_CALL_START   {$Details = "Communication entrante en cours avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_INCOMING_CALL_END     {$Details = "Communication entrante terminée avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_INCOMING_CALL_END     {$Details = "Communication entrante terminée avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_OUTGOING_CALL_START   {$Details = "Communication sortante en cours avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_OUTGOING_CALL_START   {$Details = "Communication sortante en cours avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_OUTGOING_CALL_END     {$Details = "Communication entrante terminée avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+            VOIP_OUTGOING_CALL_END     {$Details = "Communication entrante terminée avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
             VOIP_MWI                   {$Details = "Il y a : $($Params[1]) message(s) vocal/aux sur la ligne : $($Params[0])"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_ONHOOK                {$Details = "Téléphone raccroché sur la ligne $(Get-Phoneline -Phoneline $Json[$log].param)"
+            VOIP_ONHOOK                {$Details = "Téléphone raccroché sur la ligne : $(Get-Phoneline -Phoneline $Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_OFFHOOK               {$Details = "Téléphone décroché sur la ligne $(Get-Phoneline -Phoneline $Json[$log].param)"
+            VOIP_OFFHOOK               {$Details = "Téléphone décroché sur la ligne : $(Get-Phoneline -Phoneline $Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_REGISTERED            {$Details = "La ligne téléphonique est active : $($Json[$log].param)"
+            VOIP_REGISTERED            {$Details = "La ligne téléphonique est active : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            VOIP_UNREGISTERED          {$Details = "La ligne téléphonique n'est pas active : $($Json[$log].param)"
+            VOIP_UNREGISTERED          {$Details = "La ligne téléphonique n'est pas active : $($Json[$Line].param)"
                                         $LogType = "Téléphonie"
+                                        Break
                                        }
             
-            WAN_DOWN                   {$Details = "Accès Internet indisponible : $($Json[$log].param)"
+            WAN_DOWN                   {$Details = "Accès Internet indisponible : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            WAN_UP                     {$Details = "Accès Internet disponible : $($Json[$log].param)"
+            WAN_UP                     {$Details = "Accès Internet disponible : $($Json[$Line].param)"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
             WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse MAC : $($Params[0])"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
             WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse MAC : $($Params[0])"
                                         $LogType = "Internet"
+                                        Break
                                        }
             
-            WAN_UPNP_ADD               {$Details = "Ajout d'une règle NAT sur le port externe : $($Params[2]) vers l'adresse IP : $($Params[0]) sur le port local : $($Params[1]) via UPnPIP "
+            WAN_UPNP_ADD               {$Details = "Ajout d'une règle NAT sur le port externe : $($Params[2]) vers l'adresse IP : $($Params[0]) sur le port local : $($Params[1]) via UPnP "
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            WAN_UPNP_REMOVE            {$Details = "Suppression de la règle NAT du port externe $($Params[1]) vers l'adresse IP : $($Params[0]) via UPnPIP"
+            WAN_UPNP_REMOVE            {$Details = "Suppression de la règle NAT du port externe : $($Params[1]) vers l'adresse IP : $($Params[0]) via UPnP"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            WIFI_UP                    {$Details = "Wifi activé : $($Json[$log].param)"
+            WIFI_UP                    {$Details = "Wifi activé : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            WIFI_DOWN                  {$Details = "Wifi désactivé : $($Json[$log].param)"
+            WIFI_DOWN                  {$Details = "Wifi désactivé : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            WIFI_SSID_24               {$Details = "Changement de nom du réseau Wi-Fi 2.4 GHz : $($Json[$log].param)"
+            WIFI_SSID_24               {$Details = "Changement de nom du réseau Wi-Fi 2.4 GHz : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            WIFI_SSID_5                {$Details = "Changement de nom du réseau Wi-Fi 5 GHz : $($Json[$log].param)"
+            WIFI_SSID_5                {$Details = "Changement de nom du réseau Wi-Fi 5 GHz : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            WIFI_PWD_24                {$Details = "Changement du mot de passe Wi-Fi 2.4 GHz : $($Json[$log].param)"
+            WIFI_PWD_24                {$Details = "Changement du mot de passe Wi-Fi 2.4 GHz : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            WIFI_PWD_5                 {$Details = "Changement du mot de passe Wi-Fi 5 GHz : $($Json[$log].param)"
+            WIFI_PWD_5                 {$Details = "Changement du mot de passe Wi-Fi 5 GHz : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            PPP_BOUND                  {$Details = "Obtention d'adresse IP via PPP : $($Json[$log].param)"
+            PPP_BOUND                  {$Details = "Obtention d'adresse IP via PPP : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$log].param)"
+            SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            SCHEDULER_PARENTAL_ENABLE  {$Details = "Contrôle d'accès activé : $($Json[$log].param)"
+            SCHEDULER_PARENTAL_ENABLE  {$Details = "Contrôle d'accès activé : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            SCHEDULER_PARENTAL_RUNNING {$Details = "Contrôle d'accès e cours : $($Json[$log].param)"
+            SCHEDULER_PARENTAL_RUNNING {$Details = "Contrôle d'accès e cours : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            SCHEDULER_PARENTAL_STOPPING{$Details = "Contrôle d'accès arrêté : $($Json[$log].param)"
+            SCHEDULER_PARENTAL_STOPPING{$Details = "Contrôle d'accès arrêté : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            SCHEDULER_WIFI_DISABLE     {$Details = "Gestion des plages horaires Wi-Fi désactivé : $($Json[$log].param)"
+            SCHEDULER_WIFI_DISABLE     {$Details = "Gestion des plages horaires Wi-Fi désactivé : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            SCHEDULER_WIFI_ENABLE      {$Details = "Gestion des plages horaires Wi-Fi activée : $($Json[$log].param)"
+            SCHEDULER_WIFI_ENABLE      {$Details = "Gestion des plages horaires Wi-Fi activée : $($Json[$Line].param)"
                                         $LogType = "Utilisation du réseau"
+                                        Break
                                        }
             
-            UPGRADE_MAIN_FINISH        {$Details = "Mise à jour du logiciel de la Bbox réussie (firmware opérationnel) : $($Json[$log].param)"
+            UPGRADE_MAIN_FINISH        {$Details = "Mise à jour du logiciel de la Bbox réussie (firmware opérationnel) : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            UPGRADE_MAIN_FINISH_FAILED {$Details = "Echec de la mise à jour du logiciel de la Bbox (firmware opérationnel) : $($Json[$log].param)"
+            UPGRADE_MAIN_FINISH_FAILED {$Details = "Echec de la mise à jour du logiciel de la Bbox (firmware opérationnel) : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            UPGRADE_START              {$Details = "Mise à jour du logiciel de la Bbox en cours (firmware opérationnel) : $($Json[$log].param)"
+            UPGRADE_START              {$Details = "Mise à jour du logiciel de la Bbox en cours (firmware opérationnel) : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            USB_PRINTER_PLUG           {$Details = "Connexion d'une imprimante USB : $($Json[$log].param)"
+            USB_PRINTER_PLUG           {$Details = "Connexion d'une imprimante USB : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            USB_PRINTER_UNPLUG         {$Details = "Déconnexion d'une imprimante USB : $($Json[$log].param)"
+            USB_PRINTER_UNPLUG         {$Details = "Déconnexion d'une imprimante USB : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
             USB_STORAGE_MOUNT          {$Details = "Partition d'une clé ou d'un disque USB montée : $($Params[0]) sur le port USB : $($Params[1])"
                                         $LogType = "Système"
+                                        Break
                                        }
             
             USB_STORAGE_MOUNT_RW       {$Details = "Droits de lecture et écriture sur la partition : $($Params[0]) sur le port USB : $($Params[1])"
                                         $LogType = "Système"
+                                        Break
                                        }
             
             USB_STORAGE_PLUG           {$Details = "Branchement d'un périphérique de stockage USB : $($Params[0]) ayant pour désignation : $($Params[1])"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            USB_STORAGE_UMOUNT         {$Details = "Partition d'une clé ou d'un disque USB démontée : $($Json[$log].param)"
+            USB_STORAGE_UMOUNT         {$Details = "Partition d'une clé ou d'un disque USB démontée : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            USB_STORAGE_UNPLUG         {$Details = "Déconnexion d'un périphérique de stockage USB : $($Json[$log].param)"
+            USB_STORAGE_UNPLUG         {$Details = "Déconnexion d'un périphérique de stockage USB : $($Json[$Line].param)"
                                         $LogType = "Système"
+                                        Break
                                        }
             
-            Default                    {$Details = $Json[$log].param
+            Default                    {$Details = $Json[$Line].param
                                         $LogType = "Unknow / Dev error"
+                                        Break
                                        }
         }
         
         # Create New PSObject and add values to array
         $LogLine = New-Object -TypeName PSObject
-        $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $ID
+        $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $Index
         $LogLine | Add-Member -Name "Date"         -MemberType Noteproperty -Value $Date
         $LogLine | Add-Member -Name "Log type"     -MemberType Noteproperty -Value $LogType
-        $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$log].log
+        $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$Line].log
         $LogLine | Add-Member -Name "Details"      -MemberType Noteproperty -Value $Details
         
         # Add lines to $Array
         $Array += $LogLine
         
         # Go to next line
-        $log ++
-        $ID ++
+        $Line ++
+        $Index ++
     }
     
     Return $Array
@@ -2992,7 +3154,7 @@ Function Get-DeviceLog {
 
 Function Get-DeviceFullLog {
 
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3004,384 +3166,473 @@ Function Get-DeviceFullLog {
     $Array = @()
     
     $Pageid = 1
-    $ID = 0
+    $Index = 0
     
-    While($Json.exception.code -ne "404"){
+    While ($Json.exception.code -ne "404") {
         
         # Select $JSON header
         $Json = $Json.log
         
-        $log = 0
+        $Line = 0
         
-        While($log -lt $Json.count){
+        While ($Line -lt $Json.count) {
             
-            $Date = $(Format-Date -String $Json[$log].date)
+            $Date = $Json[$Line].date
             
-            If ((-not (([string]::IsNullOrEmpty($Json[$log].param)))) -and ($Json[$log].param -match ";")){
+            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ";")) {
                 
-                $Params = ($Json[$log].param).split(";")
+                $Params = ($Json[$Line].param).split(";")
             }
             
-            Switch($Json[$log].log){
+            Switch ($Json[$Line].log) {
             
-                CONNTRACK_ERROR            {$Details = "Le nombre de sessions IP est trop élevé : $($Json[$log].param)"
+                CONNTRACK_ERROR            {$Details = "Le nombre de sessions IP est trop élevé : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                CONNTRACK_OK               {$Details = "Le nombre de sessions IP est redevenu normal : $($Json[$log].param)"
+                
+                CONNTRACK_OK               {$Details = "Le nombre de sessions IP est redevenu normal : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DHCP_POOL_OK               {$Details = "Le dimensionnement de plage DHCP est redevenu suffisant : $($Json[$log].param)"
+                
+                DHCP_POOL_OK               {$Details = "Le dimensionnement de plage DHCP est redevenu suffisant : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                DHCP_POOL_TOO_SMALL        {$Details = "Le dimensionnement de plage DHCP est trop petit : $($Json[$log].param)"
+                
+                DHCP_POOL_TOO_SMALL        {$Details = "Le dimensionnement de plage DHCP est trop petit : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                MEMORY_ERROR               {$Details = "Le taux d'utilisation de la mémoire est trop élevé : $($Json[$log].param)"
+                
+                MEMORY_ERROR               {$Details = "Le taux d'utilisation de la mémoire est trop élevé : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                MEMORY_OK                  {$Details = "Le taux d'utilisation de la mémoire est redevenu normal : $($Json[$log].param)"
+                
+                MEMORY_OK                  {$Details = "Le taux d'utilisation de la mémoire est redevenu normal : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }            
-            
+                
                 DEVICE_NEW                 {$Details = "Un nouveau périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) à été ajouté sur le réseau"
                                             $LogType = "Périphérique"
+                                            Break
                                            }
-            
+                
                 DEVICE_UP                  {$Details = "Connexion du périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) sur le réseau"
                                             $LogType = "Périphérique"
+                                            Break
                                            }
-            
+                
                 DEVICE_DOWN                {$Details = "Déconnexion du périphérique : $($Params[2]), ayant pour adresse IP : $($Params[1]) et l'adresse MAC : $($Params[0]) sur le réseau"
                                             $LogType = "Périphérique"
+                                            Break
                                            }
-            
-                DHCLIENT_ACK               {$Details = "Assignation d'une adresse IP : $($Json[$log].param)"
+                
+                DHCLIENT_ACK               {$Details = "Assignation d'une adresse IP : $($Json[$Line].param)"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
-                DHCLIENT_REQUEST           {$Details = "Réception d'une requête de la part d'un client : $($Json[$log].param)"
+                
+                DHCLIENT_REQUEST           {$Details = "Réception d'une requête de la part d'un client : $($Json[$Line].param)"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
-                DHCLIENT_DISCOVER          {$Details = "Envoie d'une requête en brodcast : $($Json[$log].param)"
+                
+                DHCLIENT_DISCOVER          {$Details = "Envoie d'une requête en brodcast : $($Json[$Line].param)"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
-                DIAG_DNS_FAILURE           {$Details = "Echec des tests d'autodiagnostic DNS : $($Json[$log].param)"
+                
+                DIAG_DNS_FAILURE           {$Details = "Echec des tests d'autodiagnostic DNS : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_DNS_SUCCESS           {$Details = "Tests d'autodiagnostic DNS réussis : $($Json[$log].param)"
+                
+                DIAG_DNS_SUCCESS           {$Details = "Tests d'autodiagnostic DNS réussis : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_HTTP_FAILURE          {$Details = "Echec des tests d'autodiagnostic HTTP : $($Json[$log].param)"
+                
+                DIAG_HTTP_FAILURE          {$Details = "Echec des tests d'autodiagnostic HTTP : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_HTTP_SUCCESS          {$Details = "Tests d'autodiagnostic HTTP réussis : $($Json[$log].param)"
+                
+                DIAG_HTTP_SUCCESS          {$Details = "Tests d'autodiagnostic HTTP réussis : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_PING_FAILURE          {$Details = "Echec des tests d'autodiagnostic PING : $($Json[$log].param)"
+                
+                DIAG_PING_FAILURE          {$Details = "Echec des tests d'autodiagnostic PING : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_PING_SUCCESS          {$Details = "Tests d'autodiagnostic PING réussis : $($Json[$log].param)"
+                
+                DIAG_PING_SUCCESS          {$Details = "Tests d'autodiagnostic PING réussis : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_TIMEOUT               {$Details = "Tests d'autodiagnostic d'accès Internet expirés : $($Json[$log].param)"
+                
+                DIAG_TIMEOUT               {$Details = "Tests d'autodiagnostic d'accès Internet expirés : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_FAILURE               {$Details = "Echec des tests d'autodiagnostic d'accès Internet : $($Json[$log].param)"
+                
+                DIAG_FAILURE               {$Details = "Echec des tests d'autodiagnostic d'accès Internet : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DIAG_SUCCESS               {$Details = "Diagnostic réalisé avec succès : $($Json[$log].param)"
+                
+                DIAG_SUCCESS               {$Details = "Diagnostic réalisé avec succès : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DISPLAY_STATE              {$Details = "Changement d'Ã©tat de la Bbox : $($Json[$log].param)"
+                
+                DISPLAY_STATE              {$Details = "Changement d'Ã©tat de la Bbox : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                DSL_DOWN                   {$Details = "Ligne DSL désynchronisée : $($Json[$log].param)"
+                
+                DSL_DOWN                   {$Details = "Ligne DSL désynchronisée : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DSL_EXCHANGE               {$Details = "Synchronisation DSL en cours : $($Json[$log].param)"
+                
+                DSL_EXCHANGE               {$Details = "Synchronisation DSL en cours : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                DSL_UP                     {$Details = "Signal DSL acquis. EN Attente d'obtention de l'adresse IP publique : $($Json[$log].param)"
+                
+                DSL_UP                     {$Details = "Signal DSL acquis. En attente d'obtention de l'adresse IP publique : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
+                
                 LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
-                LAN_PORT_UP                {$Details = "Un ou plusieurs équipements ont été connecté sur l'un des ports du switch de la box. Status : $($Json[$log].param) $(Get-LanPortState -LanPortState $Json[$log].param)"
+                
+                LAN_PORT_UP                {$Details = "Un ou plusieurs équipements ont été connecté sur le port : $($Json[$Line].param) du switch de la box"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
-                LAN_PORT_DOWN              {$Details = "Un ou plusieurs équipements ont été déconnecté sur l'un des ports du switch de la box. Status : $($Json[$log].param) $(Get-LanPortState -LanPortState $Json[$log].param)"
+                
+                LAN_PORT_DOWN              {$Details = "Plus aucun équipement n'est connecté sur le port : $($Json[$Line].param) du switch de la box"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
+                
                 LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"
                                             $LogType = "Réseau"
+                                            Break
                                            }
-            
+                
                 LOGIN_LOCAL                {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0])"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_LOCAL_FAILED         {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a échoué"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_LOCAL_LOCKED         {$Details = "Accès local à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a été bloqué"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_REMOTE               {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0])"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_REMOTE_FAILED        {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a échoué"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_REMOTE_LOCKED        {$Details = "Accès distant à l'interface d'administration depuis l'équipement : $($Params[1]), ayant l'adresse IP : $($Params[0]) a été bloqué"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
+                
                 LOGIN_CDC                  {$Details = "Accès distant à l'interface d'administration par le service client Bouygues Telecom depuis l'adresse IP : $($Params[0])"
                                             $LogType = "Administration"
+                                            Break
                                            }
-            
-                USER_CHANGEPWD             {$Details = "Changement du mot de passe d'administration de la BBOX : $($Json[$log].param))"
+                
+                USER_CHANGEPWD             {$Details = "Changement du mot de passe d'administration de la BBOX : $($Json[$Line].param))"
                                             $LogType = "Réseau local"
+                                            Break
                                            }
-            
-                MAIL_ERROR                 {$Details = "Erreur lors de l'envoi d'un e-mail de notification à l'adresse mail : $($Json[$log].param)"
+                
+                MAIL_ERROR                 {$Details = "Erreur lors de l'envoi d'un e-mail de notification à l'adresse mail : $($Json[$Line].param)"
                                             $LogType = "Notification"
+                                            Break
                                            }
-            
-                MAIL_SENT                  {$Details = "Envoi d'un e-mail de notification à l'adresse mail : $($Json[$log].param)"
+                
+                MAIL_SENT                  {$Details = "Envoi d'un e-mail de notification à l'adresse mail : $($Json[$Line].param)"
                                             $LogType = "Notification"
+                                            Break
                                            }
-            
-                NTP_SYNCHRONIZATION        {$Details = "L'heure et la date ont été obtenues - Synchronisation du temps : $($Json[$log].param)"
+                
+                NTP_SYNCHRONIZATION        {$Details = "L'heure et la date ont été obtenues - Synchronisation du temps : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                VOIP_DIAG_ECHOTEST_OFF     {$Details = "Test d'écho arrêté : $($Json[$log].param)"
+                
+                VOIP_DIAG_ECHOTEST_OFF     {$Details = "Test d'écho arrêté : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_DIAG_ECHOTEST_ON      {$Details = "Test d'écho démarré : $($Json[$log].param)"
+                
+                VOIP_DIAG_ECHOTEST_ON      {$Details = "Test d'écho démarré : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_DIAG_RINGTEST_OFF     {$Details = "Test de sonnerie arrêté : $($Json[$log].param)"
+                
+                VOIP_DIAG_RINGTEST_OFF     {$Details = "Test de sonnerie arrêté : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_DIAG_RINGTEST_ON      {$Details = "Test de sonnerie démarré : $($Json[$log].param)"
+                
+                VOIP_DIAG_RINGTEST_ON      {$Details = "Test de sonnerie démarré : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_INCOMING_CALL_RINGING {$Details = "Appel en cours du $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_INCOMING_CALL_RINGING {$Details = "Appel en cours du : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_INCOMING_CALL_MISSED  {$Details = "Appel entrant manqué du $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_INCOMING_CALL_MISSED  {$Details = "Appel entrant manqué du : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_INCOMING_CALL_START   {$Details = "Communication entrante en cours avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_INCOMING_CALL_START   {$Details = "Communication entrante en cours avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_INCOMING_CALL_END     {$Details = "Communication entrante terminée avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_INCOMING_CALL_END     {$Details = "Communication entrante terminée avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_OUTGOING_CALL_START   {$Details = "Communication sortante en cours avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_OUTGOING_CALL_START   {$Details = "Communication sortante en cours avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_OUTGOING_CALL_END     {$Details = "Communication entrante terminée avec le $($Params[1]) sur la ligne $(Get-Phoneline -Phoneline $Params[0])"
+                
+                VOIP_OUTGOING_CALL_END     {$Details = "Communication entrante terminée avec le : $($Params[1]) sur la ligne : $(Get-Phoneline -Phoneline $Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
+                
                 VOIP_MWI                   {$Details = "Il y a : $($Params[1]) message(s) vocal/aux sur la ligne : $($Params[0])"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_ONHOOK                {$Details = "Téléphone raccroché sur la ligne $(Get-Phoneline -Phoneline $Json[$log].param)"
+                
+                VOIP_ONHOOK                {$Details = "Téléphone raccroché sur la ligne : $(Get-Phoneline -Phoneline $Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_OFFHOOK               {$Details = "Téléphone décroché sur la ligne $(Get-Phoneline -Phoneline $Json[$log].param)"
+                
+                VOIP_OFFHOOK               {$Details = "Téléphone décroché sur la ligne : $(Get-Phoneline -Phoneline $Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_REGISTERED            {$Details = "La ligne téléphonique est active : $($Json[$log].param)"
+                
+                VOIP_REGISTERED            {$Details = "La ligne téléphonique est active : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                VOIP_UNREGISTERED          {$Details = "La ligne téléphonique n'est pas active : $($Json[$log].param)"
+                
+                VOIP_UNREGISTERED          {$Details = "La ligne téléphonique n'est pas active : $($Json[$Line].param)"
                                             $LogType = "Téléphonie"
+                                            Break
                                            }
-            
-                WAN_DOWN                   {$Details = "Accès Internet indisponible : $($Json[$log].param)"
+                
+                WAN_DOWN                   {$Details = "Accès Internet indisponible : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                WAN_UP                     {$Details = "Accès Internet disponible : $($Json[$log].param)"
+                
+                WAN_UP                     {$Details = "Accès Internet disponible : $($Json[$Line].param)"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                WAN_ROUTE_ADDED            {$Details = "Une nouvelle règle de routage a été ajouté sur l'adresse MAC : $($Params[0])"
+                
+                WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse MAC : $($Params[0])"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                WAN_ROUTE_REMOVED          {$Details = "Suppression de la règle de routage a été ajouté sur l'adresse MAC : $($Params[0])"
+                
+                WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse MAC : $($Params[0])"
                                             $LogType = "Internet"
+                                            Break
                                            }
-            
-                WAN_UPNP_ADD               {$Details = "Ajout d'une règle NAT sur le port externe : $($Params[2]) vers l'adresse IP : $($Params[0]) sur le port local : $($Params[1]) via UPnPIP "
+                
+                WAN_UPNP_ADD               {$Details = "Ajout d'une règle NAT sur le port externe : $($Params[2]) vers l'adresse IP : $($Params[0]) sur le port local : $($Params[1]) via UPnP "
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                WAN_UPNP_REMOVE            {$Details = "Suppression de la règle NAT du port externe $($Params[1]) vers l'adresse IP : $($Params[0]) via UPnPIP"
+                
+                WAN_UPNP_REMOVE            {$Details = "Suppression de la règle NAT du port externe : $($Params[1]) vers l'adresse IP : $($Params[0]) via UPnP"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                WIFI_UP                    {$Details = "Wifi activé : $($Json[$log].param)"
+                
+                WIFI_UP                    {$Details = "Wifi activé : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                WIFI_DOWN                  {$Details = "Wifi désactivé : $($Json[$log].param)"
+                
+                WIFI_DOWN                  {$Details = "Wifi désactivé : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                WIFI_SSID_24               {$Details = "Changement de nom du réseau Wi-Fi 2.4 GHz : $($Json[$log].param)"
+                
+                WIFI_SSID_24               {$Details = "Changement de nom du réseau Wi-Fi 2.4 GHz : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                WIFI_SSID_5                {$Details = "Changement de nom du réseau Wi-Fi 5 GHz : $($Json[$log].param)"
+                
+                WIFI_SSID_5                {$Details = "Changement de nom du réseau Wi-Fi 5 GHz : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                WIFI_PWD_24                {$Details = "Changement du mot de passe Wi-Fi 2.4 GHz : $($Json[$log].param)"
+                
+                WIFI_PWD_24                {$Details = "Changement du mot de passe Wi-Fi 2.4 GHz : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                WIFI_PWD_5                 {$Details = "Changement du mot de passe Wi-Fi 5 GHz : $($Json[$log].param)"
+                
+                WIFI_PWD_5                 {$Details = "Changement du mot de passe Wi-Fi 5 GHz : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                PPP_BOUND                  {$Details = "Obtention d'adresse IP via PPP : $($Json[$log].param)"
+                
+                PPP_BOUND                  {$Details = "Obtention d'adresse IP via PPP : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$log].param)"
+                
+                SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                SCHEDULER_PARENTAL_ENABLE  {$Details = "Contrôle d'accès activé : $($Json[$log].param)"
+                
+                SCHEDULER_PARENTAL_ENABLE  {$Details = "Contrôle d'accès activé : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                SCHEDULER_PARENTAL_RUNNING {$Details = "Contrôle d'accès e cours : $($Json[$log].param)"
+                
+                SCHEDULER_PARENTAL_RUNNING {$Details = "Contrôle d'accès e cours : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                SCHEDULER_PARENTAL_STOPPING{$Details = "Contrôle d'accès arrêté : $($Json[$log].param)"
+                
+                SCHEDULER_PARENTAL_STOPPING{$Details = "Contrôle d'accès arrêté : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                SCHEDULER_WIFI_DISABLE     {$Details = "Gestion des plages horaires Wi-Fi désactivé : $($Json[$log].param)"
+                
+                SCHEDULER_WIFI_DISABLE     {$Details = "Gestion des plages horaires Wi-Fi désactivé : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                SCHEDULER_WIFI_ENABLE      {$Details = "Gestion des plages horaires Wi-Fi activée : $($Json[$log].param)"
+                
+                SCHEDULER_WIFI_ENABLE      {$Details = "Gestion des plages horaires Wi-Fi activée : $($Json[$Line].param)"
                                             $LogType = "Utilisation du réseau"
+                                            Break
                                            }
-            
-                UPGRADE_MAIN_FINISH        {$Details = "Mise à jour du logiciel de la Bbox réussie (firmware opérationnel) : $($Json[$log].param)"
+                
+                UPGRADE_MAIN_FINISH        {$Details = "Mise à jour du logiciel de la Bbox réussie (firmware opérationnel) : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                UPGRADE_MAIN_FINISH_FAILED {$Details = "Echec de la mise à jour du logiciel de la Bbox (firmware opérationnel) : $($Json[$log].param)"
+                
+                UPGRADE_MAIN_FINISH_FAILED {$Details = "Echec de la mise à jour du logiciel de la Bbox (firmware opérationnel) : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                UPGRADE_START              {$Details = "Mise à jour du logiciel de la Bbox en cours (firmware opérationnel) : $($Json[$log].param)"
+                
+                UPGRADE_START              {$Details = "Mise à jour du logiciel de la Bbox en cours (firmware opérationnel) : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_PRINTER_PLUG           {$Details = "Connexion d'une imprimante USB : $($Json[$log].param)"
+                
+                USB_PRINTER_PLUG           {$Details = "Connexion d'une imprimante USB : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_PRINTER_UNPLUG         {$Details = "Déconnexion d'une imprimante USB : $($Json[$log].param)"
+                
+                USB_PRINTER_UNPLUG         {$Details = "Déconnexion d'une imprimante USB : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_STORAGE_MOUNT          {$Details = "Partition d'une clé ou d'un disque USB montée : $($Json[$log].param)"
+                
+                USB_STORAGE_MOUNT          {$Details = "Partition d'une clé ou d'un disque USB montée : $($Params[0]) sur le port USB : $($Params[1])"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_STORAGE_PLUG           {$Details = "Branchement d'un périphérique de stockage USB : $($Json[$log].param)"
+                
+                USB_STORAGE_MOUNT_RW       {$Details = "Droits de lecture et écriture sur la partition : $($Params[0]) sur le port USB : $($Params[1])"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_STORAGE_UMOUNT         {$Details = "Partition d'une clé ou d'un disque USB démontée : $($Json[$log].param)"
+                
+                USB_STORAGE_PLUG           {$Details = "Branchement d'un périphérique de stockage USB : $($Params[0]) ayant pour désignation : $($Params[1])"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                USB_STORAGE_UNPLUG         {$Details = "Déconnexion d'un périphérique de stockage USB : $($Json[$log].param)"
+                
+                USB_STORAGE_UMOUNT         {$Details = "Partition d'une clé ou d'un disque USB démontée : $($Json[$Line].param)"
                                             $LogType = "Système"
+                                            Break
                                            }
-            
-                Default                    {$Details = $Json[$log].param
+                
+                USB_STORAGE_UNPLUG         {$Details = "Déconnexion d'un périphérique de stockage USB : $($Json[$Line].param)"
+                                            $LogType = "Système"
+                                            Break
+                                           }
+                
+                Default                    {$Details = $Json[$Line].param
                                             $LogType = "Unknow / Dev error"
+                                            Break
                                            }
             }
             
             # Create New PSObject and add values to array
             $LogLine = New-Object -TypeName PSObject
-            $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $ID
+            $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $Index
             $LogLine | Add-Member -Name "Date"         -MemberType Noteproperty -Value $Date
             $LogLine | Add-Member -Name "Log type"     -MemberType Noteproperty -Value $LogType
-            $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$log].log
+            $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$Line].log
             $LogLine | Add-Member -Name "Details"      -MemberType Noteproperty -Value $Details
             
             # Add lines to $Array
             $Array += $LogLine
             
             # Go to next line
-            $log ++
-            $ID ++
+            $Line ++
+            $Index ++
         }
         
         # Get the next page
         $Pageid ++
         
         # Get information from BBOX API
-        $Json = Get-BBoxInformation -UrlToGo $UrlToGo/$Pageid
+        $Json = Get-BBoxInformation -UrlToGo "$UrlToGo/$Pageid"
     }
     
     Return $Array
@@ -3389,7 +3640,7 @@ Function Get-DeviceFullLog {
 
 Function Get-DeviceFullTechnicalLog {
 
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3401,120 +3652,120 @@ Function Get-DeviceFullTechnicalLog {
     $Array = @()
     
     $Pageid = 1
-    $ID = 0
+    $Index = 0
     
-    While($Json.exception.code -ne "404"){
+    While ($Json.exception.code -ne "404") {
         
         # Select $JSON header
         $Json = $Json.log
         
-        $log = 1
+        $Line = 1
         
-        While($log -lt $Json.count){
+        While ($Line -lt $Json.count) {
             
-            $Date = $(Format-Date -String $Json[$log].date)
+            $Date = $Json[$Line].date
             
-            If ((-not (([string]::IsNullOrEmpty($Json[$log].param)))) -and ($Json[$log].param -match ";")){
+            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ";")) {
                 
-                $Params = ($Json[$log].param).split(";")
+                $Params = ($Json[$Line].param).split(";")
             }
             
-            Switch($Json[$log].log){
+            Switch ($Json[$Line].log) {
                 
-                DEVICE_NEW                 {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])"}
+                DEVICE_NEW                 {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])";Break}
                 
-                DEVICE_UP                  {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])"}
+                DEVICE_UP                  {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])";Break}
                 
-                DEVICE_DOWN                {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])"}
+                DEVICE_DOWN                {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])";Break}
                 
-                DHCLIENT_ACK               {$Details = $Json[$log].param}
+                DHCLIENT_ACK               {$Details = $Json[$Line].param;Break}
                 
-                DHCLIENT_REQUEST           {$Details = $Json[$log].param}
+                DHCLIENT_REQUEST           {$Details = $Json[$Line].param;Break}
                 
-                DHCLIENT_DISCOVER          {$Details = $Json[$log].param}
+                DHCLIENT_DISCOVER          {$Details = $Json[$Line].param;Break}
                 
-                DIAG_FAILURE               {$Details = $Json[$log].param}
+                DIAG_FAILURE               {$Details = $Json[$Line].param;Break}
                 
-                DIAG_SUCCESS               {$Details = $Json[$log].param}
+                DIAG_SUCCESS               {$Details = $Json[$Line].param;Break}
                 
-                DISPLAY_STATE              {$Details = $Json[$log].param}
+                DISPLAY_STATE              {$Details = $Json[$Line].param;Break}
                 
-                LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])"}
+                LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])";Break}
                 
-                LAN_PORT_UP                {$Details = "Bbox Switch Port : $($Json[$log].param)"}
+                LAN_PORT_UP                {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
                 
-                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"}
+                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])";Break}
                 
-                LOGIN_LOCAL                {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])"}
+                LOGIN_LOCAL                {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])";Break}
                 
-                LOGIN_REMOTE               {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])"}
+                LOGIN_REMOTE               {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])";Break}
                 
-                LOGIN_CDC                  {$Details = "IP Address : $($Params[0])"}
+                LOGIN_CDC                  {$Details = "IP Address : $($Params[0])";Break}
                 
-                MAIL_ERROR                 {$Details = "Mail Address : $($Json[$log].param)"}
+                MAIL_ERROR                 {$Details = "Mail Address : $($Json[$Line].param)";Break}
                 
-                MAIL_SENT                  {$Details = "Mail Address : $($Json[$log].param)"}
+                MAIL_SENT                  {$Details = "Mail Address : $($Json[$Line].param)";Break}
                 
-                NTP_SYNCHRONIZATION        {$Details = $Json[$log].param}
+                NTP_SYNCHRONIZATION        {$Details = $Json[$Line].param;Break}
                 
-                VOIP_INCOMING_CALL_RINGING {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_INCOMING_CALL_RINGING {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_INCOMING_CALL_MISSED  {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_INCOMING_CALL_MISSED  {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_INCOMING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_INCOMING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_INCOMING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_INCOMING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_OUTGOING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_OUTGOING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_OUTGOING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                VOIP_OUTGOING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                VOIP_MWI                   {$Details = "Voice Message on line : $($Params[1]), Unread Voice Message Number : $($Params[0])"}
+                VOIP_MWI                   {$Details = "Voice Message on line : $($Params[1]), Unread Voice Message Number : $($Params[0])";Break}
                 
-                VOIP_ONHOOK                {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$log].param) is available"}
+                VOIP_ONHOOK                {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param) is available";Break}
                 
-                VOIP_OFFHOOK               {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$log].param) is busy"}
+                VOIP_OFFHOOK               {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param) is busy";Break}
                 
-                VOIP_REGISTERED            {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$log].param)"}
+                VOIP_REGISTERED            {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                VOIP_UNREGISTERED          {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$log].param)"}
+                VOIP_UNREGISTERED          {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                WAN_ROUTE_ADDED            {$Details = "MAC Address : $($Params[0])"}
+                WAN_ROUTE_ADDED            {$Details = "MAC Address : $($Params[0])";Break}
                 
-                WAN_ROUTE_REMOVED          {$Details = "MAC Address : $($Params[0])"}
+                WAN_ROUTE_REMOVED          {$Details = "MAC Address : $($Params[0])";Break}
                 
-                WAN_UPNP_ADD               {$Details = "IP Address : $($Params[0]), Local Port : $($Params[1]), External Port : $($Params[2])"}
+                WAN_UPNP_ADD               {$Details = "IP Address : $($Params[0]), Local Port : $($Params[1]), External Port : $($Params[2])";Break}
                 
-                WAN_UPNP_REMOVE            {$Details = "IP Address : $($Params[0]), External Port : $($Params[1])"}
+                WAN_UPNP_REMOVE            {$Details = "IP Address : $($Params[0]), External Port : $($Params[1])";Break}
                 
-                WIFI_UP                    {$Details = $Json[$log].param}
+                WIFI_UP                    {$Details = $Json[$Line].param;Break}
                 
-                WIFI_DOWN                  {$Details = $Json[$log].param}
+                WIFI_DOWN                  {$Details = $Json[$Line].param;Break}
                 
-                Default                    {$Details = $Json[$log].param}
+                Default                    {$Details = $Json[$Line].param;Break}
                 
             }
             
             # Create New PSObject and add values to array
             $LogLine = New-Object -TypeName PSObject
-            $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $ID
+            $LogLine | Add-Member -Name "ID"           -MemberType Noteproperty -Value $Index
             $LogLine | Add-Member -Name "Date"         -MemberType Noteproperty -Value $Date
-            $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$log].log
+            $LogLine | Add-Member -Name "Log Category" -MemberType Noteproperty -Value $Json[$Line].log
             $LogLine | Add-Member -Name "Details"      -MemberType Noteproperty -Value $Details
             
             # Add lines to $Array
             $Array += $LogLine
             
             # Go to next line
-            $log ++
-            $ID ++
+            $Line ++
+            $Index ++
         }
         
         # Get the next page
         $Pageid ++
         
         # Get information from BBOX API
-        $Json = Get-BBoxInformation -UrlToGo $UrlToGo/$Pageid
+        $Json = Get-BBoxInformation -UrlToGo "$UrlToGo/$Pageid"
     }
     
     Return $Array
@@ -3522,8 +3773,8 @@ Function Get-DeviceFullTechnicalLog {
 
 Function Get-DeviceCpu {
     
-    Param(
-       [Parameter(Mandatory=$True)]
+    Param (
+        [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
@@ -3557,7 +3808,7 @@ Function Get-DeviceCpu {
 
 Function Get-DeviceMemory {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3586,7 +3837,7 @@ Function Get-DeviceMemory {
 
 Function Get-DeviceLED {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3643,7 +3894,7 @@ Function Get-DeviceLED {
 
 Function Get-DeviceSummary {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3659,7 +3910,7 @@ Function Get-DeviceSummary {
     
     # Create New PSObject and add values to array
     $SummaryLine = New-Object -TypeName PSObject
-    $SummaryLine | Add-Member -Name "Date"          -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $SummaryLine | Add-Member -Name "Date"          -MemberType Noteproperty -Value $Json.now
     $SummaryLine | Add-Member -Name "Status"        -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $SummaryLine | Add-Member -Name "Default"       -MemberType Noteproperty -Value (Get-Status -Status $Json.default)
     $SummaryLine | Add-Member -Name "Model"         -MemberType Noteproperty -Value $Json.modelname
@@ -3673,7 +3924,7 @@ Function Get-DeviceSummary {
 
 Function Get-DeviceToken {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3688,10 +3939,8 @@ Function Get-DeviceToken {
     $Json = $Json.device
     
     # Convert string value to date time 
-    $Date = ((($Json.now.replace("T"," "))).replace("-","/")).replace("+0100","")
-    $Date = [Datetime]::ParseExact($Date, 'yyyy/MM/dd HH:mm:ss', $null)
-    $ExpirationDate = ((($Json.expires.replace("T"," "))).replace("-","/")).replace("+0100","")
-    $ExpirationDate = [Datetime]::ParseExact($ExpirationDate, 'yyyy/MM/dd HH:mm:ss', $null)
+    $Date = $Json.now
+    $ExpirationDate = $Json.expires
     $TimeLeft = New-TimeSpan -Start $Date -End $ExpirationDate
     
     # Create New PSObject and add values to array
@@ -3713,7 +3962,7 @@ Function Get-DeviceToken {
 
 Function Get-DHCP {
         
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -3748,7 +3997,7 @@ Function Get-DHCP {
 
 Function Get-DHCPClients {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3762,11 +4011,11 @@ Function Get-DHCPClients {
     # Select $JSON header
     $Json = $Json.dhcp.clients
             
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Client = 0
         
-        While($Client -lt $Json.Count){
+        While ($Client -lt $Json.Count) {
             
             $ClientName = New-Object -TypeName PSObject
             $ClientName | Add-Member -Name "ID"              -MemberType Noteproperty -Value $Json[$Client].ID
@@ -3785,14 +4034,14 @@ Function Get-DHCPClients {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DHCPClientsID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3806,7 +4055,7 @@ Function Get-DHCPClientsID {
 
 Function Get-DHCPActiveOptions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3832,11 +4081,11 @@ Function Get-DHCPActiveOptions {
     
     # Add DYnamic DHCP Options
     
-    If($Json.options.Count -ne 0){
+    If ($Json.options.Count -ne 0) {
         
         $Option = 0
         
-        While($Option -lt $Json.options.Count){
+        While ($Option -lt $Json.options.Count) {
             
             # Create New PSObject and add values to array
             $OptionLine = New-Object -TypeName PSObject
@@ -3858,7 +4107,7 @@ Function Get-DHCPActiveOptions {
 
 Function Get-DHCPOptions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3872,11 +4121,11 @@ Function Get-DHCPOptions {
     # Select $JSON header
     $Json = $Json.dhcp.optionscapabilities
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Option = 0
         
-        While($Option -lt $Json.Count){
+        While ($Option -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $OptionLine = New-Object -TypeName PSObject
@@ -3894,14 +4143,14 @@ Function Get-DHCPOptions {
     
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DHCPOptionsID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3915,7 +4164,7 @@ Function Get-DHCPOptionsID {
 
 Function Get-DHCPSTBOptions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3929,11 +4178,11 @@ Function Get-DHCPSTBOptions {
     # Select $JSON header
     $Json = $Json.dhcp.options
     
-    If($Json.count -ne 0){
+    If ($Json.count -ne 0) {
         
         $Option = 0
         
-        While($Option -lt $Json.count){
+        While ($Option -lt $Json.count) {
             
             # Create New PSObject and add values to array
             $OptionLine = New-Object -TypeName PSObject
@@ -3949,14 +4198,14 @@ Function Get-DHCPSTBOptions {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 function Get-DHCPv6PrefixDelegation {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -3970,11 +4219,11 @@ function Get-DHCPv6PrefixDelegation {
     # Select $JSON header
     $Json = $Json.dhcp.prefixdelegation
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $PrefixID = 0
         
-        While($PrefixID -lt $Json.Count){
+        While ($PrefixID -lt $Json.Count) {
             
             $PrefixDelegationLine = New-Object -TypeName PSObject
             $PrefixDelegationLine | Add-Member -Name "ID"             -MemberType Noteproperty -Value $Json[$PrefixID].ID
@@ -3994,14 +4243,14 @@ function Get-DHCPv6PrefixDelegation {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DHCPv6Options {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4015,11 +4264,11 @@ Function Get-DHCPv6Options {
     # Select $JSON header
     $Json = $Json.dhcp.optionscapabilities
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Option = 0
         
-        While($Option -lt $Json.Count){
+        While ($Option -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $OptionLine = New-Object -TypeName PSObject
@@ -4037,7 +4286,7 @@ Function Get-DHCPv6Options {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -4048,7 +4297,7 @@ Function Get-DHCPv6Options {
 
 Function Get-DNSStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4083,7 +4332,7 @@ Function Get-DNSStats {
 
 Function Get-DYNDNS {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4115,7 +4364,7 @@ Function Get-DYNDNS {
 
 Function Get-DYNDNSProviderList {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4132,11 +4381,11 @@ Function Get-DYNDNSProviderList {
     # Select $JSON header
     $Json = $Json.$APIName.servercapabilities
     
-    If($Json.count -ne 0){
+    If ($Json.count -ne 0) {
     
     $Providers = 0
     
-    While($Providers -lt $Json.count){
+    While ($Providers -lt $Json.count) {
         
         # Create New PSObject and add values to array
         $ProviderLine = New-Object -TypeName PSObject
@@ -4153,14 +4402,14 @@ Function Get-DYNDNSProviderList {
     
     Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DYNDNSClient {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4177,11 +4426,11 @@ Function Get-DYNDNSClient {
     # Select $JSON header
     $Json = $Json.$APIName.domain
     
-    If($Json.count -ne "0"){
+    If ($Json.count -ne "0") {
         
         $Provider = 0
         
-        While($Provider -lt $Json.count){
+        While ($Provider -lt $Json.count) {
             
             # Create New PSObject and add values to array
             $ProviderLine = New-Object -TypeName PSObject
@@ -4193,11 +4442,11 @@ Function Get-DYNDNSClient {
             $ProviderLine | Add-Member -Name "Host"                -MemberType Noteproperty -Value $Json[$Provider].host
             $ProviderLine | Add-Member -Name "Record Type"         -MemberType Noteproperty -Value $Json[$Provider].record
             $ProviderLine | Add-Member -Name "MAC Address"         -MemberType Noteproperty -Value $Json[$Provider].device
-            $ProviderLine | Add-Member -Name "Date"                -MemberType Noteproperty -Value $(Format-Date -String $Json[$Provider].status.date)
+            $ProviderLine | Add-Member -Name "Date"                -MemberType Noteproperty -Value $Json[$Provider].status.date
             $ProviderLine | Add-Member -Name "Status"              -MemberType Noteproperty -Value $Json[$Provider].status.status
             $ProviderLine | Add-Member -Name "Message"             -MemberType Noteproperty -Value $Json[$Provider].status.message
             $ProviderLine | Add-Member -Name "IP Address"          -MemberType Noteproperty -Value $Json[$Provider].status.ip
-            $ProviderLine | Add-Member -Name "Cache Date"          -MemberType Noteproperty -Value $(Format-Date -String $Json[$Provider].status.cache_date)
+            $ProviderLine | Add-Member -Name "Cache Date"          -MemberType Noteproperty -Value $Json[$Provider].status.cache_date
             $ProviderLine | Add-Member -Name "Periodic Update (H)" -MemberType Noteproperty -Value $Json[$Provider].periodicupdate
             
             $Array += $ProviderLine
@@ -4208,17 +4457,18 @@ Function Get-DYNDNSClient {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DYNDNSClientID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
+    
     $DyndnsIDs = Get-DYNDNSClient -UrlToGo $UrlToGo -APIName $APIName
     $DyndnsID = $DyndnsIDs | Select-Object ID,Provider,Host | Out-GridView -Title "DYNDNS Configuration List" -OutputMode Single
     $Dyndns = $DyndnsIDs | Where-Object {$_.ID -ilike $DyndnsID.id}
@@ -4232,7 +4482,7 @@ Function Get-DYNDNSClientID {
 
 Function Get-FIREWALL {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4263,7 +4513,7 @@ Function Get-FIREWALL {
 
 Function Get-FIREWALLRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4277,11 +4527,11 @@ Function Get-FIREWALLRules {
     # Select $JSON header
     $Json = $Json.firewall.rules
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Rule = 0
         
-        While($Rule -lt $Json.Count){
+        While ($Rule -lt $Json.Count) {
             
             $RuleLine = New-Object -TypeName PSObject
             $RuleLine | Add-Member -Name "ID"                             -MemberType Noteproperty -Value $Json[$Rule].ID
@@ -4310,14 +4560,14 @@ Function Get-FIREWALLRules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-FIREWALLRulesID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4331,7 +4581,7 @@ Function Get-FIREWALLRulesID {
 
 Function Get-FIREWALLPingResponder {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4360,7 +4610,7 @@ Function Get-FIREWALLPingResponder {
 
 Function Get-FIREWALLGamerMode {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4387,7 +4637,7 @@ Function Get-FIREWALLGamerMode {
 
 Function Get-FIREWALLv6Rules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4401,11 +4651,11 @@ Function Get-FIREWALLv6Rules {
     # Select $JSON header
     $Json = $Json.firewall.rules
     
-    IF($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Rule = 0
         
-        While($Rule -lt $Json.Count){
+        While ($Rule -lt $Json.Count) {
             
             $RuleLine = New-Object -TypeName PSObject
             $RuleLine | Add-Member -Name "ID"                             -MemberType Noteproperty -Value $Json[$Rule].ID
@@ -4438,14 +4688,14 @@ Function Get-FIREWALLv6Rules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-FIREWALLv6RulesID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4459,7 +4709,7 @@ Function Get-FIREWALLv6RulesID {
 
 function Get-FIREWALLv6Level {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4490,7 +4740,7 @@ function Get-FIREWALLv6Level {
 
 Function Get-HOSTS {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4507,11 +4757,11 @@ Function Get-HOSTS {
     # Select $JSON header
     $Json = $Json.$APIName.list
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Device = 0
         
-        While($Device -lt ($Json.Count)){
+        While ($Device -lt ($Json.Count)) {
             
             # Create New PSObject and add values to array
             $DeviceLine = New-Object -TypeName PSObject
@@ -4525,28 +4775,28 @@ Function Get-HOSTS {
             $DeviceLine | Add-Member -Name "Device Type"                      -MemberType Noteproperty -Value $Json[$Device].devicetype
             
             # If STB part
-            If($Json[$Device].devicetype -like "STB"){
+            If ($Json[$Device].devicetype -like "STB") {
                 
                 $DeviceLine | Add-Member -Name "STB - Product"                -MemberType Noteproperty -Value $Json[$Device].stb.product
                 $DeviceLine | Add-Member -Name "STB - Serial"                 -MemberType Noteproperty -Value $Json[$Device].stb.serial
             }
-            Else{
+            Else {
                 $DeviceLine | Add-Member -Name "STB - Product"                -MemberType Noteproperty -Value ""
                 $DeviceLine | Add-Member -Name "STB - Serial"                 -MemberType Noteproperty -Value ""
             }
             
-            $DeviceLine | Add-Member -Name "IPV4 Date first connexion"        -MemberType Noteproperty -Value ($Json[$Device].firstseen).Replace("T"," ")
-            $DeviceLine | Add-Member -Name "IPV4 Date last connexion"         -MemberType Noteproperty -Value (Get-Date).AddSeconds(-($Json[$Device].lastseen))
+            $DeviceLine | Add-Member -Name "IPV4 Date first connexion"        -MemberType Noteproperty -Value $Json[$Device].firstseen
+            $DeviceLine | Add-Member -Name "IPV4 Date last connexion"         -MemberType Noteproperty -Value $Json[$Device].lastseen
             
             # If IPV6 part
-            If(-not ([string]::IsNullOrEmpty($Json[$Device].ip6address))){
+            If (-not ([string]::IsNullOrEmpty($Json[$Device].ip6address))) {
                 
                 $DeviceLine | Add-Member -Name "IPV6 Address"                 -MemberType Noteproperty -Value $($Json[$Device].ip6address.ipaddress -join ",")
                 $DeviceLine | Add-Member -Name "IPV6 Statut"                  -MemberType Noteproperty -Value $($Json[$Device].ip6address.status -join ",")
                 $DeviceLine | Add-Member -Name "IPV6 First Connexion Date"    -MemberType Noteproperty -Value $($Json[$Device].ip6address.lastseen -join ",")
                 $DeviceLine | Add-Member -Name "IPV6 Last Connexion Date"     -MemberType Noteproperty -Value $($Json[$Device].ip6address.lastscan -join ",")
             }
-            Else{
+            Else {
                 $DeviceLine | Add-Member -Name "IPV6 Address"                 -MemberType Noteproperty -Value ""
                 $DeviceLine | Add-Member -Name "IPV6 Statut"                  -MemberType Noteproperty -Value ""
                 $DeviceLine | Add-Member -Name "IPV6 First Connexion Date"    -MemberType Noteproperty -Value ""
@@ -4581,14 +4831,14 @@ Function Get-HOSTS {
             $DeviceLine | Add-Member -Name "Detected Active Services"         -MemberType Noteproperty -Value $($Json[$Device].scan.services -join ",")
             
             <# If Services part
-            If(-not ([string]::IsNullOrEmpty($Json[$Device].scan.services))){
+            If (-not ([string]::IsNullOrEmpty($Json[$Device].scan.services))) {
                 
                 $DeviceLine | Add-Member -Name "Detected Protocol"            -MemberType Noteproperty -Value $Json[$Device].scan.services.protocol
                 $DeviceLine | Add-Member -Name "Detected Port"                -MemberType Noteproperty -Value $Json[$Device].scan.services.port
                 $DeviceLine | Add-Member -Name "Port State"                   -MemberType Noteproperty -Value $Json[$Device].scan.services.state
                 $DeviceLine | Add-Member -Name "Reason"                       -MemberType Noteproperty -Value $Json[$Device].scan.services.reason
             }
-            Else{
+            Else {
                 $DeviceLine | Add-Member -Name "Detected Protocol"            -MemberType Noteproperty -Value ""
                 $DeviceLine | Add-Member -Name "Detected Port"                -MemberType Noteproperty -Value ""
                 $DeviceLine | Add-Member -Name "Port State"                   -MemberType Noteproperty -Value ""
@@ -4605,14 +4855,14 @@ Function Get-HOSTS {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-HOSTSID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4626,10 +4876,11 @@ Function Get-HOSTSID {
 
 Function Get-HOSTSME {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
+    
     # Get information from BBOX API
     $Json = Get-BBoxInformation -UrlToGo $UrlToGo
     
@@ -4651,28 +4902,29 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name "Device Type"                      -MemberType Noteproperty -Value $Json.devicetype
     
     # If STB part
-    If($Json.devicetype -like "STB"){
+    If ($Json.devicetype -like "STB") {
             
         $DeviceLine | Add-Member -Name "STB - Product"                -MemberType Noteproperty -Value $Json.stb.product
         $DeviceLine | Add-Member -Name "STB - Serial"                 -MemberType Noteproperty -Value $Json.stb.serial
     }
-    Else{
+    Else {
         $DeviceLine | Add-Member -Name "STB - Product"                -MemberType Noteproperty -Value ""
         $DeviceLine | Add-Member -Name "STB - Serial"                 -MemberType Noteproperty -Value ""
     }
     
-    $DeviceLine | Add-Member -Name "IPV4 Date first connexion"        -MemberType Noteproperty -Value ($Json.firstseen).Replace("T"," ")
-    $DeviceLine | Add-Member -Name "IPV4 Date last connexion"         -MemberType Noteproperty -Value (Get-Date).AddSeconds(-($Json.lastseen))
+    $DeviceLine | Add-Member -Name "IPV4 Date first connexion"        -MemberType Noteproperty -Value $Json.firstseen
+    $DeviceLine | Add-Member -Name "IPV4 Date last connexion"         -MemberType Noteproperty -Value $Json.lastseen
         
     # If IPV6 part
-    If(-not ([string]::IsNullOrEmpty($Json.ip6address))){
+    If (-not ([string]::IsNullOrEmpty($Json.ip6address))) {
         
         $IPV6Line = 0
         $IPAddress = ""
         $Lastseen = ""
         $Lastscan = ""
         $Status = ""
-        While($IPV6Line -ne $Json.ip6address.count){
+        
+        While ($IPV6Line -ne $Json.ip6address.count) {
             
             $IPAddress += "$($Json.ip6address[$IPV6Line].ipaddress);"
             $Status    += "$($Json.ip6address[$IPV6Line].status);"
@@ -4688,7 +4940,7 @@ Function Get-HOSTSME {
         $DeviceLine | Add-Member -Name "IPV6 First Connexion Date"    -MemberType Noteproperty -Value $Lastseen
         $DeviceLine | Add-Member -Name "IPV6 Last Connexion Date"     -MemberType Noteproperty -Value $Lastscan
     }
-    Else{
+    Else {
         $DeviceLine | Add-Member -Name "IPV6 Address"                 -MemberType Noteproperty -Value ""
         $DeviceLine | Add-Member -Name "IPV6 Statut"                  -MemberType Noteproperty -Value ""
         $DeviceLine | Add-Member -Name "IPV6 First Connexion Date"    -MemberType Noteproperty -Value ""
@@ -4716,7 +4968,7 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name "Parental Control - Last Status"   -MemberType Noteproperty -Value $Json.parentalcontrol.statusRemaining
     $DeviceLine | Add-Member -Name "Parental Control - Next Status"   -MemberType Noteproperty -Value $Json.parentalcontrol.statusUntil
     $DeviceLine | Add-Member -Name "Lease"                            -MemberType Noteproperty -Value $Json.lease
-    $DeviceLine | Add-Member -Name "First Connexion Date"             -MemberType Noteproperty -Value $Json.firstSeen.Replace("T"," ")
+    $DeviceLine | Add-Member -Name "First Connexion Date"             -MemberType Noteproperty -Value $Json.firstSeen
     $DeviceLine | Add-Member -Name "Last Connexion Date"              -MemberType Noteproperty -Value $Json.lastSeen
     $DeviceLine | Add-Member -Name "Is Active ?"                      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.active)
     $DeviceLine | Add-Member -Name "Ping Min"                         -MemberType Noteproperty -Value $Json.ping.min
@@ -4725,15 +4977,19 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name "Ping Success"                     -MemberType Noteproperty -Value $Json.ping.success
     $DeviceLine | Add-Member -Name "Ping Error"                       -MemberType Noteproperty -Value $Json.ping.error
     $DeviceLine | Add-Member -Name "Ping Tries"                       -MemberType Noteproperty -Value $Json.ping.tries
-    If($Json.ping.status){
+    If ($Json.ping.status) {
         $DeviceLine | Add-Member -Name "Ping status"                  -MemberType Noteproperty -Value (Get-Status -Status $Json.ping.status)
     }
-    Else{$DeviceLine | Add-Member -Name "Ping status"                 -MemberType Noteproperty -Value $Json.ping.status}
+    Else {
+        $DeviceLine | Add-Member -Name "Ping status"                 -MemberType Noteproperty -Value $Json.ping.status
+    }
     $DeviceLine | Add-Member -Name "Ping Result"                      -MemberType Noteproperty -Value $Json.ping.result
-    If($Json.scan.status){
+    If ($Json.scan.status) {
         $DeviceLine | Add-Member -Name "Scan Status"                  -MemberType Noteproperty -Value (Get-Status -Status $Json.scan.status)
     }
-    Else{$DeviceLine |Add-Member -Name "Scan Status"                  -MemberType Noteproperty -Value $Json.scan.status}
+    Else {
+        $DeviceLine |Add-Member -Name "Scan Status"                  -MemberType Noteproperty -Value $Json.scan.status
+    }
     $DeviceLine | Add-Member -Name "Is Automatic Services Scan ?"     -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.scan.enable)
     $DeviceLine | Add-Member -Name "Services Detected"                -MemberType Noteproperty -Value $($Json.scan.services) #$Services
     
@@ -4741,7 +4997,7 @@ Function Get-HOSTSME {
     $Services = @()
     $Service = 1
     
-    While($Service -lt $Json.scan.services.count){
+    While ($Service -lt $Json.scan.services.count) {
         
         # Create New PSObject and add values to array
         $ServiceLine = New-Object -TypeName PSObject
@@ -4763,7 +5019,7 @@ Function Get-HOSTSME {
 
 Function Get-HOSTSLite {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4777,11 +5033,11 @@ Function Get-HOSTSLite {
     # Select $JSON header
     $Json = $Json.hosts.list
     
-    If($Json.count -ne 0){
+    If ($Json.count -ne 0) {
         
         $Device = 0
         
-        While($Device -lt $Json.count){
+        While ($Device -lt $Json.count) {
             
             # Create New PSObject and add values to array
             $DeviceLine = New-Object -TypeName PSObject
@@ -4800,14 +5056,14 @@ Function Get-HOSTSLite {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-HOSTSPAUTH {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4821,11 +5077,11 @@ Function Get-HOSTSPAUTH {
     # Select $JSON header
     $Json = $Json.hosts.list
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
     
         $Device = 0
     
-        While($Device -lt ($Json.Count)){
+        While ($Device -lt ($Json.Count)) {
         
             # Create New PSObject and add values to array
             $DeviceLine = New-Object -TypeName PSObject
@@ -4867,7 +5123,7 @@ Function Get-HOSTSPAUTH {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -4878,7 +5134,7 @@ Function Get-HOSTSPAUTH {
 
 Function Get-IPTV {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4895,11 +5151,11 @@ Function Get-IPTV {
     # Select $JSON header
     $Json = $Json.$APIName
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $IPTV = 0
         
-        While($IPTV -lt $Json.Count){
+        While ($IPTV -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $IPTVLine = New-Object -TypeName PSObject
@@ -4910,7 +5166,7 @@ Function Get-IPTV {
             $IPTVLine | Add-Member -Name "Channel Name"           -MemberType Noteproperty -Value $Json[$IPTV].name
             $IPTVLine | Add-Member -Name "Channel Number"         -MemberType Noteproperty -Value $Json[$IPTV].number
             $IPTVLine | Add-Member -Name "Channel Status"         -MemberType Noteproperty -Value (Get-Status -Status $Json[$IPTV].receipt)
-            $IPTVLine | Add-Member -Name "EPG Channel ID"        -MemberType Noteproperty -Value $Json[$IPTV].epgid
+            $IPTVLine | Add-Member -Name "EPG Channel ID"         -MemberType Noteproperty -Value $Json[$IPTV].epgid
             
             # Add lines to $Array
             $Array += $IPTVLine
@@ -4921,14 +5177,14 @@ Function Get-IPTV {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-IPTVDiags {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -4944,13 +5200,13 @@ Function Get-IPTVDiags {
     
     # Create New PSObject and add values to array
     $IPTVDiagsLine = New-Object -TypeName PSObject
-    $IPTVDiagsLine | Add-Member -Name "Date"                 -MemberType Noteproperty -Value $(Format-Date -String $Json.now) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
+    $IPTVDiagsLine | Add-Member -Name "Date"                 -MemberType Noteproperty -Value $Json.now # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
     $IPTVDiagsLine | Add-Member -Name "IGMP State"           -MemberType Noteproperty -Value (Get-State -State $Json.igmp.state) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
     $IPTVDiagsLine | Add-Member -Name "IGMP Status"          -MemberType Noteproperty -Value (Get-Status -Status $Json.igmp.enable) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
     $IPTVDiagsLine | Add-Member -Name "IPTV Multicast State" -MemberType Noteproperty -Value (Get-State -State $Json.iptv.multicast.state)
-    $IPTVDiagsLine | Add-Member -Name "IPTV Multicast Date"  -MemberType Noteproperty -Value $(Format-Date -String $Json.iptv.multicast.date)
+    $IPTVDiagsLine | Add-Member -Name "IPTV Multicast Date"  -MemberType Noteproperty -Value $Json.iptv.multicast.date
     $IPTVDiagsLine | Add-Member -Name "IPTV Platform State"  -MemberType Noteproperty -Value (Get-State -State $Json.iptv.platform.state)
-    $IPTVDiagsLine | Add-Member -Name "IPTV Platform Date"   -MemberType Noteproperty -Value $(Format-Date -String $Json.iptv.platform.date)
+    $IPTVDiagsLine | Add-Member -Name "IPTV Platform Date"   -MemberType Noteproperty -Value $Json.iptv.platform.date
     
     # Add lines to $Array
     $Array += $IPTVDiagsLine
@@ -4964,7 +5220,7 @@ Function Get-IPTVDiags {
 
 Function Get-LANIP {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -4993,7 +5249,7 @@ Function Get-LANIP {
     $IPLine | Add-Member -Name "IPV6 State"                      -MemberType Noteproperty -Value (Get-State -State $Json.ip.ip6state)
     $IPV6Line = 0
     $IPV6Params = ""
-    While($IPV6Line -lt $json.ip.ip6address.Count){
+    While ($IPV6Line -lt $json.ip.ip6address.Count) {
         
         $IPV6Params += "$($Json.ip.ip6address[$IPV6Line].ipaddress),$($Json.ip.ip6address[$IPV6Line].status),$($Json.ip.ip6address[$IPV6Line].valid),$($Json.ip.ip6address[$IPV6Line].preferred);"
         
@@ -5003,11 +5259,11 @@ Function Get-LANIP {
     $IPLine | Add-Member -Name "IPV6 Address"                    -MemberType Noteproperty -Value $IPV6Params
     $IPLine | Add-Member -Name "IPV6 Prefix"                     -MemberType Noteproperty -Value $Json.ip.ip6prefix.prefix
     $IPLine | Add-Member -Name "IPV6 Prefix Status"              -MemberType Noteproperty -Value $Json.ip.ip6prefix.status
-    If(-not ([string]::IsNullOrEmpty($Json.ip.ip6prefix.valid))){
-        $IPLine | Add-Member -Name "IPV6 Prefix Valid"               -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6prefix.valid)
+    If (-not ([string]::IsNullOrEmpty($Json.ip.ip6prefix.valid))) {
+        $IPLine | Add-Member -Name "IPV6 Prefix Valid"           -MemberType Noteproperty -Value $Json.ip.ip6prefix.valid
     }
-    If(-not ([string]::IsNullOrEmpty($Json.ip.ip6prefix.preferred))){
-        $IPLine | Add-Member -Name "IPV6 Prefix Preferred"           -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6prefix.preferred)
+    If (-not ([string]::IsNullOrEmpty($Json.ip.ip6prefix.preferred))) {
+        $IPLine | Add-Member -Name "IPV6 Prefix Preferred"       -MemberType Noteproperty -Value $Json.ip.ip6prefix.preferred
     }
     $IPLine | Add-Member -Name "MAC Address"                     -MemberType Noteproperty -Value $Json.ip.mac
     $IPLine | Add-Member -Name "BBOX Hostname"                   -MemberType Noteproperty -Value $Json.ip.hostname
@@ -5019,7 +5275,7 @@ Function Get-LANIP {
     # Switch Part
     $Port = 0
     
-    While($Port -lt $json.switch.ports.Count){
+    While ($Port -lt $json.switch.ports.Count) {
         
         # Create New PSObject and add values to array
         $PortLine = New-Object -TypeName PSObject
@@ -5040,7 +5296,7 @@ Function Get-LANIP {
 
 Function Get-LANStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5077,7 +5333,7 @@ Function Get-LANStats {
 
 Function Get-LANAlerts {
 
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -5094,110 +5350,114 @@ Function Get-LANAlerts {
     # Select $JSON header
     $Json = $Json.$APIName.list
     
-    If($Json.count -ne 0){
+    If ($Json.count -ne 0) {
         
-        $Alert = 0
+        $Line = 0
         
-        While($Alert -lt $Json.count){
+        While ($Line -lt $Json.count) {
             
             # $RecoveryDate formatting
-            If(-not ([string]::IsNullOrEmpty($Json[$Alert].param))){
+            If (-not ([string]::IsNullOrEmpty($Json[$Line].param))) {
                 
-                $RecoveryDate = $(Format-Date -String $Json[$Alert].recovery_date)
+                $RecoveryDate = $Json[$Line].recovery_date
             }
-            Else{$RecoveryDate = $Json[$Alert].recovery_date}
+            Else {
+                $RecoveryDate = $Json[$Line].recovery_date
+            }
             
             # $SolvedTime formatting
-            If($Json[$Alert].total_duration -ne 0){
+            If ($Json[$Line].total_duration -ne 0) {
                 
-                $SolvedTime = ((Get-Date).AddSeconds(- $($Json[$Alert].total_duration)))
+                $SolvedTime = $Json[$Line].total_duration
             }
-            Else{$SolvedTime = "0"}
+            Else {
+                $SolvedTime = "0"
+            }
             
             # $Params formatting
-            If ((-not (([string]::IsNullOrEmpty($Json[$Alert].param)))) -and ($Json[$Alert].param -match ";" )){
+            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ";" )) {
                 
-                $Params = ($Json[$Alert].param).split(";")
+                $Params = ($Json[$Line].param).split(";")
             }
             
             # $Details formatting
-            Switch($Json[$Alert].ident){
+            Switch ($Json[$Line].ident) {
                 
-                ALERT_DEVICE_UP                  {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])"}
+                ALERT_DEVICE_UP                  {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])";Break}
                 
-                ALERT_DEVICE_DOWN                {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])"}
+                ALERT_DEVICE_DOWN                {$Details = "Hostname : $($Params[2]), IP Address : $($Params[1]), MAC Address : $($Params[0])";Break}
                 
-                ALERT_DHCLIENT_ACK               {$Details = $Json[$Alert].param}
+                ALERT_DHCLIENT_ACK               {$Details = $Json[$Line].param;Break}
                 
-                ALERT_DHCLIENT_REQUEST           {$Details = $Json[$Alert].param}
+                ALERT_DHCLIENT_REQUEST           {$Details = $Json[$Line].param;Break}
                 
-                ALERT_DHCLIENT_DISCOVER          {$Details = $Json[$Alert].param}
+                ALERT_DHCLIENT_DISCOVER          {$Details = $Json[$Line].param;Break}
                 
-                ALERT_DIAG_SUCCESS               {$Details = $Json[$Alert].param}
+                ALERT_DIAG_SUCCESS               {$Details = $Json[$Line].param;Break}
                 
-                ALERT_DISPLAY_STATE              {$Details = $Json[$Alert].param}
+                ALERT_DISPLAY_STATE              {$Details = $Json[$Line].param;Break}
                 
-                ALERT_LAN_API_LOCKED             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[3]), Failed Attempt Time : $($Params[1]), Block Time : $($Params[2]) min"}
+                ALERT_LAN_API_LOCKED             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[3]), Failed Attempt Time : $($Params[1]), Block Time : $($Params[2]) min";Break}
                 
-                ALERT_LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])"}
+                ALERT_LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostaname : $($Params[2]), IP Address destination : $($Params[1])";Break}
                 
-                ALERT_LAN_PORT_UP                {$Details = "BBox Switch Port : $($Json[$Alert].param)"}
+                ALERT_LAN_PORT_UP                {$Details = "BBox Switch Port : $($Json[$Line].param)";Break}
                 
-                ALERT_LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Associated Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"}
+                ALERT_LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Associated Hostname : $($Params[2]), IP Address in conflit : $($Params[1])";Break}
                 
-                ALERT_LAN_DUP_IP                 {$Details = "IP Address conflict between : $($Json[$Alert].param)"}
+                ALERT_LAN_DUP_IP                 {$Details = "IP Address conflict between : $($Json[$Line].param)";Break}
                 
-                ALERT_LOGIN_LOCAL                {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])"}
+                ALERT_LOGIN_LOCAL                {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])";Break}
                 
-                ALERT_MAIL_ERROR                 {$Details = "Error to send alert to the Mail Address : $($Json[$Alert].param)"}
+                ALERT_MAIL_ERROR                 {$Details = "Error to send alert to the Mail Address : $($Json[$Line].param)";Break}
                 
-                ALERT_NTP_SYNCHRONIZATION        {$Details = $Json[$Alert].param}
+                ALERT_NTP_SYNCHRONIZATION        {$Details = $Json[$Line].param}
                 
-                ALERT_VOIP_INCOMING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                ALERT_VOIP_INCOMING_CALL_END     {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                ALERT_VOIP_INCOMING_CALL_RINGING {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                ALERT_VOIP_INCOMING_CALL_RINGING {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                ALERT_VOIP_INCOMING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])"}
+                ALERT_VOIP_INCOMING_CALL_START   {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Params[0]), Number : $($Params[1])";Break}
                 
-                ALERT_VOIP_ONHOOK                {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Alert].param)"}
+                ALERT_VOIP_ONHOOK                {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                ALERT_VOIP_OFFHOOK               {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Alert].param)"}
+                ALERT_VOIP_OFFHOOK               {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                ALERT_VOIP_REGISTERED            {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Alert].param)"}
+                ALERT_VOIP_REGISTERED            {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                ALERT_WAN_ROUTE_ADDED            {$Details = "IP Address : $($Params[0])"}
+                ALERT_WAN_ROUTE_ADDED            {$Details = "IP Address : $($Params[0])";Break}
                 
-                ALERT_WAN_UPNP_ADD               {$Details = "IP Address : $($Params[0]), Local Port : $($Params[1]), External Port : $($Params[2])"}
+                ALERT_WAN_UPNP_ADD               {$Details = "IP Address : $($Params[0]), Local Port : $($Params[1]), External Port : $($Params[2])";Break}
                 
-                ALERT_WAN_UPNP_REMOVE            {$Details = "IP Address : $($Params[0]), Port : $($Params[1])"}
+                ALERT_WAN_UPNP_REMOVE            {$Details = "IP Address : $($Params[0]), Port : $($Params[1])";Break}
                 
-                ALERT_WIFI_UP                    {$Details = $Json[$Alert].param}
+                ALERT_WIFI_UP                    {$Details = $Json[$Line].param;Break}
                 
-                Default                          {$Details = $Json[$Alert].param}
+                Default                          {$Details = $Json[$Line].param;Break}
             }
             
             # Create New PSObject and add values to array
             $AlertLine = New-Object -TypeName PSObject
-            $AlertLine | Add-Member -Name "ID"                 -MemberType Noteproperty -Value $Json[$Alert].id
-            $AlertLine | Add-Member -Name "Alert type"         -MemberType Noteproperty -Value $Json[$Alert].ident
+            $AlertLine | Add-Member -Name "ID"                 -MemberType Noteproperty -Value $Json[$Line].id
+            $AlertLine | Add-Member -Name "Alert type"         -MemberType Noteproperty -Value $Json[$Line].ident
             $AlertLine | Add-Member -Name "Details"            -MemberType Noteproperty -Value $Details # Calculate field not inclued in API
-            $AlertLine | Add-Member -Name "First Date seen"    -MemberType Noteproperty -Value $(Format-Date -String $Json[$Alert].first_date)
-            $AlertLine | Add-Member -Name "Last Date seen"     -MemberType Noteproperty -Value $(Format-Date -String $Json[$Alert].last_date)
+            $AlertLine | Add-Member -Name "First Date seen"    -MemberType Noteproperty -Value $Json[$Line].first_date
+            $AlertLine | Add-Member -Name "Last Date seen"     -MemberType Noteproperty -Value $Json[$Line].last_date
             $AlertLine | Add-Member -Name "Recovery Date"      -MemberType Noteproperty -Value $RecoveryDate
-            $AlertLine | Add-Member -Name "Nb Occurences"      -MemberType Noteproperty -Value $Json[$Alert].count
+            $AlertLine | Add-Member -Name "Nb Occurences"      -MemberType Noteproperty -Value $Json[$Line].count
             $AlertLine | Add-Member -Name "Solved Time"        -MemberType Noteproperty -Value $SolvedTime # Calculate filed not inclued in API
-            $AlertLine | Add-Member -Name "Notification Level" -MemberType Noteproperty -Value $Json[$Alert].level
+            $AlertLine | Add-Member -Name "Notification Level" -MemberType Noteproperty -Value $Json[$Line].level
             
             # Add lines to $Array
             $Array += $AlertLine
             
             # Go to next line
-            $Alert ++
+            $Line ++
         }
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -5208,7 +5468,7 @@ Function Get-LANAlerts {
 
 Function Get-NAT {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5236,7 +5496,7 @@ Function Get-NAT {
 
 Function Get-NATDMZ {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5266,7 +5526,7 @@ Function Get-NATDMZ {
 
 Function Get-NATRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5280,11 +5540,11 @@ Function Get-NATRules {
     # Select $JSON header
     $Json = $Json.nat.rules
     
-    If($Json.count -ne 0){
+    If ($Json.count -ne 0) {
         
         $NAT = 0
         
-        While($NAT -lt $Json.count){
+        While ($NAT -lt $Json.count) {
             
             # Create New PSObject and add values to array
             $NATLine = New-Object -TypeName PSObject
@@ -5306,14 +5566,14 @@ Function Get-NATRules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NATRulesID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5331,7 +5591,7 @@ Function Get-NATRulesID {
 
 Function Get-NOTIFICATIONConfig {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -5364,7 +5624,7 @@ Function Get-NOTIFICATIONConfig {
 
 Function Get-NOTIFICATIONConfigAlerts {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5378,11 +5638,11 @@ Function Get-NOTIFICATIONConfigAlerts {
     # Select $JSON header
     $Json = $Json.notification.Alerts
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $NOTIFICATION = 0
         
-        While($NOTIFICATION -lt $Json.Count){
+        While ($NOTIFICATION -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $NOTIFICATIONLine = New-Object -TypeName PSObject
@@ -5403,14 +5663,14 @@ Function Get-NOTIFICATIONConfigAlerts {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NOTIFICATIONConfigContacts {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5424,11 +5684,11 @@ Function Get-NOTIFICATIONConfigContacts {
     # Select $JSON header
     $Json = $Json.notification.contacts
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Contacts = 0
         
-        While($Contacts -lt $Json.Count){
+        While ($Contacts -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $ContactsLine = New-Object -TypeName PSObject
@@ -5446,14 +5706,14 @@ Function Get-NOTIFICATIONConfigContacts {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NOTIFICATIONConfigEvents {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5467,11 +5727,11 @@ Function Get-NOTIFICATIONConfigEvents {
     # Select $JSON header
     $Json = $Json.notification.events
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Events = 0
         
-        While($Events -lt $Json.Count){
+        While ($Events -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $EventsLine = New-Object -TypeName PSObject
@@ -5489,14 +5749,14 @@ Function Get-NOTIFICATIONConfigEvents {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NOTIFICATIONAlerts {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5510,11 +5770,11 @@ Function Get-NOTIFICATIONAlerts {
     # Select $JSON header
     $Json = $Json.notification.Alerts
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $NOTIFICATION = 0
         
-        While($NOTIFICATION -lt $Json.Count){
+        While ($NOTIFICATION -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $NOTIFICATIONLine = New-Object -TypeName PSObject
@@ -5535,14 +5795,14 @@ Function Get-NOTIFICATIONAlerts {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NOTIFICATIONContacts {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5556,11 +5816,11 @@ Function Get-NOTIFICATIONContacts {
     # Select $JSON header
     $Json = $Json.notification.contacts
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Contacts = 0
         
-        While($Contacts -lt $Json.Count){
+        While ($Contacts -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $ContactsLine = New-Object -TypeName PSObject
@@ -5578,14 +5838,14 @@ Function Get-NOTIFICATIONContacts {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-NOTIFICATIONEvents {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5599,11 +5859,11 @@ Function Get-NOTIFICATIONEvents {
     # Select $JSON header
     $Json = $Json.notification.events
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Events = 0
         
-        While($Events -lt $Json.Count){
+        While ($Events -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $EventsLine = New-Object -TypeName PSObject
@@ -5621,7 +5881,7 @@ Function Get-NOTIFICATIONEvents {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -5632,7 +5892,7 @@ Function Get-NOTIFICATIONEvents {
 
 Function Get-ParentalControl {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -5652,7 +5912,7 @@ Function Get-ParentalControl {
     # Create New PSObject and add values to array
     $ParentalControlLine = New-Object -TypeName PSObject
     $ParentalControlLine | Add-Member -Name "Service"        -MemberType Noteproperty -Value "Parental Control"
-    $ParentalControlLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $ParentalControlLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $Json.now
     $ParentalControlLine | Add-Member -Name "State"          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $ParentalControlLine | Add-Member -Name "Default Policy" -MemberType Noteproperty -Value $Json.defaultpolicy
     
@@ -5664,7 +5924,7 @@ Function Get-ParentalControl {
 
 Function Get-ParentalControlScheduler {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5683,7 +5943,7 @@ Function Get-ParentalControlScheduler {
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
     $SchedulerLine | Add-Member -Name "Service"     -MemberType Noteproperty -Value "Parental Control Scheduler"
-    $SchedulerLine | Add-Member -Name "Date"        -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $SchedulerLine | Add-Member -Name "Date"        -MemberType Noteproperty -Value $Json.now
     $SchedulerLine | Add-Member -Name "State"       -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name "Rules count" -MemberType Noteproperty -Value $Json.rules.count
     
@@ -5698,7 +5958,7 @@ Function Get-ParentalControlScheduler {
 
 Function Get-ParentalControlSchedulerRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5712,11 +5972,11 @@ Function Get-ParentalControlSchedulerRules {
     # Select $JSON header
     $Json = $Json.parentalcontrol.scheduler.rules
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Scheduler = 0
         
-        While($Scheduler -lt $Json.Count){
+        While ($Scheduler -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $SchedulerLine = New-Object -TypeName PSObject
@@ -5735,7 +5995,7 @@ Function Get-ParentalControlSchedulerRules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -5746,7 +6006,7 @@ Function Get-ParentalControlSchedulerRules {
 
 Function Get-ProfileConsumption {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5778,7 +6038,7 @@ Function Get-ProfileConsumption {
 
 Function Get-REMOTEProxyWOL {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5810,7 +6070,7 @@ Function Get-REMOTEProxyWOL {
 
 Function Get-SERVICES {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -5972,7 +6232,7 @@ Function Get-SERVICES {
 
 Function Get-SUMMARY {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -5988,7 +6248,7 @@ Function Get-SUMMARY {
     #IPTV Devices list
     $I = 0
     $IPTV = @()
-    While($I -lt $Json.iptv.count){
+    While ($I -lt $Json.iptv.count) {
         $IPTV += "Source IP Address : $($Json.iptv[$I].address), Destination IP Address : $($Json.iptv[$I].ipaddress), Reception en cours : $($Json.iptv[$I].receipt), Channel Number : $($Json.iptv[$I].number)"
         
         # Go to next line
@@ -5999,7 +6259,7 @@ Function Get-SUMMARY {
     # USB Printers list
     $J = 0
     $Printer = @()
-    While($J -lt $Json.usb.printer.count){
+    While ($J -lt $Json.usb.printer.count) {
         $Printer += "Name : $($Json.usb.printer[$J].product), State : $($Json.usb.printer[$J].state)"
         
         # Go to next line
@@ -6010,7 +6270,7 @@ Function Get-SUMMARY {
     # USB Samba Storage
     $K = 0
     $Storage = @()
-    While($k -lt $Json.usb.storage.count){
+    While ($k -lt $Json.usb.storage.count) {
         $Storage += "Label : $($Json.usb.storage[$K].label), State : $($Json.usb.storage[$K].state)"
         
         # Go to next line
@@ -6021,7 +6281,7 @@ Function Get-SUMMARY {
     # Hosts List
     $L = 0
     $Hosts = @()
-    While($L -lt $Json.hosts.count){
+    While ($L -lt $Json.hosts.count) {
         $Hosts += "Hostname : $($Json.hosts[$L].hostname), IP address : $($Json.hosts[$L].ipaddress)"
         
         # Go to next line
@@ -6036,7 +6296,7 @@ Function Get-SUMMARY {
     
     # Create New PSObject and add values to array
     $DeviceLine = New-Object -TypeName PSObject
-    $DeviceLine | Add-Member -Name "Date"                              -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $DeviceLine | Add-Member -Name "Date"                              -MemberType Noteproperty -Value $Json.now
     $DeviceLine | Add-Member -Name "User Authenticated State"          -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.authenticated)
     $DeviceLine | Add-Member -Name "Luminosity State"                  -MemberType Noteproperty -Value (Get-State -State $Json.display.state)
     $DeviceLine | Add-Member -Name "Luminosity Power (%)"              -MemberType Noteproperty -Value $Json.display.luminosity
@@ -6050,7 +6310,7 @@ Function Get-SUMMARY {
     $DeviceLine | Add-Member -Name "USB Storage"                       -MemberType Noteproperty -Value $Storage
     $DeviceLine | Add-Member -Name "Wireless Status"                   -MemberType Noteproperty -Value $Json.wireless.status
     $DeviceLine | Add-Member -Name "Wireless Channel"                  -MemberType Noteproperty -Value $Json.wireless.radio
-    $DeviceLine | Add-Member -Name "Wireless Change Date"              -MemberType Noteproperty -Value $(Format-Date -String $Json.wireless.changedate)
+    $DeviceLine | Add-Member -Name "Wireless Change Date"              -MemberType Noteproperty -Value $Json.wireless.changedate
     $DeviceLine | Add-Member -Name "WPS 2,4Ghz "                       -MemberType Noteproperty -Value (Get-State -State $Json.wireless.wps."24".available)
     $DeviceLine | Add-Member -Name "WPS 5,2Ghz"                        -MemberType Noteproperty -Value (Get-State -State $Json.wireless.wps."5".available)
     $DeviceLine | Add-Member -Name "WPS State"                         -MemberType Noteproperty -Value (Get-State -State $Json.wireless.wps.enable)
@@ -6069,15 +6329,15 @@ Function Get-SUMMARY {
     $DeviceLine | Add-Member -Name "Web Remote State"                  -MemberType Noteproperty -Value (Get-State -State $Json.services.remoteweb.enable)
     $DeviceLine | Add-Member -Name "Parental Control State"            -MemberType Noteproperty -Value (Get-State -State $Json.services.parentalcontrol.enable)
     $DeviceLine | Add-Member -Name "Parental Control Status"           -MemberType Noteproperty -Value (Get-Status -Status $Json.services.parentalcontrol.status)
-    $DeviceLine | Add-Member -Name "Parental Control Status Until"     -MemberType Noteproperty -Value $(Format-Date -String $Json.services.parentalcontrol.statusUntil)
+    $DeviceLine | Add-Member -Name "Parental Control Status Until"     -MemberType Noteproperty -Value $Json.services.parentalcontrol.statusUntil
     $DeviceLine | Add-Member -Name "Parental Control Status Remaining" -MemberType Noteproperty -Value "$($ParentalControlStatusRemaining.Hours)h$($ParentalControlStatusRemaining.Minutes)m$($ParentalControlStatusRemaining.Seconds)s"
     $DeviceLine | Add-Member -Name "WIFI Scheduler State"              -MemberType Noteproperty -Value (Get-State -State $Json.services.wifischeduler.enable)
     $DeviceLine | Add-Member -Name "WIFI Scheduler Status"             -MemberType Noteproperty -Value (Get-Status -Status $Json.services.wifischeduler.status)
-    $DeviceLine | Add-Member -Name "WIFI Scheduler Status Until"       -MemberType Noteproperty -Value $(Format-Date -String $Json.services.wifischeduler.statusUntil)
+    $DeviceLine | Add-Member -Name "WIFI Scheduler Status Until"       -MemberType Noteproperty -Value $Json.services.wifischeduler.statusUntil
     $DeviceLine | Add-Member -Name "WIFI Scheduler Status Remaining"   -MemberType Noteproperty -Value "$($WifiSchedulerStatusRemaining.Hours)h$($WifiSchedulerStatusRemaining.Minutes)m$($WifiSchedulerStatusRemaining.Seconds)s"
     $DeviceLine | Add-Member -Name "VOIP Scheduler State"              -MemberType Noteproperty -Value (Get-State -State $Json.services.voipscheduler.enable)
     $DeviceLine | Add-Member -Name "VOIP Scheduler Status"             -MemberType Noteproperty -Value (Get-Status -Status $Json.services.voipscheduler.status)
-    $DeviceLine | Add-Member -Name "VOIP Scheduler Status Until"       -MemberType Noteproperty -Value $(Format-Date -String $Json.services.voipscheduler.statusUntil)
+    $DeviceLine | Add-Member -Name "VOIP Scheduler Status Until"       -MemberType Noteproperty -Value $Json.services.voipscheduler.statusUntil
     $DeviceLine | Add-Member -Name "VOIP Scheduler Status Remaining"   -MemberType Noteproperty -Value "$($VOIPSchedulerStatusRemaining.Hours)h$($VOIPSchedulerStatusRemaining.Minutes)m$($VOIPSchedulerStatusRemaining.Seconds)s"
     $DeviceLine | Add-Member -Name "GamerMode State"                   -MemberType Noteproperty -Value (Get-State -State $Json.services.gamermode.enable)
     $DeviceLine | Add-Member -Name "DHCP V6 State"                     -MemberType Noteproperty -Value (Get-State -State $Json.services.dhcp6.enable) # Since version : 19.2.12
@@ -6111,7 +6371,7 @@ Function Get-SUMMARY {
 
 Function Get-UPNPIGD {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6141,7 +6401,7 @@ Function Get-UPNPIGD {
 
 Function Get-UPNPIGDRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6149,7 +6409,7 @@ Function Get-UPNPIGDRules {
     # Get information from BBOX API
     $Json = Get-BBoxInformation -UrlToGo $UrlToGo
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
     
         # Create array
         $Array = @()
@@ -6159,7 +6419,7 @@ Function Get-UPNPIGDRules {
         
         $Rule = 0
         
-        While($Rule -lt $Json.Count){
+        While ($Rule -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $RuleLine = New-Object -TypeName PSObject
@@ -6170,7 +6430,7 @@ Function Get-UPNPIGDRules {
             $RuleLine | Add-Member -Name "Internal Port"       -MemberType Noteproperty -Value $Json[$Rule].internalport
             $RuleLine | Add-Member -Name "External Port"       -MemberType Noteproperty -Value $Json[$Rule].externalport
             $RuleLine | Add-Member -Name "Protocol"            -MemberType Noteproperty -Value $Json[$Rule].protocol
-            $RuleLine | Add-Member -Name "Expiration Date"     -MemberType Noteproperty -Value $(Format-Date -String $Json[$Rule].expire)
+            $RuleLine | Add-Member -Name "Expiration Date"     -MemberType Noteproperty -Value $Json[$Rule].expire
             
             # Add lines to $Array
             $Array += $RuleLine
@@ -6181,7 +6441,7 @@ Function Get-UPNPIGDRules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -6192,7 +6452,7 @@ Function Get-UPNPIGDRules {
 
 Function Get-DeviceUSBDevices {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6200,7 +6460,7 @@ Function Get-DeviceUSBDevices {
     # Get information from BBOX API
     $Json = Get-BBoxInformation -UrlToGo $UrlToGo
     
-    If($Json.usb.count -ne "0"){
+    If ($Json.usb.count -ne "0") {
         
         # Create array
         $Array = @()
@@ -6209,7 +6469,7 @@ Function Get-DeviceUSBDevices {
         $Json = $Json.usb
         $USBDevice = 0
         
-        While($USBDevice -lt $Json.parent.Count){
+        While ($USBDevice -lt $Json.parent.Count) {
             
             # Create New PSObject and add values to array
             
@@ -6242,14 +6502,14 @@ Function Get-DeviceUSBDevices {
         }
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-DeviceUSBPrinter {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6263,11 +6523,11 @@ Function Get-DeviceUSBPrinter {
     # Select $JSON header
     $Json = $Json.printer
         
-    If($Json.printer.count -ne "0"){  
+    If ($Json.printer.count -ne "0") {  
         
         $USBPrinter = 0
         
-        While($USBPrinter -lt ($Json.Count)){
+        While ($USBPrinter -lt ($Json.Count)) {
             
             # Create New PSObject and add values to array
             $PrinterLine = New-Object -TypeName PSObject
@@ -6286,14 +6546,14 @@ Function Get-DeviceUSBPrinter {
         }
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-USBStorage {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6307,11 +6567,11 @@ Function Get-USBStorage {
     # Select $JSON header
     $Json = $Json.file_info
     
-    If($Json.file_info.count -ne "0"){
+    If ($Json.file_info.count -ne "0") {
     
         $USBStorage = 0
         
-        While($USBStorage -lt $Json.Count){
+        While ($USBStorage -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $USBStorageLine = New-Object -TypeName PSObject
@@ -6331,7 +6591,7 @@ Function Get-USBStorage {
         }
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -6342,7 +6602,7 @@ Function Get-USBStorage {
 
 Function Get-VOIP {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -6379,7 +6639,7 @@ Function Get-VOIP {
 
 Function Get-VOIPDiag {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6393,11 +6653,11 @@ Function Get-VOIPDiag {
     # Select $JSON header
     $Json = $Json.phy_interface
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $VOIPID = 0
         
-        While($VOIPID -lt $Json.Count){
+        While ($VOIPID -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $VOIPLine = New-Object -TypeName PSObject
@@ -6414,14 +6674,14 @@ Function Get-VOIPDiag {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPDiagHost {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6435,11 +6695,11 @@ Function Get-VOIPDiagHost {
     # Select $JSON header
     $Json = $Json.host
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Device = 0
         
-        While($Device -lt $Json.Count){
+        While ($Device -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $DeviceLine = New-Object -TypeName PSObject
@@ -6458,14 +6718,14 @@ Function Get-VOIPDiagHost {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPDiagUSB {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6479,11 +6739,11 @@ Function Get-VOIPDiagUSB {
     # Select $JSON header
     $Json = $Json.usb
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $USB = 0
         
-        While($USB -lt $Json.Count){
+        While ($USB -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $USBLine = New-Object -TypeName PSObject
@@ -6503,14 +6763,14 @@ Function Get-VOIPDiagUSB {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPScheduler {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6527,11 +6787,11 @@ Function Get-VOIPScheduler {
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
     $SchedulerLine | Add-Member -Name "Service"        -MemberType Noteproperty -Value "Voip Scheduler"
-    $SchedulerLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $SchedulerLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $Json.now
     $SchedulerLine | Add-Member -Name "State"          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name "Unbloked ?"     -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.unblock)
     $SchedulerLine | Add-Member -Name "Status"         -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
-    $SchedulerLine | Add-Member -Name "Status Until"   -MemberType Noteproperty -Value $(Format-Date -String $Json.statusuntil)
+    $SchedulerLine | Add-Member -Name "Status Until"   -MemberType Noteproperty -Value $Json.statusuntil
     $SchedulerLine | Add-Member -Name "Time Remaining" -MemberType Noteproperty -Value "$([Math]::Floor($Json.statusremaining/3600))h$([Math]::Ceiling($Json.statusremaining/3600))s"
     $SchedulerLine | Add-Member -Name "Rules"          -MemberType Noteproperty -Value $Json.rules.count # Since Version 19.2.12
 
@@ -6543,7 +6803,7 @@ Function Get-VOIPScheduler {
 
 Function Get-VOIPSchedulerRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6557,11 +6817,11 @@ Function Get-VOIPSchedulerRules {
     # Select $JSON header
     $Json = $Json.voip.scheduler.rules
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Rule = 0
         
-        While($Rule -lt $Json.Count){
+        While ($Rule -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $RuleLine = New-Object -TypeName PSObject
@@ -6579,14 +6839,14 @@ Function Get-VOIPSchedulerRules {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPCallLogLineX {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6600,11 +6860,11 @@ Function Get-VOIPCallLogLineX {
     # Select $JSON header
     $Json = $Json.calllog
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Call = 0
         
-        While($Call -lt $Json.Count){
+        While ($Call -lt $Json.Count) {
             
             # Calculate call time
             $CallTime = New-TimeSpan -Seconds $($Json[$Call].duree)
@@ -6627,14 +6887,14 @@ Function Get-VOIPCallLogLineX {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPFullCallLogLineX {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6648,11 +6908,11 @@ Function Get-VOIPFullCallLogLineX {
     # Select $JSON header
     $Json = $Json.fullcalllog
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Call = 0
         
-        While($Call -lt $Json.Count){
+        While ($Call -lt $Json.Count) {
             
             # Calculate call time
             $CallTime = New-TimeSpan -Seconds $($Json[$Call].duree)
@@ -6675,14 +6935,14 @@ Function Get-VOIPFullCallLogLineX {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-VOIPAllowedListNumber {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6696,11 +6956,11 @@ Function Get-VOIPAllowedListNumber {
     # Select $JSON header
     $Json = $Json.voip.scheduler
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Number = 0
         
-        While($Number -lt $Json.Count){
+        While ($Number -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $NumberLine = New-Object -TypeName PSObject
@@ -6716,7 +6976,7 @@ Function Get-VOIPAllowedListNumber {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
@@ -6727,7 +6987,7 @@ Function Get-VOIPAllowedListNumber {
 
 Function Get-WANAutowan {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6749,7 +7009,7 @@ Function Get-WANAutowan {
     $DeviceLine = New-Object -TypeName PSObject
     $DeviceLine | Add-Member -Name "Model"            -MemberType Noteproperty -Value $Json.device.model
     $DeviceLine | Add-Member -Name "Firmware Version" -MemberType Noteproperty -Value $Json.device.firmware.main
-    $DeviceLine | Add-Member -Name "Firmware Date"    -MemberType Noteproperty -Value (Format-Date -String $Json.device.firmware.date)
+    $DeviceLine | Add-Member -Name "Firmware Date"    -MemberType Noteproperty -Value $Json.device.firmware.date
     $DeviceLine | Add-Member -Name "WAN IP Address"   -MemberType Noteproperty -Value $Json.ip.address
     $DeviceLine | Add-Member -Name "WAN Bytel DNS"    -MemberType Noteproperty -Value "static-$(($Json.ip.address).replace("-","-")).ftth.abo.bbox.fr" # Not included in API
     
@@ -6770,11 +7030,11 @@ Function Get-WANAutowan {
     
     
     # Profiles part
-    If($Json.Profiles.Count -ne 0){
+    If ($Json.Profiles.Count -ne 0) {
         
         $Line = 0
         
-        While($Line -lt  $Json.Profiles.Count){
+        While ($Line -lt  $Json.Profiles.Count) {
             
             # Create New PSObject and add values to array
             $ProfilesLine = New-Object -TypeName PSObject
@@ -6801,7 +7061,7 @@ Function Get-WANAutowan {
             $Line ++
         }
     }
-    Else{
+    Else {
         $Profiles = $null
     }
     
@@ -6819,7 +7079,7 @@ Function Get-WANAutowan {
 
 Function Get-WANDiags {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6838,7 +7098,7 @@ Function Get-WANDiags {
     
     # DNS Diags Part
     $DNS = 0
-    While($DNS -lt $Json.dns.Count){
+    While ($DNS -lt $Json.dns.Count) {
         
         # Create New PSObject and add values to array
         $DNSLine = New-Object -TypeName PSObject
@@ -6860,7 +7120,7 @@ Function Get-WANDiags {
     
     # HTTP Diags Part
     $HTTP = 0
-    While($HTTP -lt $Json.HTTP.Count){
+    While ($HTTP -lt $Json.HTTP.Count) {
         
         # Create New PSObject and add values to array
         $HTTPLine = New-Object -TypeName PSObject
@@ -6882,7 +7142,7 @@ Function Get-WANDiags {
     
     # Ping Diags Part
         $Ping = 0
-    While($Ping -lt $Json.Ping.Count){
+    While ($Ping -lt $Json.Ping.Count) {
         
         # Create New PSObject and add values to array
         $PingLine = New-Object -TypeName PSObject
@@ -6913,7 +7173,7 @@ Function Get-WANDiags {
 
 Function Get-WANDiagsSessions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6925,13 +7185,13 @@ Function Get-WANDiagsSessions {
     $Array = @()
     
     # Calculate Nb current TCP/UDP IP Sessions
-    If($Json.hosts.Count){
+    If ($Json.hosts.Count) {
         
         $TCP_Sessions = $null
         $UDP_Sessions = $null
         $Line = 0
         
-        While($Line -lt $Json.hosts.Count){
+        While ($Line -lt $Json.hosts.Count) {
             
             $TCP_Sessions += $Json.hosts[$Line].currenttcp
             $UDP_Sessions += $Json.hosts[$Line].currentudp
@@ -6951,7 +7211,7 @@ Function Get-WANDiagsSessions {
         $SessionsLine | Add-Member -Name "TCP Timeout"                         -MemberType Noteproperty -Value $Json.tcptimeout
         $SessionsLine | Add-Member -Name "High Threshold"                      -MemberType Noteproperty -Value $Json.highthreshold
         $SessionsLine | Add-Member -Name "Low Threshold"                       -MemberType Noteproperty -Value $Json.lowthreshold
-        $SessionsLine | Add-Member -Name "Update Date"                         -MemberType Noteproperty -Value $(Format-Date -String $Json.updatedate)
+        $SessionsLine | Add-Member -Name "Update Date"                         -MemberType Noteproperty -Value $Json.updatedate
         $SessionsLine | Add-Member -Name "Nb Page"                             -MemberType Noteproperty -Value $Json.pages
         $SessionsLine | Add-Member -Name "Nb Result Per Page"                  -MemberType Noteproperty -Value $Json.resultperpage
         
@@ -6960,14 +7220,14 @@ Function Get-WANDiagsSessions {
         
         Return $Array
     }
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-WANDiagsSummaryHostsActiveSessions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -6978,11 +7238,11 @@ Function Get-WANDiagsSummaryHostsActiveSessions {
     # Create array
     $Array = @()
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Line = 0
         
-        While($Line -lt $Json.hosts.Count){
+        While ($Line -lt $Json.hosts.Count) {
             
             # Create New PSObject and add values to array
             $SessionsLine = New-Object -TypeName PSObject
@@ -7000,14 +7260,14 @@ Function Get-WANDiagsSummaryHostsActiveSessions {
         
         Return $Array
 	}
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-WANDiagsAllActiveSessions {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7018,7 +7278,7 @@ Function Get-WANDiagsAllActiveSessions {
     $NbPages = $(Get-BBoxInformation -UrlToGo $UrlToGo).pages + 1
     $Currentpage = 1
     
-    While($Currentpage -ne $NbPages){
+    While ($Currentpage -ne $NbPages) {
         
         $SessionPage = "$UrlToGo/$Currentpage"
         $Date = Get-Date
@@ -7026,7 +7286,7 @@ Function Get-WANDiagsAllActiveSessions {
         $Json = Get-BBoxInformation -UrlToGo $SessionPage
         $Line = 0
         
-        While($Line -lt $Json.Count){
+        While ($Line -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $SessionLine = New-Object -TypeName PSObject
@@ -7054,7 +7314,7 @@ Function Get-WANDiagsAllActiveSessions {
 
 Function Get-WANDiagsAllActiveSessionsHost {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7068,7 +7328,7 @@ Function Get-WANDiagsAllActiveSessionsHost {
 
 Function Get-WANFTTHStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7096,7 +7356,7 @@ Function Get-WANFTTHStats {
 
 Function Get-WANIP {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7127,25 +7387,25 @@ Function Get-WANIP {
     $IPLine | Add-Member -Name "WAN MTU"                           -MemberType Noteproperty -Value $Json.ip.mtu
     $IPLine | Add-Member -Name "WAN IPV6 State"                    -MemberType Noteproperty -Value (Get-State -State $Json.ip.ip6state)
     
-    If($Json.ip.ip6address){
+    If ($Json.ip.ip6address) {
         $IPLine | Add-Member -Name "WAN IPV6 Address"              -MemberType Noteproperty -Value $Json.ip.ip6address.ipaddress
         $IPLine | Add-Member -Name "WAN IPV6 Status"               -MemberType Noteproperty -Value (Get-Status -Status $Json.ip.ip6address.status)
-        $IPLine | Add-Member -Name "WAN IPV6 Valid"                -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6address.valid)
-        $IPLine | Add-Member -Name "WAN IPV6 Preferred"            -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6address.preferred)
+        $IPLine | Add-Member -Name "WAN IPV6 Valid"                -MemberType Noteproperty -Value $Json.ip.ip6address.valid
+        $IPLine | Add-Member -Name "WAN IPV6 Preferred"            -MemberType Noteproperty -Value $Json.ip.ip6address.preferred
     }
-    Else{
+    Else {
         $IPLine | Add-Member -Name "WAN IPV6 Address"              -MemberType Noteproperty -Value ""
         $IPLine | Add-Member -Name "WAN IPV6 Status"               -MemberType Noteproperty -Value ""
         $IPLine | Add-Member -Name "WAN IPV6 Valid"                -MemberType Noteproperty -Value ""
         $IPLine | Add-Member -Name "WAN IPV6 Preferred"            -MemberType Noteproperty -Value ""
     }
-    If($Json.ip.ip6prefix){
+    If ($Json.ip.ip6prefix) {
         $IPLine | Add-Member -Name "WAN IPV6 Prefix"               -MemberType Noteproperty -Value $Json.ip.ip6prefix.prefix
         $IPLine | Add-Member -Name "WAN IPV6 Prefix Status"        -MemberType Noteproperty -Value (Get-Status -Status $Json.ip.ip6prefix.status)
-        $IPLine | Add-Member -Name "WAN IPV6 Prefix Valid"         -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6prefix.valid)
-        $IPLine | Add-Member -Name "WAN IPV6 Prefix Preferred"     -MemberType Noteproperty -Value $(Format-Date -String $Json.ip.ip6prefix.preferred)
+        $IPLine | Add-Member -Name "WAN IPV6 Prefix Valid"         -MemberType Noteproperty -Value $Json.ip.ip6prefix.valid
+        $IPLine | Add-Member -Name "WAN IPV6 Prefix Preferred"     -MemberType Noteproperty -Value $Json.ip.ip6prefix.preferred
     }
-    Else{
+    Else {
         $IPLine | Add-Member -Name "WAN IPV6 Prefix"               -MemberType Noteproperty -Value ""
         $IPLine | Add-Member -Name "WAN IPV6 Prefix Status"        -MemberType Noteproperty -Value ""
         $IPLine | Add-Member -Name "WAN IPV6 Prefix Valid"         -MemberType Noteproperty -Value ""
@@ -7163,7 +7423,7 @@ Function Get-WANIP {
 
 Function Get-WANIPStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7206,7 +7466,7 @@ Function Get-WANIPStats {
 
 Function Get-WANXDSL {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7253,7 +7513,7 @@ Function Get-WANXDSL {
 
 Function Get-WANXDSLStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7284,7 +7544,7 @@ Function Get-WANXDSLStats {
 
 function Get-WANSFF {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7329,7 +7589,7 @@ function Get-WANSFF {
 
 Function Get-WIRELESS {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
         
@@ -7414,7 +7674,7 @@ Function Get-WIRELESS {
 
 Function Get-WIRELESS24Ghz {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7462,7 +7722,7 @@ Function Get-WIRELESS24Ghz {
 
 Function Get-WIRELESS5Ghz {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7496,10 +7756,12 @@ Function Get-WIRELESS5Ghz {
     $WIRELESSLine | Add-Member -Name "WMM is enable ?"       -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.ssid."5".wmmenable)
     $WIRELESSLine | Add-Member -Name "HTBW"                  -MemberType Noteproperty -Value $Json.ssid."5".htbw
     $WIRELESSLine | Add-Member -Name "WPS State"             -MemberType Noteproperty -Value (Get-State -State $Json.ssid."5".wps.enable)
-    If($Json.ssid."5".wps.status){
+    If ($Json.ssid."5".wps.status) {
         $WIRELESSLine | Add-Member -Name "WPS Status"        -MemberType Noteproperty -Value (Get-Status -Status $Json.ssid."5".wps.status)
     }
-    Else{$WIRELESSLine | Add-Member -Name "WPS Status"       -MemberType Noteproperty -Value "Unknow"}
+    Else {
+        $WIRELESSLine | Add-Member -Name "WPS Status"       -MemberType Noteproperty -Value "Unknow"
+    }
     $WIRELESSLine | Add-Member -Name "Security Protocol"     -MemberType Noteproperty -Value $Json.ssid."5".security.protocol
     $WIRELESSLine | Add-Member -Name "Encryption"            -MemberType Noteproperty -Value $Json.ssid."5".security.encryption
     $WIRELESSLine | Add-Member -Name "Passphrase"            -MemberType Noteproperty -Value $Json.ssid."5".security.passphrase
@@ -7514,7 +7776,7 @@ Function Get-WIRELESS5Ghz {
 
 Function Get-WIRELESS5GHCAPABILITIES {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [Array]$Capabilities
     )
@@ -7524,7 +7786,7 @@ Function Get-WIRELESS5GHCAPABILITIES {
     
     $Capabilitie = 0
     
-    While($Capabilitie -lt $Capabilities.Count){
+    While ($Capabilitie -lt $Capabilities.Count) {
         
         # Create New PSObject and add values to array
         $CapabilitieLine = New-Object -TypeName PSObject
@@ -7548,7 +7810,7 @@ Function Get-WIRELESS5GHCAPABILITIES {
 
 Function Get-WIRELESSStats {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7582,7 +7844,7 @@ Function Get-WIRELESSStats {
 
 Function Get-WIRELESSACL {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7609,7 +7871,7 @@ Function Get-WIRELESSACL {
 
 Function Get-WIRELESSACLRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7623,11 +7885,11 @@ Function Get-WIRELESSACLRules {
     # Select $JSON header
     $Json = $Json.acl
     
-    If($Json.rules.Count -ne 0){
+    If ($Json.rules.Count -ne 0) {
         
         $Rule = 0
         
-        While($Rule -lt $Json.rules.Count){
+        While ($Rule -lt $Json.rules.Count) {
             
             # Create New PSObject and add values to array
             $RuleLine = New-Object -TypeName PSObject
@@ -7644,14 +7906,14 @@ Function Get-WIRELESSACLRules {
         
         Return $Array
 	}
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-WIRELESSACLRulesID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7665,7 +7927,7 @@ Function Get-WIRELESSACLRulesID {
 
 Function Get-WIRELESSFrequencyNeighborhoodScanID {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7681,9 +7943,9 @@ Function Get-WIRELESSFrequencyNeighborhoodScanID {
     
     $lineid = 0
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
-        While($lineid -lt $Json.Count){
+        While ($lineid -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $WifiLine = New-Object -TypeName PSObject
@@ -7704,14 +7966,14 @@ Function Get-WIRELESSFrequencyNeighborhoodScanID {
         
         Return $Array
     }
-    Else{      
+    Else {      
         Return $null
     }
 }
 
 Function Get-WIRELESSScheduler {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7727,11 +7989,11 @@ Function Get-WIRELESSScheduler {
     
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
-    $SchedulerLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $(Format-Date -String $Json.now)
+    $SchedulerLine | Add-Member -Name "Date"           -MemberType Noteproperty -Value $Json.now
     $SchedulerLine | Add-Member -Name  "Service"       -MemberType Noteproperty -Value "Wireless Scheduler"
     $SchedulerLine | Add-Member -Name "State"          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name "Status"         -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
-    $SchedulerLine | Add-Member -Name "Status Until"   -MemberType Noteproperty -Value $(Format-Date -String $Json.statusuntil)
+    $SchedulerLine | Add-Member -Name "Status Until"   -MemberType Noteproperty -Value $Json.statusuntil
     $SchedulerLine | Add-Member -Name "Time Remaining" -MemberType Noteproperty -Value "$([Math]::Floor($Json.statusremaining/3600))h$([Math]::Ceiling($Json.statusremaining/3600))s"
     $SchedulerLine | Add-Member -Name "Rules Count"    -MemberType Noteproperty -Value $Json.rules.count
     
@@ -7743,7 +8005,7 @@ Function Get-WIRELESSScheduler {
 
 Function Get-WIRELESSSchedulerRules {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7757,11 +8019,11 @@ Function Get-WIRELESSSchedulerRules {
     # Select $JSON header
     $Json = $Json.wireless.scheduler.rules
     
-    If($Json.Count -ne 0){
+    If ($Json.Count -ne 0) {
         
         $Rule = 0
         
-        While($Rule -lt $Json.Count){
+        While ($Rule -lt $Json.Count) {
             
             # Create New PSObject and add values to array
             $RuleLine = New-Object -TypeName PSObject
@@ -7780,14 +8042,14 @@ Function Get-WIRELESSSchedulerRules {
         
         Return $Array
 	}
-    Else{
+    Else {
         Return $null
     }
 }
 
 Function Get-WIRELESSRepeater {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7813,7 +8075,7 @@ Function Get-WIRELESSRepeater {
 
 function Get-WIRELESSVideoBridgeSetTopBoxes {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7828,7 +8090,7 @@ function Get-WIRELESSVideoBridgeSetTopBoxes {
     $Json = $Json[0].videobridge.topology.settopboxes
     $Lineid = 0
     
-    While($Lineid -lt ($Json.Count)){
+    While ($Lineid -lt ($Json.Count)) {
         
         # Create New PSObject and add values to array
         $VideoBridgeLine = New-Object -TypeName PSObject
@@ -7851,7 +8113,7 @@ function Get-WIRELESSVideoBridgeSetTopBoxes {
 
 function Get-WIRELESSVideoBridgeRepeaters {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -7866,7 +8128,7 @@ function Get-WIRELESSVideoBridgeRepeaters {
     $Json = $Json[0].videobridge.topology.repeaters
     $Lineid = 0
     
-    While($Lineid -lt ($Json.Count)){
+    While ($Lineid -lt ($Json.Count)) {
         
         # Create New PSObject and add values to array
         $RepeaterLine = New-Object -TypeName PSObject
@@ -7893,7 +8155,7 @@ function Get-WIRELESSVideoBridgeRepeaters {
 
 Function Get-WIRELESSWPS {
     
-    Param(
+    Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
