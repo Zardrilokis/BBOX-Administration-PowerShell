@@ -1,29 +1,29 @@
 {
-  "Trigger": {
-    "OpenHTMLReport": "0",
-    "ExportFormat": "0",
-    "DisplayFormat": "0"
-  },
   "Credentials": {
-    "OldPassword": "",
-    "NewPassword": ""
+    "NewPassword": "",
+    "OldPassword": ""
+  },
+  "Site": {
+    "OldRemotePort": "",
+    "OldRemoteUrl": "",
+    "DefaultLocalUrl": "https://mabbox.bytel.fr",
+    "DefaultRemotePort": "8560",
+    "LocalUrl": "",
+    "CurrentRemoteUrl": "",
+    "CurrentRemotePort": ""
   },
   "OpenHTMLReport": {
     "OpenHTMLReport": "0"
   },
-  "ExportFormat": {
+  "Trigger": {
+    "DisplayFormat": "0",
+    "OpenHTMLReport": "0",
     "ExportFormat": "0"
   },
   "DisplayFormat": {
     "DisplayFormat": "0"
   },
-  "Site": {
-    "LocalUrl": "",
-    "CurrentRemoteUrl": "",
-    "DefaultRemotePort": "8560",
-    "OldRemotePort": "",
-    "OldRemoteUrl": "",
-    "DefaultLocalUrl": "https://mabbox.bytel.fr",
-    "CurrentRemotePort": ""
+  "ExportFormat": {
+    "ExportFormat": "0"
   }
 }

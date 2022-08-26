@@ -168,7 +168,7 @@
     Update       : Remove function 'Format-Date'
     
     Version 2.3 - BBOX version 20.8.8
-    Updated Date : 2022/08/05
+    Updated Date : 2022/08/20
     Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : New variable : $global:TranscriptFileName
     Update       : Create json system configuration file : '.\Settings-Program.json'
@@ -199,6 +199,15 @@
     Update       : Update function : 'Connect-BBOX' to manage if wrong password enter to connect to BBox web interface
     Update       : Change default value for : '$global:TriggerExit' from '0' to '$null'
     Update       : Optimise syntaxe code for string of characters
+    Update       : New Varaiable : '$global:TriggerDialogBox'
+    Update       : Update functions : 'Get-HostStatus' and 'Get-PortStatus' to integrate Windows Form Dialog Box
+    Update       : Replace ALL 'Write-Host' by 'Write-Log' function
+    Update       : Display warning action for end-user with function : 'Show-WindowsFormDialogBox'
+    Update       : Change Start Chromedriver and bbox authentification only if not already launched and if it is not a local program action
+    Update       : Change '.\Settings-Program.json' file structure
+    Update       : Update function 'Get-BBoxInformation' to catch better API errors
+    Update       : Update function 'Stop-Program' to manage better Google Chrome and ChromeDriver closing
+    Update       : Omptimise function 'Switch-Info' to remove old value dont used.
 
 .LINKS
     
@@ -309,6 +318,7 @@ $global:JSONSettingsProgramFilePath = "$RessourcesPath\$ProgramConfigurationFile
 
 # Main Trigger
 $global:TriggerExit = $Null
+$global:TriggerDialogBox = $Null
 $TriggerLANNetwork = $Null
 
 # URL Settings for the ChromeDriver request
@@ -362,8 +372,8 @@ Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Progra
 If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramContent)) {
     
     Try {
-        $global:JSONSettingsDefaultUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultUserConfigurationFileName
-        $global:JSONSettingsCurrentUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentUserConfigurationFileName
+        $global:JSONSettingsDefaultUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultFileName
+        $global:JSONSettingsCurrentUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentFileName
 
         # Paths
         $ExportPath              = "$ScriptRootFolder\"  + $global:JSONSettingsProgramContent.path.ExportFolderName
@@ -390,9 +400,15 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $ChromeProgramFilesX86Installation       = $global:JSONSettingsProgramContent.GoogleChrome.ChromeProgramFilesX86InstallationPath
 
         # APIName
-        $APINameExclusionFull                 = $global:JSONSettingsProgramContent.APIName.APINameExclusionFull
-        $APINameExclusionFull_Testing_Program = $global:JSONSettingsProgramContent.APIName.APINameExclusionFull_Testing_Program
-
+        $APINameAvailable                      = $global:JSONSettingsProgramContent.APIName.Available
+        $APINameExclusionsFull                 = $global:JSONSettingsProgramContent.APIName.Exclusions.Full
+        $APINameExclusionsFull_Testing_Program = $global:JSONSettingsProgramContent.APIName.Exclusions.Full_Testing_Program
+        $APINameScopeExclusionsFull            = $global:JSONSettingsProgramContent.APIName.Scope.Exclusions.Full
+        
+        # Actions
+        $ActionsExclusionsScope   = $global:JSONSettingsProgramContent.Actions.Exclusions.Scope
+        $ActionsExclusionsActions = $global:JSONSettingsProgramContent.Actions.Exclusions.Actions
+        
         # BBox
         $APIVersion          = $global:JSONSettingsProgramContent.bbox.APIVersion
         $BBoxDns             = $global:JSONSettingsProgramContent.bbox.BBoxDns
@@ -531,6 +547,7 @@ If ($Null -eq $global:TriggerExit) {
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Installation' -Message 'Not yet' -NotDisplay
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Installation' -Message 'Please install Google Chrome before to use this Program'
+        Show-WindowsFormDialogBox -Title 'Program initialisation - Google Chrome Installation' -Message 'Please install Google Chrome before to use this Program' -WarnIcon
         Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Installation' -Message 'End Google Chrome Installation' -NotDisplay
         $global:TriggerExit = 1
     }
@@ -632,6 +649,9 @@ If ($Null -eq $global:TriggerExit) {
     Write-Host 'Logs files location : '
     Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
     Write-Host "- $TranscriptFilePath" -ForegroundColor Green
+    Write-Host "Tested environnement list : " -NoNewline
+    Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
+
     <#
     Write-Host 'Last success tested environnement :'
     Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Start tested environnements' -NotDisplay
@@ -740,7 +760,7 @@ If ($Null -eq $global:TriggerExit) {
     Catch {
         Write-Log -Type ERROR -Name 'Program run - Network connection' -Message 'Failed' -NotDisplay
         Write-Log -Type ERROR -Name 'Program run - Network connection' -Message "Unable to resolve $BBoxDns, due to : $($_.ToString())" -NotDisplay
-        Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local BBOX Network`nIf you are connected on your local network, make sure you are connected on the BBOX's Wifi or ethernet network`nIf you use a intermediary router between your computer and the BBOX router, it will not working" -WarnIcon | Out-Null
+        Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local BBOX Network`n`n- If you are connected on your local network, make sure you are connected on the BBOX's Wifi or ethernet network`n- If you use a intermediary router between your computer and the BBOX router, it will not working" -WarnIcon | Out-Null
         Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Remotely' -NotDisplay
         $TriggerLANNetwork = 0
@@ -756,6 +776,7 @@ If ($Null -eq $global:TriggerExit) {
     
     Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'Start Connexion Type' -NotDisplay
     $ConnexionType = Get-ConnexionType -TriggerLANNetwork $TriggerLANNetwork -ErrorAction Stop
+    Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'End Connexion Type' -NotDisplay
 }
 
 #endregion Ask to the user how he want to connect to the BBOX
@@ -809,48 +830,9 @@ If ($Null -eq $global:TriggerExit) {
 
 #endregion Get Already Active Google Chrome Process
 
-#region Start in Background chromeDriver
-
-If ($Null -eq $global:TriggerExit) {
-    
-    Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
-    
-    Try {
-        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -DownloadPath $JournalPath -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
-        $global:TriggerExit = 1
-    }
-    Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
-}
-
-#endregion Start in Background chromeDriver
-
-#region Start BBox Authentification
-
-If ($Null -eq $global:TriggerExit) {
-    
-    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
-    
-    Try {
-        Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $global:Password -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
-        $global:TriggerExit = 1
-    }
-    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
-}
-
-#endregion Start BBox Authentification
-
 #region process
 
+$global:ChromeDriver = $Null
 While ($Null -eq $global:TriggerExit) {
     
     # Ask user action he wants to do (Get/PUT/POST/REMOVE)
@@ -865,25 +847,64 @@ While ($Null -eq $global:TriggerExit) {
         $Description = $Action.Description
         $ReportType = $Action.ReportType
         $ExportFile = $Action.ExportFile
+        #$Scope = $Action.Scope
+        $ActionProgram = $Action.Action
         
         Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Selected action : '
         Write-Log -Type VALUE -Name 'Program run - Action asked' -Message $Description
+
+        If (($Null -eq $global:TriggerExit) -and (-not $global:ChromeDriver) -and ($ActionProgram -notmatch $ActionsExclusionsActions)) {
+            
+            #region Start in Background chromeDriver
+
+            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
+            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
+            
+            Try {
+                Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -DownloadPath $JournalPath -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
+                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
+                $global:TriggerExit = 1
+            }
+            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
+
+            #endregion Start in Background chromeDriver
+            
+            #region Start BBox Authentification
+            
+            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
+            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
+            
+            Try {
+                Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $global:Password -ErrorAction Stop
+                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
+                $global:TriggerExit = 1
+            }
+            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
+
+            #endregion Start BBox Authentification#
+        }
         
         # Get data
         Switch ($APIName) {
             
-            'Full'                 {$APISName = ($Actions | Where-Object {(($_.Available -eq 'Yes') -and ($_.APIName -notmatch $APINameExclusionFull) -and ($_.Scope -notmatch 'Computer') -and ($_.Action -notmatch 'Export'))}).APIName | Select-Object -Unique
+            'Full'                 {$APISName = ($Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.Action -notmatch $APINameScopeExclusionsFull))}).APIName | Select-Object -Unique
                                     $FormatedData = Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath
                                     Break
                                    }
             
-            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq 'Yes') -and ($_.APIName -notmatch $APINameExclusionFull_Testing_Program))} | Select-Object *
+            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program))} | Select-Object *
                                     $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath -Mail $Mail -JournalPath $JournalPath
                                     Break
                                    }
             
             Default                {$UrlToGo = "$UrlRoot/$APIName"
-                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -UrlRoot $UrlRoot -Mail $Mail -JournalPath $JournalPath -ErrorAction Continue -WarningAction Continue
+                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -Mail $Mail -JournalPath $JournalPath -ErrorAction Continue -WarningAction Continue
                                     Export-GlobalOutputData -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ExportFile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath
                                     Break
                                    }
@@ -899,13 +920,8 @@ While ($Null -eq $global:TriggerExit) {
 
 #endregion process
 
-#region Close all ChromeDriver instances openned
+#region Close Program
 
 Stop-Program -LogFolderPath $global:LogFolderPath -LogFileName $global:LogFileName -ErrorAction Stop
-$Global:ActiveChromeAfter = Get-Process Chrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id} | Where-Object {$Global:ActiveChromeBefore -notcontains $_} -ErrorAction SilentlyContinue
-If ($null -ne $Global:ActiveChromeAfter) {
-    Stop-Process -Id $Global:ActiveChromeAfter -Force -ErrorAction SilentlyContinue
-}
-Stop-Transcript -ErrorAction Stop
 
-#endregion Close all ChromeDriver instances openned
+#endregion Close Programm

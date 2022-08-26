@@ -276,87 +276,118 @@ Function Get-ConnexionType {
 Function Get-HostStatus {
     
     Param (
-        [Parameter(Mandatory=$False)]
+        [Parameter(Mandatory=$false)]
         [String]$UrlRoot
     )
     
     $BBoxDnsStatus = $null
-    While (([string]::IsNullOrEmpty($UrlRoot) -and ($BBoxDnsStatus -notlike $true))) {
+    While ($null -eq $BBoxDnsStatus) {
         
-        #$UrlRoot = Read-Host "Enter your external BBOX IP/DNS Address, Example : example.com "
-        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText 'Enter your external BBOX IP/DNS Address, Example : example.com ' -OkButtonText 'OK' -CancelButtonText 'Cancel'
-        Write-Log -Type INFONO -Name "Program run - Check Host" -Message "Host `"$UrlRoot`" status : " -NotDisplay
+        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText 'Enter your external BBOX IP/DNS Address, Example : example.com' -OkButtonText 'OK' -CancelButtonText 'Cancel'
+        Write-Log -Type INFONO -Name 'Program run - Check Host' -Message "Host `"$UrlRoot`" status : " -NotDisplay
         
+        If ($global:TriggerDialogBox -eq 1) {
+            
+            Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'User Cancel the action' -NotDisplay
+            $global:TriggerExit = 1
+            $UrlRoot = $null
+            Return $UrlRoot
+            Break
+        }
+
         If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
             
             $BBoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
             
             If ($BBoxDnsStatus -like $true) {
                 
-                Write-Log -Type VALUE -Name "Program run - Check Host" -Message "Online"-NotDisplay
+                Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'Online' -NotDisplay
                 $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
                 $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
                 $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+                Return $UrlRoot
                 Break
             }
             Else {
-                Write-Log -Type WARNING -Name "Program run - Check Host" -Message "Offline" -NotDisplay
-                Write-Host "Host : $UrlRoot , seems not Online ; please make sure :" -ForegroundColor Yellow
-                Write-Host "- You enter a valid DNS address or IP address" -ForegroundColor Yellow
-                Write-Host "- `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.BBoxUrlFirewall))" -ForegroundColor Yellow
-                Write-Host "- `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))" -ForegroundColor Yellow
-                Write-Host "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -ForegroundColor Yellow
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message 'Offline' -NotDisplay
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You are connected to internet"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You enter a valid DNS address or IP address"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled $($global:JSONSettingsProgramContent.BBoxUrlFirewall)"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns)"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote)"
+                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled $($global:JSONSettingsProgramContent.BBoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote)" -WarnIcon
+                $BBoxDnsStatus = $null
                 $UrlRoot = $null
             }
         }
         Else {
             Write-Log -Type WARNING -Name "Program run - Check Host" -Message "This field can't be empty or null"
+            Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "This field can't be empty or null" -WarnIcon
+            $BBoxDnsStatus = $null
+            $UrlRoot = $null
         }
     }
-    Return $UrlRoot
 }
 
 # Used only to check if external Bbox Port is open
 Function Get-PortStatus {
     
     Param (
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$False)]
         [String]$UrlRoot
     )
-    
+
     $PortStatus = $null
-    While (($PortStatus -notlike $true) -and (-not ([string]::IsNullOrEmpty($UrlRoot)))) {
+    While (($null -eq $PortStatus)) {
         
-        #[int]$Port = Read-Host "Enter your external remote BBOX port, Example : 80,443, default is 8560 "
-        [int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is 8560`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel'
-        Write-Log -Type INFONO -Name "Program run - Check Port" -Message "Port `"$Port`" status : " -NotDisplay
-        
-        If (($Port -ge 1) -and ($Port -le 65535)) {
+        If ($global:TriggerDialogBox -ne 1){
             
-            $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
-            
-            If ($PortStatus.TcpTestSucceeded -like $true) {
-                
-                Write-Log -Type VALUE -Name "Program run - Check Port" -Message "Opened" -NotDisplay
-                $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
-                $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
-                $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
-                Break
-            }
-            Else {
-                 Write-Log -Type WARNING -Name "Program run - Check Port" -Message "Closed" -NotDisplay
-                 Write-Host "Port $Port seems closed, please make sure :" -ForegroundColor Yellow
-                 Write-host "- You enter a valid port number" -ForegroundColor Yellow
-                 Write-Host "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))" -ForegroundColor Yellow
-                 Write-Host "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -ForegroundColor Yellow
-                 $Port = $null
-            }
+            [int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is 8560`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel'
+            Write-Log -Type INFONO -Name 'Program run - Check Port' -Message "Port `"$Port`" status : " -NotDisplay
         }
         Else {
-            Write-Log -Type WARNING -Name "Program run - Check Port" -Message "This field can't be empty or null or must be in the range between 1 and 65565"
+            Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'User Cancel the action' -NotDisplay
+            $global:TriggerExit = 1
+            $Port = $null
+            Return $Port
+            Break
+        }
+        
+        If ($global:TriggerDialogBox -ne 1){
+
+            If (($Port -ge 1) -and ($Port -le 65535)) {
+                
+                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
+                
+                If ($PortStatus.TcpTestSucceeded -like $true) {
+                    
+                    Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'Opened' -NotDisplay
+                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
+                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
+                    $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+                    Return $Port
+                    Break
+                }
+                Else {
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'Closed' -NotDisplay
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :"
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message '- You enter a valid port number'
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))" 
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n'- You enter a valid port number'`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
+                    $Port = $null
+                    $PortStatus = $null
+                }
+            }
+            Else {
+                Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565'
+                Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565' -WarnIcon
+                $Port = $null
+                $PortStatus = $null
+            }
         }
     }
-    Return $Port
 }
 
 #region ChromeDriver 
@@ -458,9 +489,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         [Parameter(Mandatory=$True)]
         [String]$APIName,
         [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot
+        [String]$UrlToGo
     )
     
     Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Start WIRELESS Frequency Neighborhood scan' -NotDisplay
@@ -525,13 +554,10 @@ Function Get-WIRELESSFrequencyNeighborhoodScan {
         [String]$UrlToGo,
         
         [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        
-        [Parameter(Mandatory=$True)]
         [String]$APIName
     )
     
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName $APIName -UrlToGo $UrlToGo -UrlRoot $UrlRoot
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName $APIName -UrlToGo $UrlToGo
     $FormatedData = @()
     $FormatedData = Get-WIRELESSFrequencyNeighborhoodScanID -UrlToGo $UrlToGo
     
@@ -616,7 +642,7 @@ Function Get-BBoxInformation {
     }
     Catch {
         Write-Log -Type ERROR -Name 'Program run - Get Information' -Message "Failed, due to : $($_.ToString())"
-        Write-Host "Please check your local/internet network connection" -ForegroundColor Yellow
+        Write-Log -Type ERROR -Name 'Program run - Get Information' -Message "Please check your local/internet network connection"
         Return "0"
         Break
     }
@@ -662,11 +688,14 @@ Function Get-BBoxInformation {
         Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API error code : "
         Try {
             $ErrorCode = Get-ErrorCode -Json $Json
-            Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message $($ErrorCode.ToString()) -NotDisplay
-            Return $ErrorCode | Format-Table
+            Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message $ErrorCode.ErrorReason
+            Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message $ErrorCode -NotDisplay
+            Return $ErrorCode
         }
         Catch {
+            Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message $Json -NotDisplay
             Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+            Return $null
         }
 
         Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API error code" -NotDisplay
@@ -745,9 +774,6 @@ Function Switch-Info {
         
         [Parameter(Mandatory=$True)]
         [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
         
         [Parameter(Mandatory=$True)]
         [String]$Mail,
@@ -857,7 +883,7 @@ Function Switch-Info {
             Get-FIREWALLv6L      {$FormatedData = Get-FIREWALLv6Level -UrlToGo $UrlToGo;Break}
             
             # API
-            GET-APIRM            {$FormatedData = Get-APIRessourcesMap -UrlToGo $UrlToGo -UrlRoot $UrlRoot;Break}
+            GET-APIRM            {$FormatedData = Get-APIRessourcesMap -UrlToGo $UrlToGo;Break}
             
             # HOST
             GET-HOSTS            {$FormatedData = Get-HOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
@@ -1000,7 +1026,7 @@ Function Switch-Info {
             
             GET-WIRELESSWPS      {$FormatedData = GET-WIRELESSWPS -UrlToGo $UrlToGo;Break}
             
-            GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -UrlRoot $UrlRoot -APIName $APIName;Break}
+            GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             GET-WIRELESSS        {$FormatedData = Get-WIRELESSScheduler -UrlToGo $UrlToGo;Break}
             
@@ -1051,6 +1077,7 @@ Function Switch-Info {
             
             # Default
             Default              {Write-log WARNING -Name 'Program run - Action not developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail for more information"
+                                  Show-WindowsFormDialogBox -Title 'Program run - Action not developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail for more information" -WarnIcon
                                   $FormatedData = 'Program'
                                   Pause
                                   Break
@@ -1071,25 +1098,40 @@ Function Stop-Program {
         [String]$LogFileName
     )
     
+    $null = Show-WindowsFormDialogBox -Title 'Stop Program' -Message "Program exiting ... `nPlease dont close windows manually !`nWe are closing background processes before quit the program" -WarnIcon
     Write-Log -Type INFO -Name 'Stop Program' -Message 'Program exiting ...' -NotDisplay
     Write-Log -Type WARNING -Name 'Stop Program' -Message 'Please dont close windows manually !'
-    Write-Log -Type INFO -Name 'Stop Program' -Message 'We are closing background processes before quit the program'
-    Write-Log -Type INFO -Name 'ChromeDriver Stop' -Message 'Start Stop Chrome Driver' -NotDisplay
+    Write-Log -Type WARNING -Name 'Stop Program' -Message 'We are closing background processes before quit the program'
+    
     If ($Null -ne $global:ChromeDriver) {
+        
+        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'Start Stop Chrome Driver' -NotDisplay
         Stop-ChromeDriver
+        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'End Stop Chrome Driver' -NotDisplay
+
+        Write-Log -Type INFO -Name 'Stop Google Chrome' -Message 'Start Stop Google Chrome' -NotDisplay
+        $Global:ActiveChromeAfter = Get-Process Chrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id} | Where-Object {$Global:ActiveChromeBefore -notcontains $_} -ErrorAction SilentlyContinue
+        
+        If ($null -ne $Global:ActiveChromeAfter) {
+            
+            Stop-Process -Id $Global:ActiveChromeAfter -Force -ErrorAction SilentlyContinue
+        }
+        Write-Log -Type INFO -Name 'Stop Google Chrome ' -Message 'End Stop Google Chrome' -NotDisplay
     }
-    Write-Log -Type INFO -Name 'ChromeDriver Stop' -Message 'End Stop Chrome Driver' -NotDisplay
+    
     Start-Sleep 2
     $Current_Log_File = "$LogFolderPath\" + (Get-ChildItem -Path $LogFolderPath -Name "$LogFileName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
     Write-Log -Type INFONO -Name 'Stop Program' -Message 'Log file is available here : '
     Write-Log -Type VALUE -Name 'Stop Program' -Message $Current_Log_File
     Write-Log -Type INFO -Name 'Stop Program' -Message 'Program Closed' -NotDisplay 
+    
+    Stop-Transcript -ErrorAction Stop
 }
 
 # Used only to display default Windows Form Dialog Box
 function Show-WindowsFormDialogBox {
- 
-    param (
+    
+    Param (
         [string]$Message = 'Fill in the message',
         [string]$Title = 'WindowTitle',
         [switch]$OKCancel,
@@ -1101,7 +1143,7 @@ function Show-WindowsFormDialogBox {
         [switch]$QuestionIcon,
         [switch]$WarnIcon,
         [switch]$InfoIcon
-        )
+    )
      
     # Set the value function of the option
     if ($OKCancel) { $Btn = 1 }
@@ -1130,7 +1172,8 @@ function Show-WindowsFormDialogBox {
 
 # Used only to get user's input
 function Show-WindowsFormDialogBoxInuput {
-    param (
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
 
@@ -1171,7 +1214,7 @@ function Show-WindowsFormDialogBoxInuput {
 
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,20)
+    $LabelMessage.Size = New-Object System.Drawing.Size(240,40)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 
@@ -1187,13 +1230,14 @@ function Show-WindowsFormDialogBoxInuput {
         Return $TextBox.Text
     }
     Else {
-        $global:TriggerExit = 1
+        $global:TriggerDialogBox = 1
     }
 }
 
 # Used only to force user to make a choice between two options
 function Show-WindowsFormDialogBox2Choices {
-    param (
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
 
@@ -1250,7 +1294,8 @@ function Show-WindowsFormDialogBox2Choices {
 
 # Used only to force user to make a choice between two options where one is "Cancel"
 function Show-WindowsFormDialogBox2ChoicesCancel {
-    param (
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
 
@@ -1307,7 +1352,8 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
 
 # Used only to force user to make a choice between three options
 function Show-WindowsFormDialogBox3Choices {
-    param (
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
 
@@ -1375,7 +1421,8 @@ function Show-WindowsFormDialogBox3Choices {
 
 # Used only to force user to make a choice between three options where one is "Cancel"
 function Show-WindowsFormDialogBox3ChoicesCancel {
-    param (
+    
+    Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
 
@@ -1418,7 +1465,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $MainForm.Controls.Add($SecondOptionButton)
 
     $ThirdOptionButton = New-Object System.Windows.Forms.Button
-    $ThirdOptionButton.Location = New-Object System.Drawing.Point(170,130)
+    $ThirdOptionButton.Location = New-Object System.Drawing.Point(255,130)
     $ThirdOptionButton.Size = New-Object System.Drawing.Size(75,25)
     $ThirdOptionButton.Text = $ThirdOptionButtonText
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
@@ -1504,10 +1551,10 @@ Function Get-JSONSettingsDefaultUserContent {
 Function Switch-DisplayFormat {
 
     # Choose Display Format : HTML or Table
-    $global:DisplayFormat = ''
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'Start data display format' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
-        
+    $global:DisplayFormat = ''
+
     While ($global:DisplayFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.DisplayFormat) {
             
         #$Temp = Read-Host "Enter your choice"
@@ -1640,7 +1687,8 @@ Function Switch-ExportFormat {
     # Choose Export Format : CSV or JSON
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Start data export format' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
-    
+    $global:ExportFormat = ''
+
     While ($global:ExportFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.ExportFormat) {
         
         #$Temp = Read-Host "Enter your choice"
@@ -1697,6 +1745,7 @@ Function Switch-OpenHTMLReport {
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
     $global:OpenHTMLReport = ''
+    
     While ($global:OpenHTMLReport[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenHTMLReport) {
         
         #$Temp = Read-Host "Enter your choice "
@@ -1997,7 +2046,7 @@ function Export-BBoxConfigTestingProgram {
         
         # Get information from BBOX API
         $FormatedData = @()
-        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -UrlRoot $UrlRoot -Mail $Mail -JournalPath $JournalPath
+        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath
         
         # Export result as CSV file
         $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
@@ -2041,7 +2090,7 @@ Function Get-BBoxJournal {
     )
         
     # Loading Journal Home Page
-    $UrlToGo = $UrlToGo -replace $global:JSONSettingsProgramContent.bbox.APIVersion
+    $UrlToGo = $UrlToGo -replace $global:JSONSettingsProgramContent.bbox.APIVersion -replace ('//','/')
     $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
     Start-Sleep 5
     
@@ -2163,7 +2212,7 @@ function Export-GlobalOutputData {
         [Parameter(Mandatory=$True)]
         [string]$Description,
         
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$False)]
         [string]$ReportType,
         
         [Parameter(Mandatory=$True)]
@@ -2475,7 +2524,7 @@ Function Set-BBoxInformation {
         [String]$UrlToGo
     )
     
-    Write-host "`nConnexion à la BBOX : " -NoNewline
+    Write-Log -Type ERROR -Name 'Program run - Set BBox Information' -Message "`nConnexion à la BBOX : "
     
     # Add path for ChromeDriver.exe to the environmental variable 
     $env:PATH += $PSScriptRoot
@@ -2501,8 +2550,8 @@ Function Set-BBoxInformation {
     $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
     Start-Sleep 2
     
-    Write-host 'OK' -ForegroundColor Green
-    Write-Host 'Application des modifications souhaitées : ' -NoNewline
+    Write-Log -Type VALUE -Name 'Program run - Set BBox Information' -Message  'OK'
+    Write-Log -Type INFO -Name 'Program run - Set BBox Information' -Message  'Application des modifications souhaitées : '
     
     # Go to the web page to get information we need
     $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
@@ -2517,7 +2566,7 @@ Function Set-BBoxInformation {
     
     Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
     
-    Write-host 'OK' -ForegroundColor Green
+    Write-Log -Type VALUE -Name 'Program run - Set BBox Information' -Message 'OK'
     
     Return $Html
 }
@@ -2694,10 +2743,7 @@ Function Get-APIRessourcesMap {
     
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot
+        [String]$UrlToGo
     )
     
     # Get information from BBOX API
@@ -2710,6 +2756,7 @@ Function Get-APIRessourcesMap {
     $Json = $Json.apis
     
     $API = 0
+    $UrlRoot = $UrlToGo -replace ('/V1/map','')
     
     While ($API -lt ($Json.Count)) {
         
@@ -2723,7 +2770,7 @@ Function Get-APIRessourcesMap {
                 # Create New PSObject and add values to array    
                 $APILine = New-Object -TypeName PSObject
                 $APILine | Add-Member -Name 'API name'           -MemberType Noteproperty -Value $($Json[$API]).api
-                $APILine | Add-Member -Name 'API url'            -MemberType Noteproperty -Value "$UrlRoot$($(($Json[$API]).api) -replace ('V1',''))"
+                $APILine | Add-Member -Name 'API url'            -MemberType Noteproperty -Value $UrlRoot
                 $APILine | Add-Member -Name 'Action'             -MemberType Noteproperty -Value ($Json[$API]).method
                 $APILine | Add-Member -Name 'Local permissions'  -MemberType Noteproperty -Value ($Json[$API]).permission.local
                 $APILine | Add-Member -Name 'Remote permissions' -MemberType Noteproperty -Value ($Json[$API]).permission.remote
@@ -2751,7 +2798,7 @@ Function Get-APIRessourcesMap {
         Else {
             $APILine = New-Object -TypeName PSObject
             $APILine | Add-Member -Name 'API name'           -MemberType Noteproperty -Value $($Json[$API]).api
-            $APILine | Add-Member -Name 'API url'            -MemberType Noteproperty -Value "$UrlRoot$($(($Json[$API]).api) -replace ('V1',''))"
+            $APILine | Add-Member -Name 'API url'            -MemberType Noteproperty -Value $UrlRoot
             $APILine | Add-Member -Name 'Action'             -MemberType Noteproperty -Value ($Json[$API]).method
             $APILine | Add-Member -Name 'Local permissions'  -MemberType Noteproperty -Value ($Json[$API]).permission.local
             $APILine | Add-Member -Name 'Remote permissions' -MemberType Noteproperty -Value ($Json[$API]).permission.remote

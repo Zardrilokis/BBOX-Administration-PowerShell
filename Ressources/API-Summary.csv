@@ -1,20 +1,20 @@
 Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
-Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;;
-Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;;
-REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;;
-REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Private;Private;Computer;Yes;Yes;;
-SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Gridview;
-SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;
-SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;
+Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;$null;$null
+Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;$null;$null
+REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Private;Private;Computer;Yes;Yes;$null;$null
+SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Gridview;$null
+SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;$null
+SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;$null
 Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
 GET-AIRTIES;Get-Airties;Get AIRTIES Summary Information;airties;https://192.168.1.254/api/v1/airties;GET;public;Private;diag-read;No;No;List;airties
 GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode
-GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;Yes;list;airties-zerotouch
-GET-ANALYTICSJS;Get-ANALYTICSJS;Get Bouygues Telecom Remote Connexion Page information;analytics.js;https://192.168.1.254/api/v1/analytics.js;GET;public;Private;lan-read;No;No;;analytics
+GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;No;list;airties-zerotouch
+GET-ANALYTICSJS;Get-ANALYTICSJS;Get Bouygues Telecom Remote Connexion Page information;analytics.js;https://192.168.1.254/api/v1/analytics.js;GET;public;Private;lan-read;No;No;$null;analytics
 GET-APIRM;Get-APIRessourcesMap;Get API Ressources List Map Information;map;https://192.168.1.254/api/v1/map;GET;private;Private;lan-read;No;Yes;Table;map
 GET-CONFIGSL;Get-BackupList;Get BACKUP List Information;configs;https://192.168.1.254/api/v1/configs;GET;public;Private;backup-read;No;Yes;Table;configs
 GET-CPL;Get-CPL;Get CPL Configuration Information;cpl;https://192.168.1.254/api/v1/cpl;GET;public;Private;cpl-read;No;Yes;List;cpl
@@ -29,7 +29,7 @@ GET-DEVICELED;Get-DeviceLED;Get DEVICE LED Information;device/led;https://192.16
 GET-DEVICEM;Get-DeviceMemory;Get DEVICE Memory Information;device/mem;https://192.168.1.254/api/v1/device/mem;GET;public;Private;device-read;No;Yes;List;device-mem
 GET-DEVICES;Get-DeviceSummary;Get DEVICE Main Information;device/summary;https://192.168.1.254/api/v1/device/summary;GET;public;Private;device-read;No;Yes;List;device-summary
 GET-DEVICET;Get-DeviceToken;Get DEVICE Token Information;device/token;https://192.168.1.254/api/v1/device/token;GET;private;Private;any;No;Yes;List;device-token
-GET-DEVICEU;Get-DeviceUpgrade;Get DEVICE Upgrade Information;device/upgrade;https://192.168.1.254/api/v1/device/upgrade;GET;private;Private;bboxdebug;No;No;;device-upgrade
+GET-DEVICEU;Get-DeviceUpgrade;Get DEVICE Upgrade Information;device/upgrade;https://192.168.1.254/api/v1/device/upgrade;GET;private;Private;bboxdebug;No;No;$null;device-upgrade
 GET-DEVICEUSBD;Get-DeviceUSBDevices;Get DEVICE USB Devices Information;device/usb;https://192.168.1.254/api/v1/device/usb;GET;public;Private;device-read;No;Yes;Table;device-usb
 GET-DEVICEUSBP;Get-DeviceUSBPrinter;Get DEVICE USB Printer Information;device/printer;https://192.168.1.254/api/v1/device/printer;GET;public;Private;device-read;No;Yes;Table;device-printer
 GET-DHCP;Get-DHCP;Get DHCP Configuration Information;dhcp;https://192.168.1.254/api/v1/dhcp;GET;public;Private;dhcp-read;No;Yes;List;dhcp
@@ -67,7 +67,7 @@ GET-IPTVD;Get-IPTVDiags;Get IPTV Diags Information;iptv/diags;https://192.168.1.
 GET-LANA;Get-LANAlerts;Get LAN User Alerts Information;alerts;https://192.168.1.254/api/v1/alerts;GET;public;Private;alert-read;No;Yes;Table;alerts
 GET-LANIP;Get-LANIP;Get LAN IP Configuration Information;lan/ip;https://192.168.1.254/api/v1/lan/ip;GET;public;Private;lan-read;No;Yes;List;lan-ip
 GET-LANS;Get-LANIPStats;Get LAN Stats Information;lan/stats;https://192.168.1.254/api/v1/lan/stats;GET;public;Private;lan-read;No;Yes;List;lan-stats
-GET-LEGACYINFO;Get-LEGACYINFO;Get LEGACY Information;legacy/_info.xml;https://192.168.1.254/legacy/_info.xml;GET;public;Private;lan-read;No;No;;legacy-info
+GET-LEGACYINFO;Get-LEGACYINFO;Get LEGACY Information;legacy/_info.xml;https://192.168.1.254/legacy/_info.xml;GET;public;Private;lan-read;No;No;$null;legacy-info
 GET-NATDMZ;Get-NATDMZ;Get NAT DMZ Configuration Information;nat/dmz;https://192.168.1.254/api/v1/nat/dmz;GET;public;Private;nat-read;No;Yes;List;nat-dmz
 GET-NAT;Get-NAT;Get NAT Configuration Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;List;nat-rules-config
 GET-NATR;Get-NATRules;Get NAT Rules Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;Table;nat-rules
@@ -80,7 +80,7 @@ GET-NOTIFICATIONA;Get-NOTIFICATIONAlerts;Get NOTIFICATION Alerts List Informatio
 GET-NOTIFICATIONC;Get-NOTIFICATIONContacts;Get NOTIFICATION Contacts Information;notification/contacts;https://192.168.1.254/api/v1/notification/contacts;GET;private;Private;notif-read;No;Yes;Table;notification-contacts
 GET-NOTIFICATIONE;Get-NOTIFICATIONEvents;Get NOTIFICATION Events Information;notification/events;https://192.168.1.254/api/v1/notification/events;GET;private;Private;notif-read;No;Yes;Table;notification-events
 GET-OAUTHA;Get-OAUTHAuthorize;Get OAUTH Authorize Information;oauth/authorize;https://192.168.1.254/api/v1/oauth/authorize;GET;public;Private;any;No;No;List;oauth-authorize
-GET-OQCBUTTONID;Get-OQCBUTTONID;Get BBOX BUTTON Information;oqc/button;https://192.168.1.254/api/v1/oqc/button;GET;private;Private;device-read;No;No;;oqc-button
+GET-OQCBUTTONID;Get-OQCBUTTONID;Get BBOX BUTTON Information;oqc/button;https://192.168.1.254/api/v1/oqc/button;GET;private;Private;device-read;No;No;$null;oqc-button
 GET-PARENTALCONTROL;Get-PARENTALCONTROL;Get PARENTAL CONTROL Configuration Information;parentalcontrol;https://192.168.1.254/api/v1/parentalcontrol;GET;private;Private;parental-read;No;Yes;List;parentalcontrol
 GET-PARENTALCONTROLS;Get-PARENTALCONTROLScheduler;Get PARENTAL CONTROL Scheduler Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;list;parentalcontrol-scheduler
 GET-PARENTALCONTROLSR;Get-PARENTALCONTROLSchedulerRules;Get PARENTAL CONTROL Scheduler Rules Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;Table;parentalcontrol-scheduler-rules
