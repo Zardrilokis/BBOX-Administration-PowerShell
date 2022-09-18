@@ -488,6 +488,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     Param (
         [Parameter(Mandatory=$True)]
         [String]$APIName,
+        
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
@@ -548,7 +549,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
 
 # Used only to Refresh WIRELESS Frequency Neighborhood Scan ID and linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-WIRELESSFrequencyNeighborhoodScanID"
 Function Get-WIRELESSFrequencyNeighborhoodScan {
-    
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
@@ -1214,13 +1215,13 @@ function Show-WindowsFormDialogBoxInuput {
 
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 
     $TextBox = New-Object System.Windows.Forms.TextBox
     $TextBox.Location = New-Object System.Drawing.Point(40,80)
-    $TextBox.Size = New-Object System.Drawing.Size(240,20)
+    $TextBox.Size = New-Object System.Drawing.Size(300,100)
     $MainForm.Controls.Add($TextBox)
 
     $MainForm.Topmost = $true
@@ -1278,7 +1279,7 @@ function Show-WindowsFormDialogBox2Choices {
 
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,50)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 
@@ -1336,7 +1337,7 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
 
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,50)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 
@@ -1405,7 +1406,7 @@ function Show-WindowsFormDialogBox3Choices {
     
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,50)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 
@@ -1474,7 +1475,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(240,50)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
 

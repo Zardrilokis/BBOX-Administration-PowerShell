@@ -825,7 +825,7 @@ If ($Null -eq $global:TriggerExit) {
 #region Get Already Active Google Chrome Process
 
 If ($Null -eq $global:TriggerExit) {
-    $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue| ForEach-Object {$_.Id})
+    $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
 }
 
 #endregion Get Already Active Google Chrome Process
@@ -887,7 +887,7 @@ While ($Null -eq $global:TriggerExit) {
             }
             Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
 
-            #endregion Start BBox Authentification#
+            #endregion Start BBox Authentification
         }
         
         # Get data
