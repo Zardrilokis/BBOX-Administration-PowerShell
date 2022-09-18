@@ -207,7 +207,8 @@
     Update       : Change '.\Settings-Program.json' file structure
     Update       : Update function 'Get-BBoxInformation' to catch better API errors
     Update       : Update function 'Stop-Program' to manage better Google Chrome and ChromeDriver closing
-    Update       : Omptimise function 'Switch-Info' to remove old value dont used.
+    Update       : Omptimise function 'Switch-Info' to remove old value dont used
+    Update       : Change Windows Form position and size
 
 .LINKS
     
