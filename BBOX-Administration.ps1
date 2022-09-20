@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+#Requires -Version 7.0
 
 <#
 .SYNOPSIS
@@ -205,11 +205,29 @@
     Update       : Display warning action for end-user with function : 'Show-WindowsFormDialogBox'
     Update       : Change Start Chromedriver and bbox authentification only if not already launched and if it is not a local program action
     Update       : Change '.\Settings-Program.json' file structure
-    Update       : Update function 'Get-BBoxInformation' to catch better API errors
-    Update       : Update function 'Stop-Program' to manage better Google Chrome and ChromeDriver closing
-    Update       : Omptimise function 'Switch-Info' to remove old value dont used
+    Update       : Update function : 'Get-BBoxInformation' to catch better API errors
+    Update       : Update function : 'Stop-Program' to manage better Google Chrome and ChromeDriver closing
+    Update       : Optimise function : 'Switch-Info' to remove old value don't used
     Update       : Change Windows Form position and size
-
+    
+    Version 2.4 - BBOX version 20.8.8
+    Updated Date : 2022/09/18
+    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Update       : #Requires -Version 7.0
+    Update       : Add new function 'Import-CredentialManager' to manage credential in 'Windows Credential Manager'
+    Update       : Install / import new module : 'TUN.CredentialManager'
+    Update       : Add new function : 'Import-TUNCredentialManager'
+    Update       : Add new 'links' : https://www.powershellgallery.com/packages/TUN.CredentialManager
+    Update       : Need to use PowerShell Version 7.0
+    Update       : Add new functions : 'Remove-BBoxCredential', 'Show-BBoxCredential', 'Add-BBoxCredential' to manage BBOX Credential in 'Windows Credential Manager'
+    Update       : Add PowerShell Script Admin Execution control
+    Update       : Add new block to install / Import Powershell module : 'TUN.CredentialManager'
+    Update       : switch position block 'Presentation'
+    Update       : Update function : 'Stop-Program'
+    Update       : update credentials setting in user json configuration files : '.\Ressources\Settings-Current-User.json' and '.\Ressources\Settings-Default-User.json'
+    Update       : Update functions : 'Export-GlobalOutputData' and 'EmptyFormatedDATA'
+    Update       : Change Windows Form position and size
+    
 .LINKS
     
     https://api.bbox.fr/doc/
@@ -219,8 +237,17 @@
     https://mabbox.bytel.fr/api/v1
     http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     https://www.bbox-mag.fr/box/firmware/
+    https://www.powershellgallery.com/packages/TUN.CredentialManager
     
 #>
+
+#region admin execution control
+
+#$Script_Name = $MyInvocation.MyCommand.Name
+#$Script = "$PSScriptRoot\$Script_Name"
+#If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {Start-Process Pwsh " -ExecutionPolicy Bypass -File `"$Script`"" -Verb RunAs; Exit}
+
+#endregion admin execution control
 
 #region function
 
@@ -329,6 +356,7 @@ $UrlAuth    = $Null
 $UrlHome    = $Null
 $UrlToGo    = $Null
 
+
 #endregion Main Variables
 
 #region Start Program initialisation
@@ -368,6 +396,7 @@ Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Progra
 #region Load System Json Configuration files
 
 Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Start Load JSON Settings Program' -NotDisplay
+Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message "JSON Settings Program file path : $global:JSONSettingsProgramFilePath" -NotDisplay
 Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
 
 If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramContent)) {
@@ -459,6 +488,23 @@ If ($Null -eq $global:TriggerExit) {
         $global:TriggerExit = 1
     }
     
+    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
+}
+
+If ($Null -eq $global:TriggerExit) {
+
+    $ModuleName = 'TUN.CredentialManager'
+    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'Start Powershell Module Importation' -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $ModuleName" -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
+    
+    Try {
+        Import-TUNCredentialManager -ModuleName $ModuleName -ErrorAction Stop
+    }
+    Catch {
+        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $ModuleName can't be installed or imported, due to : $($_.ToString())"
+        $global:TriggerExit = 1
+    }
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
 }
 
@@ -609,72 +655,13 @@ If ($Null -eq $global:TriggerExit) {
 }
 Else{
     Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 'Finished with errors'
+    Stop-Program -ErrorAction Stop
 }
 
 Write-Log -Type INFO -Name 'Program initialisation - Start Program' -Message 'End Program initialisation' -NotDisplay
 Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message '#################################################### Initialisation #####################################################'
 
 #endregion End Program Initialisation
-
-#region Program Presentation
-
-If ($Null -eq $global:TriggerExit) {
-    
-    Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
-    Write-Host 'This program is only available in English'
-    Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBOX'
-    Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBOX'
-    Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBOX management => ' -NoNewline
-    Write-Host "$BBoxUrlRemote" -ForegroundColor Green -NoNewline
-    Write-Host ')'
-    Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
-    Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
-    Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one'
-    Write-Host 'When displaying the result, some information may not be displayed, or may be missing :'
-    Write-Host '- Either its an oversight on my part in the context of the development, and I apologize in advance'
-    Write-Host '- Either this one is still under development'
-    Write-Host '- Either this information is optional and only appears in the presence of certain bbox models :'
-    Write-Host '-- BBOX models'
-    Write-Host '-- Firmware version'
-    Write-Host '-- Available features'
-    Write-Host '-- Connection mode (Local / Remote)'
-    Write-Host 'This program requires the installation of PowerShell 5.1 minimum and Google Chrome'
-    Write-Host 'For more information, please consult : ' -NoNewline
-    Write-Host "$APIUrlDocumentation" -ForegroundColor Green
-    Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
-    Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
-    Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
-    Write-Host 'For any questions or additional requests, contact me to this email address : ' -NoNewline
-    Write-Host "$Mail" -ForegroundColor Green
-    Write-Host 'Please make sure log file is closed before continue' -ForegroundColor Yellow
-    Write-Host 'Logs files location : '
-    Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
-    Write-Host "- $TranscriptFilePath" -ForegroundColor Green
-    Write-Host "Tested environnement list : " -NoNewline
-    Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
-
-    <#
-    Write-Host 'Last success tested environnement :'
-    Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Start tested environnements' -NotDisplay
-    Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Tested environnements importation status $TestedEnvironnementPath :' -NotDisplay
-    Try {
-        $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ';' -ErrorAction Stop
-        $TestedEnvironnement[0] | Format-List
-        Write-Log -Type VALUE -Name 'Program presentation - Get tested environnements' -Message 'Success' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program presentation - Get tested environnements' -Message "Failed, to get tested environnements, due to : $($_.ToString())"
-        $global:TriggerExit = 1
-    }
-    Write-Host 'For others successful tested environnement, please consult : ' -NoNewline
-    Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
-    Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'End tested environnements' -NotDisplay
-    #>
-    Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
-    Pause
-}
-
-#endregion Program Presentation
 
 #region Import User Json Configuration files
 
@@ -692,6 +679,7 @@ Else {
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Json Current User Settings Creation' -Message "Failed, to create Json Current User Settings file, due to : $($_.ToString())"
+        Stop-Program -ErrorAction Stop
     }
     Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Creation' -Message 'End Json Current User Settings Creation' -NotDisplay
 
@@ -706,41 +694,94 @@ Else {
     Else {
         Write-Log -Type WARNING -Name 'Program initialisation - Json Current User Settings Importation' -Message "Failed, to find find any user settings configuration file, due to : $($_.ToString())"
         Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
-        $global:TriggerExit = 1
+        Stop-Program -ErrorAction Stop
     }
 }
 
+#region Program Presentation
+
+Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
+Write-Host 'This program is only available in English'
+Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBOX'
+Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBOX'
+Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBOX management => ' -NoNewline
+Write-Host "$BBoxUrlRemote" -ForegroundColor Green -NoNewline
+Write-Host ')'
+Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
+Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
+Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one'
+Write-Host 'When displaying the result, some information may not be displayed, or may be missing :'
+Write-Host '- Either its an oversight on my part in the context of the development, and I apologize in advance'
+Write-Host '- Either this one is still under development'
+Write-Host '- Either this information is optional and only appears in the presence of certain bbox models :'
+Write-Host '-- BBOX models'
+Write-Host '-- Firmware version'
+Write-Host '-- Available features'
+Write-Host '-- Connection mode (Local / Remote)'
+Write-Host 'This program requires the installation of PowerShell 5.1 minimum and Google Chrome'
+Write-Host 'For more information, please consult : ' -NoNewline
+Write-Host "$APIUrlDocumentation" -ForegroundColor Green
+Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
+Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
+Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
+Write-Host 'For any questions or additional requests, contact me to this email address : ' -NoNewline
+Write-Host "$Mail" -ForegroundColor Green
+Write-Host "Tested environnement list : "
+Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
+Write-Host 'Logs files location : '
+Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
+Write-Host "- $TranscriptFilePath" -ForegroundColor Green
+Write-Host 'Please make sure log file is closed before continue' -ForegroundColor Yellow
+
+<#
+Write-Host 'Last success tested environnement :'
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Start tested environnements' -NotDisplay
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Tested environnements importation status $TestedEnvironnementPath :' -NotDisplay
+Try {
+    $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ';' -ErrorAction Stop
+    $TestedEnvironnement[0] | Format-List
+    Write-Log -Type VALUE -Name 'Program presentation - Get tested environnements' -Message 'Success' -NotDisplay
+}
+Catch {
+    Write-Log -Type ERROR -Name 'Program presentation - Get tested environnements' -Message "Failed, to get tested environnements, due to : $($_.ToString())"
+    $global:TriggerExit = 1
+}
+Write-Host 'For others successful tested environnement, please consult : ' -NoNewline
+Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'End tested environnements' -NotDisplay
+#>
+Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
+Pause
+
+#endregion Program Presentation
+
 #endregion Import User Json Configuration files
 
-#region Check if password already exist in Current json file
+#region Check if password already exist in Windows Credential Manager
 
 If ($Null -eq $global:TriggerExit) {
     
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Start Password Status' -NotDisplay
     Write-Log -Type INFONO -Name 'Program run - Password Status' -Message 'Password Status : ' -NotDisplay
-    
-    If (-not [string]::IsNullOrEmpty($global:JSONSettingsCurrentUserContent.Credentials.NewPassword)) {
+
+    If ($null -eq ($(Get-StoredCredential -Target $global:Target -ErrorAction SilentlyContinue | Select-Object -Property Password -ErrorAction SilentlyContinue).password | ConvertFrom-SecureString -AsPlainText -ErrorAction SilentlyContinue)) {
         
-        $global:Password = $global:JSONSettingsCurrentUserContent.Credentials.NewPassword
-    }
-    Else{
-        While ([string]::IsNullOrEmpty($global:Password)) {
-            
-            # Ask user to provide BBOX Web Interface Password
-            Write-Log -Type WARNING -Name 'Program run - Password Status' -Message 'Not set' -NotDisplay
-            #$global:Password = Read-Host -Prompt "Please enter your bbox Admin web portal interface password "
-            $global:Password = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Password Status' -LabelMessageText 'Please enter your bbox Admin web portal interface password :' -OkButtonText 'Ok' -CancelButtonText 'Cancel'
+        Write-Log -Type WARNING -Name 'Program run - Password Status' -Message 'Not yet set' -NotDisplay
+        Try {
+            Add-BBoxCredential -ErrorAction Stop
+        }
+        Catch {
+            Write-Log -Type WARNING -Name 'Program run - Password Status' -Message "Password can't be set, du to : $($_.ToString())" -NotDisplay
+            Stop-Program -ErrorAction Stop
         }
     }
-    
-    $global:JSONSettingsCurrentUserContent.Credentials.OldPassword = $global:JSONSettingsCurrentUserContent.Credentials.NewPassword
-    $global:JSONSettingsCurrentUserContent.Credentials.NewPassword = $global:Password
-    $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
-    Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Set' -NotDisplay
+    Else {
+        Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Already Set' -NotDisplay
+    }
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'End Password Status' -NotDisplay
 }
 
-#endregion Check if password already exist in Current json file
+#endregion Check if password already exist in Windows Credential Manager
 
 #region Check if user connect on the correct LAN Network
 
@@ -821,6 +862,7 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'End Connexion Type' -NotDisplay
     }
 }
+
 #endregion Set Bbox connexion settings regarding user selection
 
 #region Get Already Active Google Chrome Process
@@ -854,7 +896,7 @@ While ($Null -eq $global:TriggerExit) {
         Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Selected action : '
         Write-Log -Type VALUE -Name 'Program run - Action asked' -Message $Description
 
-        If (($Null -eq $global:TriggerExit) -and (-not $global:ChromeDriver) -and ($ActionProgram -notmatch $ActionsExclusionsActions)) {
+        If ((-not $global:ChromeDriver) -and ($ActionProgram -notmatch $ActionsExclusionsActions)) {
             
             #region Start in Background chromeDriver
 
@@ -867,7 +909,7 @@ While ($Null -eq $global:TriggerExit) {
             }
             Catch {
                 Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
-                $global:TriggerExit = 1
+                Stop-Program -ErrorAction Stop
             }
             Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
 
@@ -879,12 +921,14 @@ While ($Null -eq $global:TriggerExit) {
             Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
             
             Try {
-                Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $global:Password -ErrorAction Stop
+                $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
+                Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
                 Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
+                Clear-Variable -Name Password
             }
             Catch {
                 Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
-                $global:TriggerExit = 1
+                Stop-Program -ErrorAction Stop
             }
             Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
 
@@ -914,8 +958,9 @@ While ($Null -eq $global:TriggerExit) {
     
     Else {
         Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Action chosen : '
-        Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Cancelled by user / Quit program'
+        Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Cancelled by user'
         $global:TriggerExit = 1
+        Stop-Program -ErrorAction Stop
     }
 }
 
@@ -923,6 +968,6 @@ While ($Null -eq $global:TriggerExit) {
 
 #region Close Program
 
-Stop-Program -LogFolderPath $global:LogFolderPath -LogFileName $global:LogFileName -ErrorAction Stop
+Stop-Program -ErrorAction Stop
 
 #endregion Close Programm

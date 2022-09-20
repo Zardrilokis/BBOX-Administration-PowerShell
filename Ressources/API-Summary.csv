@@ -1,16 +1,20 @@
 Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
-Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;$null;$null
-Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;$null;$null
-REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Private;Private;Computer;Yes;Yes;$null;$null
-SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Gridview;$null
-SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;$null
-SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;$null
-Get-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
+Stop-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Private;Private;Computer;No;Yes;List;Stop_Program
+Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;List;Full_Testing_Program
+Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;List;Full
+REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;List;remove-logs
+REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;List;remove-csv
+REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;List;remove-Json
+REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Private;Private;Computer;Yes;Yes;List;remove-Journal
+REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Private;Private;Computer;Yes;Yes;List;remove-bbox-config
+REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Private;Private;Computer;Yes;Yes;List;remove-report
+SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Private;Private;Computer;Yes;Yes;HTML/Table/Out-Gridview;html-table-outgridview
+SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Private;Private;Computer;Yes;Yes;CSV/JSON;csv-json
+SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Private;Private;Computer;Yes;Yes;HTML;html
+REMOVE-BBoxC;Remove-BBoxCredential;Remove BBox Credential stored in Windows Credential Manager;Remove_BBox_Credential;Remove_BBox_Credential;Remove;Private;Private;Computer;Yes;Yes;List;remove-cred
+SHOW-BBoxC;Show-BBoxCredential;Show BBox Credential stored in Windows Credential Manager;Show_BBox_Credential;Show_BBox_Credential;Show;Private;Private;Computer;Yes;Yes;List;show-cred
+ADD-BBoxC;Add-BBoxCredential;Add BBox Credential in Windows Credential Manager;Add_BBox_Credential;Add_BBox_Credential;Add;Private;Private;Computer;Yes;Yes;List;add-cred
+GET-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal
 GET-AIRTIES;Get-Airties;Get AIRTIES Summary Information;airties;https://192.168.1.254/api/v1/airties;GET;public;Private;diag-read;No;No;List;airties
 GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode
 GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;No;list;airties-zerotouch

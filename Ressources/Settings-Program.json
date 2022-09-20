@@ -25,7 +25,7 @@
   "APIName": {
     "Exclusions": {
       "Full": "401|404|log.html|voip/calllog|voip/fullcalllog",
-      "Full_Testing_Program": "401|404|Full|Full_Testing_Program"
+      "Full_Testing_Program": "401|404|Full|Full_Testing_Program|Stop_Program"
     },
     "Action": {
       "Exclusions": {
@@ -71,10 +71,10 @@
   "Actions": {
     "Exclusions": {
       "Scope": "Computer",
-      "Actions": "Remove|Switch"
+      "Actions": "Remove|Switch|Show|Add|Quit"
     }
   },
   "FormatedData": {
-    "ExcludedValues": "C|J|Y|H|T|Domain|Program"
+    "ExcludedValues": "Domain|Program"
   }
 }

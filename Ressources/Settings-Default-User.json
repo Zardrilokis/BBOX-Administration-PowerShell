@@ -1,7 +1,8 @@
 {
   "Credentials": {
-    "NewPassword": "",
-    "OldPassword": ""
+    "Target": "AdminBytel",
+	"UserName": "AdminBytel",
+    "Comment": "Credentials to connect to BYTEL Web Admin Console"
   },
   "Site": {
     "OldRemotePort": "",
