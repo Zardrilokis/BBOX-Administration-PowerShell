@@ -5,12 +5,16 @@
 
 #region GLOBAL (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
 
+# Add -AssemblyName Classies
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
 <#
     .SYNOPSIS
-    Write-Log permet d'écrire les logs fonctionnels d'exécution.
+    Write-Log allow to write fonctionnal execution logs
     
     .DESCRIPTION
-    Ecrit un log sur la console et sur fichier.
+    Write a log in the host console and to a csv file.
 #>
 function Write-Log {
     Param (
@@ -257,48 +261,71 @@ function Show-WindowsFormDialogBoxInuput {
         [Parameter(Mandatory=$True)]
         [string]$LabelMessageText,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory=$True)]
         [string]$OkButtonText,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory=$True)]
         [string]$CancelButtonText
     )
+    
+    $MainFormSizeX = 330
+    $MainFormSizeY = 230
 
-    # Add -AssemblyName Classies
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 60
 
+    $TextBoxSizeX = 100
+    $TextBoxSizeY = 40
+    
+    $OkButtonSizeX = 75
+    $OkButtonSizeY = 25
+    
+    $CancelButtonSizeX = 75
+    $CancelButtonSizeY = 25
+
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 40
+
+    $TextBoxLocationX = 20
+    $TextBoxLocationY = $LabelMessageLocationY + $LabelMessageSizeY
+    
+    $OkButtonLocationX = 85
+    $OkButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
+
+    $CancelButtonLocationX = $OkButtonLocationX + $OkButtonSizeX + 10
+    $CancelButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
+    
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
 
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+
+    $TextBox = New-Object System.Windows.Forms.TextBox
+    $TextBox.Location = New-Object System.Drawing.Point($TextBoxLocationX,$TextBoxLocationY)
+    $TextBox.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+    $MainForm.Controls.Add($TextBox)
+    
     $OkButton = New-Object System.Windows.Forms.Button
-    $OkButton.Location = New-Object System.Drawing.Point(85,130)
-    $OkButton.Size = New-Object System.Drawing.Size(75,25)
+    $OkButton.Location = New-Object System.Drawing.Point($OkButtonLocationX,$OkButtonLocationY)
+    $OkButton.Size = New-Object System.Drawing.Size($OkButtonSizeX,$OkButtonSizeY)
     $OkButton.Text = $OkButtonText
     $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $OkButton
     $MainForm.Controls.Add($OkButton)
 
     $CancelButton = New-Object System.Windows.Forms.Button
-    $CancelButton.Location = New-Object System.Drawing.Point(170,130)
-    $CancelButton.Size = New-Object System.Drawing.Size(75,25)
+    $CancelButton.Location = New-Object System.Drawing.Point($CancelButtonLocationX,$CancelButtonLocationY)
+    $CancelButton.Size = New-Object System.Drawing.Size($CancelButtonSizeX,$CancelButtonSizeY)
     $CancelButton.Text = $CancelButtonText
     $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $CancelButton
     $MainForm.Controls.Add($CancelButton)
-
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
-
-    $TextBox = New-Object System.Windows.Forms.TextBox
-    $TextBox.Location = New-Object System.Drawing.Point(40,80)
-    $TextBox.Size = New-Object System.Drawing.Size(300,100)
-    $MainForm.Controls.Add($TextBox)
 
     $MainForm.Topmost = $true
     $MainForm.Add_Shown({$TextBox.Select()})
@@ -327,37 +354,54 @@ function Show-WindowsFormDialogBox2Choices {
         [Parameter(Mandatory=$True)]
         [string]$SecondOptionButtonText
     )
+    
+    $MainFormSizeX = 400
+    $MainFormSizeY = 300
 
-    # Add -AssemblyName Classies
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 100
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
 
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 40
+    
+    $FirstOptionButtonLocationX = 85
+    $FirstOptionButtonLocationY = 130
+
+    $SecondOptionButtonLocationX = 170
+    $SecondOptionButtonLocationY = 130
+    
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
 
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
     $FirstOptionButton = New-Object System.Windows.Forms.Button
-    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
-    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
     $FirstOptionButton.Text = $FirstOptionButtonText
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
 
     $SecondOptionButton = New-Object System.Windows.Forms.Button
-    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
-    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
     $SecondOptionButton.Text = $SecondOptionButtonText
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
 
     $MainForm.Topmost = $true
 
@@ -386,36 +430,53 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
         [string]$SecondOptionButtonText
     )
 
-    # Add -AssemblyName Classies
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
+    $MainFormSizeX = 400
+    $MainFormSizeY = 300
 
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 100
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
+
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 40
+    
+    $FirstOptionButtonLocationX = 85
+    $FirstOptionButtonLocationY = 130
+
+    $SecondOptionButtonLocationX = 170
+    $SecondOptionButtonLocationY = 130
+    
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
 
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
     $FirstOptionButton = New-Object System.Windows.Forms.Button
-    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
-    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
     $FirstOptionButton.Text = $FirstOptionButtonText
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
 
     $SecondOptionButton = New-Object System.Windows.Forms.Button
-    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
-    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
     $SecondOptionButton.Text = $SecondOptionButtonText
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
 
     $MainForm.Topmost = $true
 
@@ -447,44 +508,67 @@ function Show-WindowsFormDialogBox3Choices {
         [string]$ThirdOptionButtonText
     )
 
-    # Add -AssemblyName Classies
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
+    $MainFormSizeX = 400
+    $MainFormSizeY = 300
 
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 100
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
+
+    $ThirdOptionButtonSizeX = 75
+    $ThirdOptionButtonSizeY = 25
+    
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 40
+    
+    $FirstOptionButtonLocationX = 85
+    $FirstOptionButtonLocationY = 130
+
+    $SecondOptionButtonLocationX = 170
+    $SecondOptionButtonLocationY = 130
+    
+    $ThirdOptionButtonLocationX = 225
+    $ThirdOptionButtonLocationY = 130
+    
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
 
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
     $FirstOptionButton = New-Object System.Windows.Forms.Button
-    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
-    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
     $FirstOptionButton.Text = $FirstOptionButtonText
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
 
     $SecondOptionButton = New-Object System.Windows.Forms.Button
-    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
-    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
     $SecondOptionButton.Text = $SecondOptionButtonText
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
 
     $ThirdOptionButton = New-Object System.Windows.Forms.Button
-    $ThirdOptionButton.Location = New-Object System.Drawing.Point(170,130)
-    $ThirdOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
+    $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
     $ThirdOptionButton.Text = $ThirdOptionButtonText
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $ThirdOptionButton
     $MainForm.Controls.Add($ThirdOptionButton)
-    
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
 
     $MainForm.Topmost = $true
 
@@ -515,16 +599,18 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
         [Parameter(Mandatory=$True)]
         [string]$ThirdOptionButtonText
     )
-
-    # Add -AssemblyName Classies
-    Add-Type -AssemblyName System.Windows.Forms
-    Add-Type -AssemblyName System.Drawing
-
+    
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size(400,300)
     $MainForm.StartPosition = 'CenterScreen'
 
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
     $FirstOptionButton = New-Object System.Windows.Forms.Button
     $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
     $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
@@ -548,12 +634,6 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $ThirdOptionButton
     $MainForm.Controls.Add($ThirdOptionButton)
-    
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
 
     $MainForm.Topmost = $true
 
@@ -1648,9 +1728,9 @@ Function Get-JSONSettingsCurrentUserContent {
         $global:TriggerExportFormat   = $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat
         $global:TriggerDisplayFormat  = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
-        $global:Target   = $global:JSONSettingsCurrentUserContent.Credentials.Target
-        $global:UserName = $global:JSONSettingsCurrentUserContent.Credentials.UserName
-        $global:Comment  = $global:JSONSettingsCurrentUserContent.Credentials.Comment
+        $global:Target                = $global:JSONSettingsCurrentUserContent.Credentials.Target
+        $global:UserName              = $global:JSONSettingsCurrentUserContent.Credentials.UserName
+        $global:Comment               = $global:JSONSettingsCurrentUserContent.Credentials.Comment
         
         Write-Log -Type VALUE -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Success' -NotDisplay
     }
@@ -1677,6 +1757,10 @@ Function Get-JSONSettingsDefaultUserContent {
         $global:TriggerExportFormat   = $global:JSONSettingsDefaultUserContent.Trigger.ExportFormat
         $global:TriggerDisplayFormat  = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
+        $global:Target                = $global:JSONSettingsDefaultUserContent.Credentials.Target
+        $global:UserName              = $global:JSONSettingsDefaultUserContent.Credentials.UserName
+        $global:Comment               = $global:JSONSettingsDefaultUserContent.Credentials.Comment
+        
         Write-Log -Type VALUE -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Success'
     }
     Catch {
