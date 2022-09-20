@@ -881,6 +881,178 @@ Function Get-PortStatus {
     }
 }
 
+#region ChromeDriver 
+
+# Used only to Start ChromeDriver
+Function Start-ChromeDriver {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverVersion,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$DownloadPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$LogsPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeBinaryPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverDefaultProfile
+    )
+    
+    # Add path for ChromeDriver.exe to the environmental variable 
+    $env:PATH += ";$ChromeDriverPath\$ChromeDriverVersion"
+
+    # Add path for GoogleChrome.exe to the environmental variable 
+    #$Temp = $($ChromeBinaryPath.Replace("\$($ChromeBinaryPath.Split("\")[-1])",''))
+    #$env:PATH += ";$Temp"
+
+    # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
+    Add-Type -Path "$ChromeDriverPath\$ChromeDriverVersion\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)"
+    
+    # Create new Chrome Drive Service
+    $ChromeDriverService = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService()
+    
+    # Hide ChromeDriver Command Prompt Window
+    $ChromeDriverService.HideCommandPromptWindow = $True
+    
+    # Add Chrome Driver Option
+    $chromeoption = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+    
+    # Add path for Chrome Driver Log File
+    $chromeoption.AddArgument("log-path='$LogsPath\ChromeDriver-Debug.log'")
+    
+    # Enable Verbose Logging
+    $chromeoption.AddArgument('verbose')
+    
+    # Bypass certificate control
+    $chromeoption.AddArgument('ignore-certificate-errors')
+    
+    # Use Profile Directory
+    $chromeoption.AddArgument("profile-directory='$ChromeDriverDefaultProfile'")
+    
+    # Find Google Chrome Application
+    $chromeoption.BinaryLocation = $ChromeBinaryPath
+    
+    # Allow to download file without prompt
+    $chromeoption.AddUserProfilePreference('download', @{'default_directory' = $DownloadPath; 'directory_upgrade' = $True;'prompt_for_download' = $False})
+    #$Preferencies = @()
+    #$Preferencies.put('download.default_directory', $DownloadPath)
+    #$Preferencies.put('download.prompt_for_download', $False)
+    #$chromeoption.setExperimentalOption('prefs', $Preferencies)
+
+    # Disable All Extentions
+    $chromeoption.AddArgument("disable-extensions")
+    $chromeoption.AddArgument("disable-default-apps")
+    $chromeoption.AddArgument("disable-popup-blocking")
+    $chromeoption.AddArgument("disable-plugins")
+    $chromeoption.AddArgument("no-sandbox")
+    
+    # Hide ChromeDriver Application
+    #$chromeoption.AddArguments('headless')
+    
+    # Start the ChromeDriver
+    $global:ChromeDriver = New-Object OpenQA.Selenium.Chrome.ChromeDriver($ChromeDriverService,$chromeoption)
+}
+
+# Used only to stop ChromeDriver, linked to : "Stop-Program"
+Function Stop-ChromeDriver {
+    
+    Param ()
+    
+    # Close all ChromeDriver instances openned
+    $global:ChromeDriver.Close()
+    $global:ChromeDriver.Dispose()
+    $global:ChromeDriver.Quit()
+    Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+}
+
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan, linked to : "Format-Date1970"
+function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Start WIRELESS Frequency Neighborhood scan' -NotDisplay
+    
+    # Get information from BBOX API and last scan date
+    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+    $Lastscan = $Json.lastscan
+    
+    Write-Log -Type INFONO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'WIRELESS Frequency Neighborhood Lastscan : ' -NotDisplay
+    
+    If ($Lastscan -eq 0) {
+        
+        Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Never' -NotDisplay
+    }
+    Else {
+        Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message $(Format-Date1970 -Seconds $Lastscan) -NotDisplay
+    }
+    
+    $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("api/v1/$APIName",'diagnostic.html')))
+    Start-Sleep -Seconds 1
+    
+    Switch ($APIName) {
+        
+        wireless/24/neighborhood {($global:ChromeDriver.FindElementsByClassName('scan24') | Where-Object -Property text -eq 'Scanner').click();Break}
+            
+        wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName('scan5') | Where-Object -Property text -eq 'Scanner').click();Break}
+    }
+    
+    Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Attention, le scan peut provoquer une coupure temporaire de votre réseau Wi-Fi'
+    Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Souhaitez-vous continuer? : ' -NotDisplay
+    
+    While ($ActionState -notmatch "Y|N") {
+            
+        #$ActionState = Read-Host "Souhaitez-vous continuer ? (Y) Yes / (N) No"
+        $ActionState = Show-WindowsFormDialogBox -Title 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Souhaitez-vous continuer ? (Y) Yes / (N) No' -YesNo
+        Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message "Action chosen by user : $ActionState" -NotDisplay
+    }
+
+    If ($ActionState[0] -eq 'Y') {
+        
+        # addd
+        Try {
+            ($global:ChromeDriver.FindElementsByClassName('cta-1') | Where-Object -Property text -eq 'Rafraîchir').click()
+            ($global:ChromeDriver.FindElementsByClassName('cta-2') | Where-Object -Property text -eq 'OK').click()
+        }
+        Catch {
+            ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq 'OK').click()
+        }
+    }
+    
+    Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
+}
+
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan ID and linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-WIRELESSFrequencyNeighborhoodScanID"
+Function Get-WIRELESSFrequencyNeighborhoodScan {
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName
+    )
+    
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName $APIName -UrlToGo $UrlToGo
+    $FormatedData = @()
+    $FormatedData = Get-WIRELESSFrequencyNeighborhoodScanID -UrlToGo $UrlToGo
+    
+    Return $FormatedData
+}
+
 # Used only to get BBOX LAN Switch Port State, linked to : "Get-DeviceFullLog"
 Function Get-LanPortState {
     
@@ -1453,6 +1625,228 @@ Function Stop-Program {
 
 #region ChromeDriver 
 
+# Used only to display default Windows Form Dialog Box
+function Show-WindowsFormDialogBox {
+    
+    Param (
+        [string]$Message = 'Fill in the message',
+        [string]$Title = 'WindowTitle',
+        [switch]$OKCancel,
+        [switch]$AbortRetryIgnore,
+        [switch]$YesNoCancel,
+        [switch]$YesNo,
+        [switch]$RetryCancel,
+        [switch]$ErrorIcon,
+        [switch]$QuestionIcon,
+        [switch]$WarnIcon,
+        [switch]$InfoIcon
+    )
+     
+    # Set the value function of the option
+    if ($OKCancel) { $Btn = 1 }
+    elseif ($AbortRetryIgnore) { $Btn = 2 }
+    elseif ($YesNoCancel) { $Btn = 3 }
+    elseif ($YesNo) { $Btn = 4 }
+    elseif ($RetryCancel) { $Btn = 5 }
+    else { $Btn = 0 }
+     
+    # Affect value for the associated icon
+    if ($ErrorIcon) {$Icon = 16 }
+    elseif ($QuestionIcon) {$Icon = 32 }
+    elseif ($WarnIcon) {$Icon = 48 }
+    elseif ($InfoIcon) {$Icon = 64 }
+    else {$Icon = 0 }
+        
+     
+    # Call Windows Forms library
+    [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null
+     
+    # Run the messagebox and return the value
+    $Answer = [System.Windows.Forms.MessageBox]::Show($Message, $Title , $Btn, $Icon)
+    
+    Return $Answer
+}
+
+# Used only to get user's input
+function Show-WindowsFormDialogBoxInuput {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [string]$MainFormTitle,
+
+        [Parameter(Mandatory=$True)]
+        [string]$LabelMessageText,
+
+        [Parameter(Mandatory=$false)]
+        [string]$OkButtonText,
+
+        [Parameter(Mandatory=$false)]
+        [string]$CancelButtonText
+    )
+
+    # Add -AssemblyName Classies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $MainForm = New-Object System.Windows.Forms.Form
+    $MainForm.Text = $MainFormTitle
+    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.StartPosition = 'CenterScreen'
+
+    $OkButton = New-Object System.Windows.Forms.Button
+    $OkButton.Location = New-Object System.Drawing.Point(85,130)
+    $OkButton.Size = New-Object System.Drawing.Size(75,25)
+    $OkButton.Text = $OkButtonText
+    $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.AcceptButton = $OkButton
+    $MainForm.Controls.Add($OkButton)
+
+    $CancelButton = New-Object System.Windows.Forms.Button
+    $CancelButton.Location = New-Object System.Drawing.Point(170,130)
+    $CancelButton.Size = New-Object System.Drawing.Size(75,25)
+    $CancelButton.Text = $CancelButtonText
+    $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $MainForm.CancelButton = $CancelButton
+    $MainForm.Controls.Add($CancelButton)
+
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+
+    $TextBox = New-Object System.Windows.Forms.TextBox
+    $TextBox.Location = New-Object System.Drawing.Point(40,80)
+    $TextBox.Size = New-Object System.Drawing.Size(300,100)
+    $MainForm.Controls.Add($TextBox)
+
+    $MainForm.Topmost = $true
+    $MainForm.Add_Shown({$TextBox.Select()})
+
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $TextBox.Text
+    }
+    Else {
+        $global:TriggerDialogBox = 1
+    }
+}
+
+# Used only to force user to make a choice between two options
+function Show-WindowsFormDialogBox2Choices {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [string]$MainFormTitle,
+
+        [Parameter(Mandatory=$True)]
+        [string]$LabelMessageText,
+
+        [Parameter(Mandatory=$True)]
+        [string]$FirstOptionButtonText,
+
+        [Parameter(Mandatory=$True)]
+        [string]$SecondOptionButtonText
+    )
+
+    # Add -AssemblyName Classies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $MainForm = New-Object System.Windows.Forms.Form
+    $MainForm.Text = $MainFormTitle
+    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.StartPosition = 'CenterScreen'
+
+    $FirstOptionButton = New-Object System.Windows.Forms.Button
+    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Text = $FirstOptionButtonText
+    $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.AcceptButton = $FirstOptionButton
+    $MainForm.Controls.Add($FirstOptionButton)
+
+    $SecondOptionButton = New-Object System.Windows.Forms.Button
+    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Text = $SecondOptionButtonText
+    $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $SecondOptionButton
+    $MainForm.Controls.Add($SecondOptionButton)
+
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+
+    $MainForm.Topmost = $true
+
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $MainForm.ActiveControl.Text
+    }
+    Else {
+        $global:TriggerExit = 1
+    }
+}
+
+# Used only to force user to make a choice between two options where one is "Cancel"
+function Show-WindowsFormDialogBox2ChoicesCancel {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [string]$MainFormTitle,
+
+        [Parameter(Mandatory=$True)]
+        [string]$LabelMessageText,
+
+        [Parameter(Mandatory=$True)]
+        [string]$FirstOptionButtonText,
+
+        [Parameter(Mandatory=$True)]
+        [string]$SecondOptionButtonText
+    )
+
+    # Add -AssemblyName Classies
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $MainForm = New-Object System.Windows.Forms.Form
+    $MainForm.Text = $MainFormTitle
+    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.StartPosition = 'CenterScreen'
+
+    $FirstOptionButton = New-Object System.Windows.Forms.Button
+    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Text = $FirstOptionButtonText
+    $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.AcceptButton = $FirstOptionButton
+    $MainForm.Controls.Add($FirstOptionButton)
+
+    $SecondOptionButton = New-Object System.Windows.Forms.Button
+    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Text = $SecondOptionButtonText
+    $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $MainForm.CancelButton = $SecondOptionButton
+    $MainForm.Controls.Add($SecondOptionButton)
+
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+
+    $MainForm.Topmost = $true
+
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $MainForm.ActiveControl.Text
+    }
+    Else {
+        $global:TriggerExit = 1
+    }
+}
+
 # Used only to Start ChromeDriver
 Function Start-ChromeDriver {
     
@@ -1516,6 +1910,13 @@ Function Start-ChromeDriver {
     #$Preferencies.put('download.default_directory', $DownloadPath)
     #$Preferencies.put('download.prompt_for_download', $False)
     #$chromeoption.setExperimentalOption('prefs', $Preferencies)
+    
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
 
     # Disable All Extentions
     $chromeoption.AddArgument("disable-extensions")
@@ -1624,6 +2025,21 @@ Function Get-WIRELESSFrequencyNeighborhoodScan {
     $FormatedData = Get-WIRELESSFrequencyNeighborhoodScanID -UrlToGo $UrlToGo
     
     Return $FormatedData
+    
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
+    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+
+    $MainForm.Topmost = $true
+
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $MainForm.ActiveControl.Text
+    }
+    Else {
+        $global:TriggerExit = 1
+    }
 }
 
 #endregion ChromeDriver
