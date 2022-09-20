@@ -368,7 +368,7 @@ function Show-WindowsFormDialogBox2Choices {
     $SecondOptionButtonSizeY = 25
 
     $LabelMessageLocationX = 20
-    $LabelMessageLocationY = 40
+    $LabelMessageLocationY = 20
     
     $FirstOptionButtonLocationX = 85
     $FirstOptionButtonLocationY = 130
@@ -443,7 +443,7 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     $SecondOptionButtonSizeY = 25
 
     $LabelMessageLocationX = 20
-    $LabelMessageLocationY = 40
+    $LabelMessageLocationY = 20
     
     $FirstOptionButtonLocationX = 85
     $FirstOptionButtonLocationY = 130
@@ -508,11 +508,11 @@ function Show-WindowsFormDialogBox3Choices {
         [string]$ThirdOptionButtonText
     )
 
-    $MainFormSizeX = 400
-    $MainFormSizeY = 300
+    $MainFormSizeX = 300
+    $MainFormSizeY = 200
 
     $LabelMessageSizeX = 300
-    $LabelMessageSizeY = 100
+    $LabelMessageSizeY = 90
     
     $FirstOptionButtonSizeX = 75
     $FirstOptionButtonSizeY = 25
@@ -524,16 +524,16 @@ function Show-WindowsFormDialogBox3Choices {
     $ThirdOptionButtonSizeY = 25
     
     $LabelMessageLocationX = 20
-    $LabelMessageLocationY = 40
+    $LabelMessageLocationY = 20
     
-    $FirstOptionButtonLocationX = 85
-    $FirstOptionButtonLocationY = 130
+    $FirstOptionButtonLocationX = 20
+    $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
 
-    $SecondOptionButtonLocationX = 170
-    $SecondOptionButtonLocationY = 130
+    $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
+    $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
     
-    $ThirdOptionButtonLocationX = 225
-    $ThirdOptionButtonLocationY = 130
+    $ThirdOptionButtonLocationX = $SecondOptionButtonLocationX + $SecondOptionButtonSizeX + 10
+    $ThirdOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
     
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
@@ -598,38 +598,65 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
 
         [Parameter(Mandatory=$True)]
         [string]$ThirdOptionButtonText
-    )
+    )   
+
+    $MainFormSizeX = 300
+    $MainFormSizeY = 200
+
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 90
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
+
+    $ThirdOptionButtonSizeX = 75
+    $ThirdOptionButtonSizeY = 25
+    
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 20
+    
+    $FirstOptionButtonLocationX = 20
+    $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+
+    $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
+    $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $ThirdOptionButtonLocationX = $SecondOptionButtonLocationX + $SecondOptionButtonSizeX + 10
+    $ThirdOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
     
     $MainForm = New-Object System.Windows.Forms.Form
     $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size(400,300)
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
 
     $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point(20,40)
-    $LabelMessage.Size = New-Object System.Drawing.Size(300,100)
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
     
     $FirstOptionButton = New-Object System.Windows.Forms.Button
-    $FirstOptionButton.Location = New-Object System.Drawing.Point(85,130)
-    $FirstOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
     $FirstOptionButton.Text = $FirstOptionButtonText
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
 
     $SecondOptionButton = New-Object System.Windows.Forms.Button
-    $SecondOptionButton.Location = New-Object System.Drawing.Point(170,130)
-    $SecondOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
     $SecondOptionButton.Text = $SecondOptionButtonText
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
 
     $ThirdOptionButton = New-Object System.Windows.Forms.Button
-    $ThirdOptionButton.Location = New-Object System.Drawing.Point(255,130)
-    $ThirdOptionButton.Size = New-Object System.Drawing.Size(75,25)
+    $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
+    $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
     $ThirdOptionButton.Text = $ThirdOptionButtonText
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $ThirdOptionButton
@@ -768,20 +795,38 @@ Function Get-ChromeDriverVersion {
     Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
 
     Switch ($ChromeMainVersion) {
-        
+                
         '93'{
+            $ChromeDriverVersion = '93.0.4577.63'
+            Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
+            Break
+           }
+            
+        '94'{
+            $ChromeDriverVersion = '94.0.4606.61'
+            Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
+            Break
+           }
+            
+        '95'{
+            $ChromeDriverVersion = '95.0.4638.17'
+            Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
+            Break
+           }
+    
+        '104'{
                 $ChromeDriverVersion = '104.0.5112.79'
                 Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
                 Break
                }
         
-        '94'{
+        '105'{
                 $ChromeDriverVersion = '105.0.5195.52'
                 Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
                 Break
                }
 
-        '95'{
+        '106'{
                 $ChromeDriverVersion = '106.0.5249.21'
                 Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "$ChromeDriverVersion" -NotDisplay
                 Break
@@ -929,7 +974,7 @@ Function Get-PortStatus {
 
             If (($Port -ge 1) -and ($Port -le 65535)) {
                 
-                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
+                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed | Out-Null
                 
                 If ($PortStatus.TcpTestSucceeded -like $true) {
                     
