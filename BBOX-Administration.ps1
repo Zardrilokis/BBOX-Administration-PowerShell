@@ -211,7 +211,7 @@
     Update       : Change Windows Form position and size
     
     Version 2.4 - BBOX version 20.8.8
-    Updated Date : 2022/09/18
+    Updated Date : 2022/09/20
     Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : #Requires -Version 7.0
     Update       : Add new function 'Import-CredentialManager' to manage credential in 'Windows Credential Manager'
@@ -227,6 +227,7 @@
     Update       : update credentials setting in user json configuration files : '.\Ressources\Settings-Current-User.json' and '.\Ressources\Settings-Default-User.json'
     Update       : Update functions : 'Export-GlobalOutputData' and 'EmptyFormatedDATA'
     Update       : Change Windows Form position and size
+    Update       : Optimise functions : 'Show-WindowsFormDialogBoxInput','Show-WindowsFormDialogBox2Choices','Show-WindowsFormDialogBox2ChoicesCancel','Show-WindowsFormDialogBox3Choices','Show-WindowsFormDialogBox3ChoicesCancel' to better manage the position boxes. 
     
 .LINKS
     
@@ -663,6 +664,63 @@ Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 
 
 #endregion End Program Initialisation
 
+#region Program Presentation
+
+Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
+Write-Host 'This program is only available in English'
+Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBOX'
+Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBOX'
+Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBOX management => ' -NoNewline
+Write-Host "$BBoxUrlRemote" -ForegroundColor Green -NoNewline
+Write-Host ')'
+Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
+Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
+Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one'
+Write-Host 'When displaying the result, some information may not be displayed, or may be missing :'
+Write-Host '- Either its an oversight on my part in the context of the development, and I apologize in advance'
+Write-Host '- Either this one is still under development'
+Write-Host '- Either this information is optional and only appears in the presence of certain bbox models :'
+Write-Host '-- BBOX models'
+Write-Host '-- Firmware version'
+Write-Host '-- Available features'
+Write-Host '-- Connection mode (Local / Remote)'
+Write-Host 'This program requires the installation of PowerShell 5.1 minimum and Google Chrome'
+Write-Host 'For more information, please consult : ' -NoNewline
+Write-Host "$APIUrlDocumentation" -ForegroundColor Green
+Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
+Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
+Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
+Write-Host 'For any questions or additional requests, contact me to this email address : ' -NoNewline
+Write-Host "$Mail" -ForegroundColor Green
+Write-Host "Tested environnement list : "
+Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
+Write-Host 'Logs files location : '
+Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
+Write-Host "- $TranscriptFilePath" -ForegroundColor Green
+Write-Host 'Please make sure logs files is closed before continue' -ForegroundColor Yellow
+
+<#
+Write-Host 'Last success tested environnement :'
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Start tested environnements' -NotDisplay
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Tested environnements importation status $TestedEnvironnementPath :' -NotDisplay
+Try {
+    $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ';' -ErrorAction Stop
+    $TestedEnvironnement[0] | Format-List
+    Write-Log -Type VALUE -Name 'Program presentation - Get tested environnements' -Message 'Success' -NotDisplay
+}
+Catch {
+    Write-Log -Type ERROR -Name 'Program presentation - Get tested environnements' -Message "Failed, to get tested environnements, due to : $($_.ToString())"
+    $global:TriggerExit = 1
+}
+Write-Host 'For others successful tested environnement, please consult : ' -NoNewline
+Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
+Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'End tested environnements' -NotDisplay
+#>
+Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
+Pause
+
+#endregion Program Presentation
+
 #region Import User Json Configuration files
 
 If (($Null -eq $global:TriggerExit) -and (Test-Path -Path $global:JSONSettingsCurrentUserFilePath)) {
@@ -697,64 +755,6 @@ Else {
         Stop-Program -ErrorAction Stop
     }
 }
-
-#region Program Presentation
-
-Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
-Write-Host 'This program is only available in English'
-Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBOX'
-Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBOX'
-Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBOX management => ' -NoNewline
-Write-Host "$BBoxUrlRemote" -ForegroundColor Green -NoNewline
-Write-Host ')'
-Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
-Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
-Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one'
-Write-Host 'When displaying the result, some information may not be displayed, or may be missing :'
-Write-Host '- Either its an oversight on my part in the context of the development, and I apologize in advance'
-Write-Host '- Either this one is still under development'
-Write-Host '- Either this information is optional and only appears in the presence of certain bbox models :'
-Write-Host '-- BBOX models'
-Write-Host '-- Firmware version'
-Write-Host '-- Available features'
-Write-Host '-- Connection mode (Local / Remote)'
-Write-Host 'This program requires the installation of PowerShell 5.1 minimum and Google Chrome'
-Write-Host 'For more information, please consult : ' -NoNewline
-Write-Host "$APIUrlDocumentation" -ForegroundColor Green
-Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
-Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
-Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
-Write-Host 'For any questions or additional requests, contact me to this email address : ' -NoNewline
-Write-Host "$Mail" -ForegroundColor Green
-Write-Host "Tested environnement list : "
-Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
-Write-Host 'Logs files location : '
-Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
-Write-Host "- $TranscriptFilePath" -ForegroundColor Green
-Write-Host 'Please make sure log file is closed before continue' -ForegroundColor Yellow
-
-<#
-Write-Host 'Last success tested environnement :'
-Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Start tested environnements' -NotDisplay
-Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'Tested environnements importation status $TestedEnvironnementPath :' -NotDisplay
-Try {
-    $TestedEnvironnement = Import-Csv -Path $TestedEnvironnementPath -Delimiter ';' -ErrorAction Stop
-    $TestedEnvironnement[0] | Format-List
-    Write-Log -Type VALUE -Name 'Program presentation - Get tested environnements' -Message 'Success' -NotDisplay
-}
-Catch {
-    Write-Log -Type ERROR -Name 'Program presentation - Get tested environnements' -Message "Failed, to get tested environnements, due to : $($_.ToString())"
-    $global:TriggerExit = 1
-}
-Write-Host 'For others successful tested environnement, please consult : ' -NoNewline
-Write-Host "$TestedEnvironnementPath" -ForegroundColor Green
-Write-Log -Type INFO -Name 'Program presentation - Get tested environnements' -Message 'End tested environnements' -NotDisplay
-#>
-Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
-Pause
-
-#endregion Program Presentation
-
 #endregion Import User Json Configuration files
 
 #region Check if password already exist in Windows Credential Manager
