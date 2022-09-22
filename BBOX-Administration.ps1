@@ -229,6 +229,8 @@
     Update       : Change Windows Form position and size
     Update       : Optimise functions : 'Show-WindowsFormDialogBoxInput','Show-WindowsFormDialogBox2Choices','Show-WindowsFormDialogBox2ChoicesCancel','Show-WindowsFormDialogBox3Choices','Show-WindowsFormDialogBox3ChoicesCancel' to better manage the position boxes
     Update       : Update ChromeDriver version to : 104.0.5112.79, 105.0.5195.52, 106.0.5249.21
+    Update       : Update function 'Show-BBoxCredential' to manage error when no password has been set to 'Windows Credential Manager'
+    Update       : Update function 'Add-BBoxCredential' to display the password set to 'Windows Credential Manager'
     
 .LINKS
     
@@ -900,7 +902,7 @@ While ($Null -eq $global:TriggerExit) {
         If ((-not $global:ChromeDriver) -and ($ActionProgram -notmatch $ActionsExclusionsActions)) {
             
             #region Start in Background chromeDriver
-
+            
             Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
             Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
             
