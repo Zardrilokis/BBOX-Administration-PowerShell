@@ -218,7 +218,7 @@
     Update       : Install / import new module : 'TUN.CredentialManager'
     Update       : Add new function : 'Import-TUNCredentialManager'
     Update       : Add new 'links' : https://www.powershellgallery.com/packages/TUN.CredentialManager
-    Update       : Need to use PowerShell Version 7.0
+    Update       : Requires to use PowerShell Version 7.0
     Update       : Add new functions : 'Remove-BBoxCredential', 'Show-BBoxCredential', 'Add-BBoxCredential' to manage BBOX Credential in 'Windows Credential Manager'
     Update       : Add PowerShell Script Admin Execution control
     Update       : Add new block to install / Import Powershell module : 'TUN.CredentialManager'
@@ -231,6 +231,7 @@
     Update       : Update ChromeDriver version to : 104.0.5112.79, 105.0.5195.52, 106.0.5249.21
     Update       : Update function 'Show-BBoxCredential' to manage error when no password has been set to 'Windows Credential Manager'
     Update       : Update function 'Add-BBoxCredential' to display the password set to 'Windows Credential Manager'
+    Update       : Update function 'Get-BackupList', add WindowsFormDialogBox when no backup file found
     
 .LINKS
     
