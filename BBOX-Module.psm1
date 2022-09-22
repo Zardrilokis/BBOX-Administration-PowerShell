@@ -159,9 +159,19 @@ Function Show-BBoxCredential {
     Write-Log -Type INFONO -Name 'Program run - Show BBox Credential' -Message 'Show BBox Credential status : ' -NotDisplay
 
     Try {
-        $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-        Write-Log -Type VALUE -Name 'Program run - Show BBox Credential' -Message 'Success' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Show BBox Credential' -Message "Actual BBox Stored Password : " -NotDisplay
+        $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password 
+        
+        If($Password){
+            
+            $Password = $Password | ConvertFrom-SecureString -AsPlainText
+            Write-Log -Type VALUE -Name 'Program run - Show BBox Credential' -Message 'Success' -NotDisplay
+            Write-Log -Type INFONO -Name 'Program run - Show BBox Credential' -Message "Actual BBox Stored Password : **********" -NotDisplay
+        }
+        Else {
+            $Password = 'None password was found, please set it, before to show it'
+            Write-Log -Type VALUE -Name 'Program run - Show BBox Credential' -Message $Password -NotDisplay
+        }
+        
         $null = Show-WindowsFormDialogBox -Title 'Program run - Show BBox Credential' -Message "Actual BBox Password stored in Windows Credential Manager : $Password" -InfoIcon
         Clear-Variable -Name Password
     }
@@ -201,6 +211,9 @@ function Add-BBoxCredential {
     Catch {
         Write-Log -Type WARNING -Name 'Program run - Password Status' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
+    
+    Show-BBoxCredential
+    
     Return $Credentialbuild
     Clear-Variable -Name Credentialbuild
 }
@@ -1531,7 +1544,6 @@ Function Switch-Info {
             Default              {Write-log WARNING -Name 'Program run - Action not developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail for more information"
                                   Show-WindowsFormDialogBox -Title 'Program run - Action not developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail for more information" -WarnIcon
                                   $FormatedData = 'Program'
-                                  Pause
                                   Break
                                  }
         }

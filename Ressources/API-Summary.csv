@@ -1,7 +1,7 @@
 Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile
-Stop-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Private;Private;Computer;No;Yes;List;Stop_Program
-Export-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;List;Full_Testing_Program
-Export-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;List;Full
+STOP-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Private;Private;Computer;No;Yes;List;Stop_Program
+EXPORT-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Private;Private;Computer;No;Yes;List;Full_Testing_Program
+EXPORT-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Private;Private;Computer;No;Yes;List;Full
 REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Private;Private;Computer;Yes;Yes;List;remove-logs
 REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Private;Private;Computer;Yes;Yes;List;remove-csv
 REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Private;Private;Computer;Yes;Yes;List;remove-Json
@@ -43,8 +43,8 @@ GET-DHCPOID;Get-DHCPOptionsID;Get DHCP Options Information by ID;dhcp/options;ht
 GET-DHCPC;Get-DHCPClients;Get DHCP Client Configuration Information;dhcp/clients;https://192.168.1.254/api/v1/dhcp/clients;GET;public;Private;dhcp-read;No;Yes;Table;dhcp-clients
 GET-DHCPCID;Get-DHCPClientsID;Get DHCP Clients Configuration Information by ID;dhcp/clients;https://192.168.1.254/api/v1/dhcp/clients/{ID};GET;public;Private;dhcp-read;No;Yes;List;dhcp-clients-id
 GET-DHCPSTBO;Get-DHCPSTBOptions;Get DHCP STB Options Information;dhcp/stb/options;https://192.168.1.254/api/v1/dhcp/stb/options;GET;private;Private;dhcp-read;No;Yes;Table;dhcp-stb-options
-Get-DHCPv6O;Get-DHCPv6Options;Get DHCP V6 Options Information;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options;GET;public;Private;dhcp-read;No;Yes;Table;dhcp6-options
-Get-DHCPv6PFD;Get-DHCPv6PrefixDelegation;Get-DHCP V6 Prefix Delegation Configuration Information;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation;GET;public;Private;dhcp-read;No;Yes;List;dhcp6-prefixdelegation
+GET-DHCPv6O;Get-DHCPv6Options;Get DHCP V6 Options Information;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options;GET;public;Private;dhcp-read;No;Yes;Table;dhcp6-options
+GET-DHCPv6PFD;Get-DHCPv6PrefixDelegation;Get-DHCP V6 Prefix Delegation Configuration Information;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation;GET;public;Private;dhcp-read;No;Yes;List;dhcp6-prefixdelegation
 GET-DNSS;Get-DNSStats;Get DNS Stats Information;dns/stats;https://192.168.1.254/api/v1/dns/stats;GET;public;Private;lan-read;No;Yes;List;dns-stats
 GET-DYNDNS;Get-DYNDNS;Get DYNDNS Configuration Information;dyndns;https://192.168.1.254/api/v1/dyndns;GET;private;Private;dyndns-read;No;Yes;List;dyndns-config
 GET-DYNDNSPL;Get-DYNDNSProviderList;Get DYNDNS Provider List Configuration Information;dyndns;https://192.168.1.254/api/v1/dyndns;GET;private;Private;dyndns-read;No;Yes;Table;dyndns-provider
