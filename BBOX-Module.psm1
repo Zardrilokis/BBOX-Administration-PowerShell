@@ -3158,23 +3158,36 @@ Function Get-BackupList {
     }
     # Check if BBox Cloud Synchronisation Service is Active and if user allow it
     Else {
-        Write-Log -Type WARNING -Name 'Program run - Get BBOX Configuration Save' -Message 'No local backups in BBox configuration were found'
         $APIName = 'usersave'
         $UrlToGo = $UrlToGo.Replace('configs',$APIName)
         $CloudSynchronisationState = Get-BBoxInformation -UrlToGo $UrlToGo
+        $Enable = $(Get-State -State $CloudSynchronisationState.$APIName.enable)
+        $Status = $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
+        $Authorized = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
+        $Datelastsave = $($CloudSynchronisationState.$APIName.datelastsave)
+
+        Write-Log -Type WARNING -Name 'Program run - Get BBOX Configuration Save' -Message 'No local backups were found'
         
         Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Checking BBox cloud save synchronisation state : '
-        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $(Get-State -State $CloudSynchronisationState.$APIName.enable)
+        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Enable
         
         Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Checking BBox cloud save synchronisation status : '
-        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
+        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Status
         
-        Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Checking BBox cloud save synchronisation User authorization : '
-        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
+        Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Checking BBox cloud save synchronisation user consent : '
+        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Authorized
         
         Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Last Time BBox Configuration save to the cloud : '
-        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $($CloudSynchronisationState.$APIName.datelastsave)
+        Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Datelastsave
         
+        $Message = "No local backups in BBox configuration were found, checking BBox cloud save synchronisation :
+            - State : $Enable
+            - Status : $Status
+            - User consent : $Authorized
+            - Last Synchronisation : $Datelastsave
+            "
+        
+        Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
         Return $null
     }
 }
