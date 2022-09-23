@@ -48,7 +48,11 @@
     "ChromeVersionRegistry": "HKCU:\\SOFTWARE\\Google\\Chrome\\BLBeacon",
     "ChromeDriverDefaultWebDriverDLLFileName": "webdriver.dll",
     "ChromeProgramFilesInstallationPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "ChromeDriverDefaultProfileName": "Guest Profile"
+    "ChromeDriverDefaultProfileName": "Guest Profile",
+	"ChromeDriverDownloadFileName": "chromedriver_win32.zip",
+	"ChromeDriverDownloadHomeUrl": "https://chromedriver.storage.googleapis.com/index.html",
+	"ChromeDriverDownloadPathUrl": "https://chromedriver.storage.googleapis.com/index.html?path=",
+	"ChromeDownloadUrl" : "https://www.google.com/intl/en_us/chrome/"
   },
   "HTMLReport": {
     "Type": "List|Table"

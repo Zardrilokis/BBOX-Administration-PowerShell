@@ -211,7 +211,7 @@
     Update       : Change Windows Form position and size
     
     Version 2.4 - BBOX version 20.8.8
-    Updated Date : 2022/09/20
+    Updated Date : 2022/09/23
     Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : #Requires -Version 7.0
     Update       : Add new function 'Import-CredentialManager' to manage credential in 'Windows Credential Manager'
@@ -233,6 +233,12 @@
     Update       : Update function 'Add-BBoxCredential' to display the password set to 'Windows Credential Manager'
     Update       : Update function 'Get-BackupList', add WindowsFormDialogBox when no backup file found
     
+    Version 2.5 - BBOX version 20.8.8
+    Updated Date : 2022/09/23
+    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Update       : Update json program file : '.\Settings-Program.json'
+    Update       : Add new function 'Update-ChromeDriver' to manage ChromeDriver update
+
 .LINKS
     
     https://api.bbox.fr/doc/
@@ -433,6 +439,7 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $ChromeDriverDefaultProfile              = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultProfileName
         $ChromeProgramFilesInstallation          = $global:JSONSettingsProgramContent.GoogleChrome.ChromeProgramFilesInstallationPath
         $ChromeProgramFilesX86Installation       = $global:JSONSettingsProgramContent.GoogleChrome.ChromeProgramFilesX86InstallationPath
+        $ChromeDownloadUrl                       = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDownloadUrl
 
         # APIName
         $APINameAvailable                      = $global:JSONSettingsProgramContent.APIName.Available
@@ -600,6 +607,7 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Installation' -Message 'Not yet' -NotDisplay
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Installation' -Message 'Please install Google Chrome before to use this Program'
         Show-WindowsFormDialogBox -Title 'Program initialisation - Google Chrome Installation' -Message 'Please install Google Chrome before to use this Program' -WarnIcon
+        Invoke-Item -Path $ChromeDownloadUrl  -ErrorAction Stop
         Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Installation' -Message 'End Google Chrome Installation' -NotDisplay
         $global:TriggerExit = 1
     }
@@ -653,13 +661,37 @@ If ($Null -eq $global:TriggerExit) {
 
 #endregion Chrome Version choice
 
+#region Update Chrome Driver version
+
+If ($Null -eq $global:TriggerExit) {
+
+    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Start update ChromeDriver' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver version Status : ' -NotDisplay
+    
+    If ($ChromeVersion -notmatch $ChromeDriverVersion) {
+        
+        Write-Log -Type WARNING -Name 'Program initialisation - Update ChromeDriver' -Message 'Need to be updated' -NotDisplay
+        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
+        
+        Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver update version Status : ' -NotDisplay
+        Update-ChromeDriver -ChromeDriverVersion $ChromeDriverVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
+    }
+    Else {
+        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
+    }
+}
+
+Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
+
+#endregion Chrome Driver version
+
 #region End Program Initialisation
 
 If ($Null -eq $global:TriggerExit) {
     Write-Log -Type VALUE -Name 'Program initialisation - Start Program' -Message 'Finished without errors'
 }
 Else{
-    Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 'Finished with errors'
+    Write-Log -Type WARNING -Name "Program initialisation - Start Program' -Message 'Finished with errors : $($_.ToString())"
     Stop-Program -ErrorAction Stop
 }
 
@@ -916,7 +948,7 @@ While ($Null -eq $global:TriggerExit) {
                 Stop-Program -ErrorAction Stop
             }
             Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
-
+            
             #endregion Start in Background chromeDriver
             
             #region Start BBox Authentification
