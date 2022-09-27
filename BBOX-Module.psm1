@@ -801,50 +801,25 @@ Function Get-ChromeDriverVersion {
     
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$ChromeVersion
+        [String]$ChromeVersion,
+
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverPath
     )
     
     $ChromeMainVersion = $ChromeVersion.split(".")[0]
-    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
-
-    Switch ($ChromeMainVersion) {
-                
-        '93'   {
-                $ChromeDriverVersion = '93.0.4577.63'
-                Break
-               }
-            
-        '94'   {
-                $ChromeDriverVersion = '94.0.4606.61'
-                Break
-               }
-            
-        '95'   {
-                $ChromeDriverVersion = '95.0.4638.17'
-                Break
-               }
+    $ChromeDriverVersionList = Get-childItem -Path $ChromeDriverPath | Select-Object Name
     
-        '104'  {
-                $ChromeDriverVersion = '104.0.5112.79'
-                Break
-               }
-        
-        <#'105'  {
-                $ChromeDriverVersion = '105.0.5195.52'
-                Break
-               }
-
-        '106'  {
-                $ChromeDriverVersion = '106.0.5249.21'
-                Break
-               }#>
-
-        Default {
-                $ChromeDriverVersion = 'Default'
-                Break
-               }
+    Try {
+        $ChromeDriverVersion = $($ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion})[-1].Name
     }
-    
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "No Chrome Driver version was found to match Google Chrome version : $ChromeVersion" -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Error detail : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message 'Using Chrome Driver default version' -NotDisplay
+        $ChromeDriverVersion = 'Default'
+    }
+    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay    
     Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverVersion -NotDisplay
 
     Return $ChromeDriverVersion
@@ -1657,7 +1632,7 @@ Function Start-ChromeDriver {
     $chromeoption.AddArgument("no-sandbox")
     
     # Hide ChromeDriver Application
-    #$chromeoption.AddArguments('headless')
+    $chromeoption.AddArguments('headless')
     
     # Start the ChromeDriver
     $global:ChromeDriver = New-Object OpenQA.Selenium.Chrome.ChromeDriver($ChromeDriverService,$chromeoption)
@@ -1718,38 +1693,43 @@ Function Update-ChromeDriver {
         $Version = $($Temp | Where-Object {$_ -notmatch 'Index of /NameLast modifiedSizeETag2.0' -and $_ -notmatch 'icons' -and $_ -notmatch 'LATEST_RELEASE' -and $_ -match "$ChromeDriverVersionShort"})[-1]
         $url = "$ChromeDriverDownloadPathUrl$Version/"
         
-        # Navigate to Chrome Driver Version choosen
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page for version : $url" -NotDisplay
-        $global:ChromeDriver.Navigate().GoToURL($url)
-        Start-Sleep -Seconds 2
-        
-        # Start setup file downloading
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
-        $global:ChromeDriver.FindElementByLinkText($FileName).click()
-        Start-Sleep -Seconds 10
-        
-        # Create new directory to use chrome Driver update
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
-        $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
-        
-        # Unzip new Chrome driver version to destination
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
-        Expand-Archive -Path $SourceFile -DestinationPath "$ChromeDriverPath\$Version" -Force -ErrorAction Stop
-        
-        # Remove the downloaded source
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
-        Remove-Item -Path $SourceFile -Force -ErrorAction Stop
-        
-        # Copy DLL System
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $("$ChromeDriverPath\$Version")" -NotDisplay
-        Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $ChromeDriverPath\$Version -Force
-        Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $ChromeDriverPath\$Version -Force
+        $DestinationPath = "$ChromeDriverPath\$Version"
+        If ((Test-Path -Path $DestinationPath) -eq $false) {
+
+            # Navigate to Chrome Driver Version choosen
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page for version : $url" -NotDisplay
+            $global:ChromeDriver.Navigate().GoToURL($url)
+            Start-Sleep -Seconds 2
+            
+            # Start setup file downloading
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
+            $global:ChromeDriver.FindElementByLinkText($FileName).click()
+            Start-Sleep -Seconds 10
+
+            # Create new directory to use chrome Driver update
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
+            $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
+            
+            # Unzip new Chrome driver version to destination
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
+            Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop
+            Start-Sleep -Seconds 1
+
+            # Copy DLL System
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
+            Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $DestinationPath -Force
+            Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $DestinationPath -Force
+
+            # Remove the downloaded source
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
+            Remove-Item -Path $SourceFile -Force -ErrorAction Stop
+        }
         
         # Stop chrome Driver
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Stop Chrome Driver' -NotDisplay
         Stop-ChromeDriver -ErrorAction Stop
-        $global:ChromeDriver = $null
         Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
+        $global:ChromeDriver = $null
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Update ChromeDriver' -Message "Installation failed, due to : $($_.ToString())" -NotDisplay
@@ -3258,14 +3238,14 @@ Function Get-BackupList {
         Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Datelastsave
         
         $Message = "No local backups in BBox configuration were found, checking BBox cloud save synchronisation :
-            - State : $Enable
-            - Status : $Status
-            - User consent : $Authorized
-            - Last Synchronisation : $Datelastsave
-            "
+        - State : $Enable
+        - Status : $Status
+        - User consent : $Authorized
+        - Last Synchronisation : $Datelastsave
+        "
         
         Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
-        Return $null
+        Return "Program"
     }
 }
 
