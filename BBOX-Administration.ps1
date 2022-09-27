@@ -234,10 +234,12 @@
     Update       : Update function 'Get-BackupList', add WindowsFormDialogBox when no backup file found
     
     Version 2.5 - BBOX version 20.8.8
-    Updated Date : 2022/09/23
+    Updated Date : 2022/09/27
     Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Update json program file : '.\Settings-Program.json'
     Update       : Add new function 'Update-ChromeDriver' to manage ChromeDriver update
+    Update       : Add new parameter in function : 'Get-ChromeDriverVersion' => -ChromeDriverPath
+    Update       : Update defaut chrome driver to : 106.0.5249.21
 
 .LINKS
     
@@ -359,6 +361,7 @@ $global:JSONSettingsProgramFilePath = "$RessourcesPath\$ProgramConfigurationFile
 $global:TriggerExit = $Null
 $global:TriggerDialogBox = $Null
 $TriggerLANNetwork = $Null
+$TriggerAuthentification = $Null
 
 # URL Settings for the ChromeDriver request
 $UrlRoot    = $Null
@@ -650,7 +653,7 @@ If ($Null -eq $global:TriggerExit) {
     
     Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start Chrome Driver version selection function Chrome Version installed on device' -NotDisplay   
     Try {
-        $ChromeDriverVersion = Get-ChromeDriverVersion -ChromeVersion $ChromeVersion -ErrorAction Stop
+        $ChromeDriverVersion = Get-ChromeDriverVersion -ChromeVersion $ChromeVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
@@ -691,7 +694,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type VALUE -Name 'Program initialisation - Start Program' -Message 'Finished without errors'
 }
 Else{
-    Write-Log -Type WARNING -Name "Program initialisation - Start Program' -Message 'Finished with errors : $($_.ToString())"
+    Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 'Finished with errors'
     Stop-Program -ErrorAction Stop
 }
 
@@ -931,43 +934,45 @@ While ($Null -eq $global:TriggerExit) {
         
         Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Selected action : '
         Write-Log -Type VALUE -Name 'Program run - Action asked' -Message $Description
-
-        If ((-not $global:ChromeDriver) -and ($ActionProgram -notmatch $ActionsExclusionsActions)) {
-            
+        
+        If ($ActionProgram -notmatch $ActionsExclusionsActions) {
             #region Start in Background chromeDriver
-            
-            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
-            
-            Try {
-                Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -DownloadPath $JournalPath -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
-                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
+            If (-not $global:ChromeDriver) {
+                
+                Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
+                Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
+                
+                Try {
+                    Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -DownloadPath $JournalPath -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
+                    Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
+                }
+                Catch {
+                    Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
+                    Stop-Program -ErrorAction Stop
+                }
+                Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
-            Catch {
-                Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
-                Stop-Program -ErrorAction Stop
-            }
-            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
-            
             #endregion Start in Background chromeDriver
-            
+        
             #region Start BBox Authentification
-            
-            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
-            
-            Try {
-                $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
-                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
-                Clear-Variable -Name Password
+            If ($Null -eq $TriggerAuthentification){
+        
+                Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
+                Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
+                
+                Try {
+                    $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
+                    Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
+                    Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
+                    Clear-Variable -Name Password
+                    $TriggerAuthentification = 1
+                }
+                Catch {
+                    Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
+                    Stop-Program -ErrorAction Stop
+                }
+                Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
             }
-            Catch {
-                Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
-                Stop-Program -ErrorAction Stop
-            }
-            Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
-
             #endregion Start BBox Authentification
         }
         
