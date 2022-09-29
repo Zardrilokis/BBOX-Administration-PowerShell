@@ -1730,7 +1730,6 @@ Function Update-ChromeDriver {
         Stop-ChromeDriver -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
         $global:ChromeDriver = $null
-        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Update ChromeDriver' -Message "Installation failed, due to : $($_.ToString())" -NotDisplay
