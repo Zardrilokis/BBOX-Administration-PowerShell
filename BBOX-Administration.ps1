@@ -694,7 +694,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type VALUE -Name 'Program initialisation - Start Program' -Message 'Finished without errors'
 }
 Else{
-    Write-Log -Type WARNING -Name "Program initialisation - Start Program' -Message 'Finished with errors : $($_.ToString())"
+    Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 'Finished with errors'
     Stop-Program -ErrorAction Stop
 }
 
@@ -952,19 +952,6 @@ While ($Null -eq $global:TriggerExit) {
                 }
                 Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
-            
-            Try {
-                $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
-                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
-                Clear-Variable -Name Password
-                $TriggerAuthentification = 1
-            }
-            Catch {
-                Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
-                Stop-Program -ErrorAction Stop
-            }
-            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             #endregion Start in Background chromeDriver
         
             #region Start BBox Authentification
