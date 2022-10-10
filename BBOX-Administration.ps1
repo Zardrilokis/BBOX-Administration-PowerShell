@@ -239,7 +239,25 @@
     Update       : Update json program file : '.\Settings-Program.json'
     Update       : Add new function 'Update-ChromeDriver' to manage ChromeDriver update
     Update       : Add new parameter in function : 'Get-ChromeDriverVersion' => -ChromeDriverPath
-    Update       : Update defaut chrome driver to : 106.0.5249.21
+    Update       : Update defaut chrome driver to version : 106.0.5249.21
+    
+    Version 2.6 - BBOX version 22.3.12
+    Updated Date : 2022/10/09
+    Update       : Update program to be conmpabible with : BBOX version 22.3.12
+    Update       : Add new function : 'Get-WIRELESSFastScanMe'
+    Update       : Modify function : 'Get-APIRessourcesMap', correct field : 'API url' with the complete URL
+    Update       : Update File configuration : '.\Settings-Default-User.json', '.\Settings-Default-User.json', '.\Settings-Current-User.json'
+    Update       : Update File : '.\API-Summary.csv'
+    Update       : Update propose to user to re-use or not the existing stored password or define a new one
+    Update       : Add new function : 'Switch-OpenExportFolder'
+    Update       : Update function : 'Switch-Info', 'Export-toCSV', 'Export-toJSON', 'Export-BboxConfiguration', 'Export-BBoxConfigTestingProgram'
+    Update       : Update 'Export-*' function to open the output folder where data were exported
+    Update       : update setting in json configuration files : '.\Ressources\Settings-Current-User.json' and '.\Ressources\Settings-Default-User.json'
+    Update       : Update File : '.\API-Summary.csv'
+    Update       : Hide/Reduce chrome and chromedriver Window
+    Update       : Update syntaxe in function : 'Get-BackupList'
+    Update       : Use Resolve-DnsName function to resole HostName from IP address
+    Update       : Correct some display bug in functions when data has been exported
 
 .LINKS
     
@@ -461,7 +479,8 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $APIUrlDocumentation = $global:JSONSettingsProgramContent.bbox.APIUrlDocumentation
         
         # Various
-        $Mail = $global:JSONSettingsProgramContent.various.mail        
+        $Mail = $global:JSONSettingsProgramContent.various.mail
+        $GitHubUrlSite = $global:JSONSettingsProgramContent.various.$GitHubUrlSite
         
         Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Success' -NotDisplay
     }
@@ -736,7 +755,7 @@ Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
 Write-Host 'Logs files location : '
 Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
 Write-Host "- $TranscriptFilePath" -ForegroundColor Green
-Write-Host 'Please make sure logs files is closed before continue' -ForegroundColor Yellow
+Write-Host 'Please make sure logs files are closed before continue' -ForegroundColor Yellow
 
 <#
 Write-Host 'Last success tested environnement :'
@@ -816,6 +835,13 @@ If ($Null -eq $global:TriggerExit) {
     }
     Else {
         Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Already Set' -NotDisplay
+        $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Password Status' -LabelMessageText "Bbox password is already set.`nWhat do you want to do ? :`n- (U) Use existing Password`n- (D) Define new password`n- (Q) Quit the program" -FirstOptionButtonText 'U' -SecondOptionButtonText 'D' -ThirdOptionButtonText 'Q'
+        switch ($Answer) {
+            'U'   {$Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
+            'D'   {Add-BBoxCredential -ErrorAction Stop;Break}
+            'Q'  {Stop-Program -ErrorAction Stop;Break}
+            Default {$Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
+        }
     }
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'End Password Status' -NotDisplay
 }
@@ -984,13 +1010,13 @@ While ($Null -eq $global:TriggerExit) {
                                     Break
                                    }
             
-            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program))} | Select-Object *
-                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath -Mail $Mail -JournalPath $JournalPath
+            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program) -and ($_.Scope -notmatch $ActionsExclusionsScope))} | Select-Object *
+                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath
                                     Break
                                    }
             
             Default                {$UrlToGo = "$UrlRoot/$APIName"
-                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -Mail $Mail -JournalPath $JournalPath -ErrorAction Continue -WarningAction Continue
+                                    $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite -ErrorAction Continue -WarningAction Continue
                                     Export-GlobalOutputData -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ExportFile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath
                                     Break
                                    }

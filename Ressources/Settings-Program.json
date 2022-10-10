@@ -4,7 +4,8 @@
     "CurrentFileName": "Settings-Current-User.json"
   },
   "Values": {
-    "OpenHTMLReport": "Y|N",
+    "OpenExportFolder": "Y|N",
+	"OpenHTMLReport": "Y|N",
     "LineNumber": "1|2",
     "DisplayFormat": "H|T",
     "ExportFormat": "C|J",
@@ -12,7 +13,8 @@
     "LANNetworkLocal": "L|R|Q"
   },
   "Various": {
-    "Mail": "tom78_91_45@yahoo.fr"
+    "Mail": "tom78_91_45@yahoo.fr",
+	"GitHubUrlSite": "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
   },
   "BBox": {
     "BBoxUrlRemote": "https://mabbox.bytel.fr/remote.html",
@@ -34,7 +36,7 @@
     },
     "Scope": {
       "Exclusions": {
-        "Full": "Computer"
+        "Full": "Program"
       }
     },
     "Available": "Yes"
@@ -74,7 +76,7 @@
   },
   "Actions": {
     "Exclusions": {
-      "Scope": "Computer",
+      "Scope": "Program",
       "Actions": "Remove|Switch|Show|Add|Quit"
     }
   },
