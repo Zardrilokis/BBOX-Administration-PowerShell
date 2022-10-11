@@ -1501,7 +1501,7 @@ Function Switch-Info {
             Switch-EF            {$FormatedData = Switch-ExportFormat;Break}
             
             # OpenExportFormat
-            SWITCH-OEF           {$FormatedData = Switch-OpenExportFormat;Break}
+            SWITCH-OEF           {$FormatedData = Switch-OpenExportFolder;Break}
             
             # OpenHTMLReport
             Switch-OHR           {$FormatedData = Switch-OpenHTMLReport;Break}
@@ -1522,8 +1522,8 @@ Function Switch-Info {
             Stop-Program         {Stop-Program;Break}
             
             # Default
-            Default              {Write-log WARNING -Name 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail or post on github : $GitHubUrlSite for more information"
-                                  Show-WindowsFormDialogBox -Title 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one and contact me by mail to : $Mail or post on github : $GitHubUrlSite for more information" -WarnIcon
+            Default              {Write-log WARNING -Name 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
+                                  Show-WindowsFormDialogBox -Title 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
                                   $FormatedData = 'Program'
                                   Break
                                  }
@@ -1848,12 +1848,12 @@ Function Get-JSONSettingsCurrentUserContent {
         $global:JSONSettingsCurrentUserContent = Get-Content -Path $global:JSONSettingsCurrentUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $global:DisplayFormat           = $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat
         $global:ExportFormat            = $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat
-        $global:OpenExportFormat        = $global:JSONSettingsCurrentUserContent.OpenExportFormat.OpenExportFormat
+        $global:OpenExportFolder        = $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder
         $global:OpenHTMLReport          = $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport
         $global:TriggerExportFormat     = $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat
         $global:TriggerDisplayFormat    = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
-        $global:TriggerOpenExportFormat = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFormat
+        $global:TriggerOpenExportFolder = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder
         $global:Target                  = $global:JSONSettingsCurrentUserContent.Credentials.Target
         $global:UserName                = $global:JSONSettingsCurrentUserContent.Credentials.UserName
         $global:Comment                 = $global:JSONSettingsCurrentUserContent.Credentials.Comment
@@ -1879,12 +1879,12 @@ Function Get-JSONSettingsDefaultUserContent {
         $global:JSONSettingsDefaultUserContent = Get-Content -Path $global:JSONSettingsDefaultUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
         $global:DisplayFormat           = $global:JSONSettingsDefaultUserContent.DisplayFormat.DisplayFormat
         $global:ExportFormat            = $global:JSONSettingsDefaultUserContent.ExportFormat.ExportFormat
-        $global:OpenExportFormat        = $global:JSONSettingsDefaultUserContent.OpenExportFormat.OpenExportFormat
+        $global:OpenExportFolder        = $global:JSONSettingsDefaultUserContent.OpenExportFolder.OpenExportFolder
         $global:OpenHTMLReport          = $global:JSONSettingsDefaultUserContent.OpenHTMLReport.OpenHTMLReport
         $global:TriggerExportFormat     = $global:JSONSettingsDefaultUserContent.Trigger.ExportFormat
         $global:TriggerDisplayFormat    = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
-        $global:TriggerOpenExportFormat = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFormat
+        $global:TriggerOpenExportFolder = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFolder
         $global:Target                  = $global:JSONSettingsDefaultUserContent.Credentials.Target
         $global:UserName                = $global:JSONSettingsDefaultUserContent.Credentials.UserName
         $global:Comment                 = $global:JSONSettingsDefaultUserContent.Credentials.Comment
@@ -1913,7 +1913,7 @@ Function Switch-OpenExportFolder {
     While ($global:OpenExportFolder[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenExportFolder) {
             
         #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Yes' -SecondOptionButtonText 'No'
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
         
         Switch ($Temp) {
                 
@@ -2026,7 +2026,7 @@ Function Export-toCSV {
         
             $global:TriggerOpenExportFolder = Switch-OpenExportFolder
             $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
 
         If ($global:OpenExportFolder -eq 'Y') {
@@ -2072,7 +2072,7 @@ Function Export-toJSON {
         
             $global:TriggerOpenExportFolder = Switch-OpenExportFolder
             $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
         
         If ($global:OpenExportFolder -eq 'Y') {
@@ -2334,6 +2334,18 @@ Function Export-HTMLReport {
     }
 
     Open-HTMLReport -Path $FullReportPath
+
+    If ($global:TriggerOpenExportFolder -eq 0) {
+        
+        $global:TriggerOpenExportFolder = Switch-OpenExportFolder
+        $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+    }
+    
+    If ($global:OpenExportFolder -eq 'Y') {
+        Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message "Open folder : $ReportPath"
+        Invoke-Item -Path $ReportPath
+    }
 }
 
 # Used only to Out-Gridview Display, linked to : "Format-DisplayResult"
@@ -2421,7 +2433,7 @@ function Export-BboxConfiguration {
         
         $global:TriggerOpenExportFolder = Switch-OpenExportFolder
         $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     }
 
     If ($global:OpenExportFolder -eq 'Y') {
@@ -2449,7 +2461,10 @@ function Export-BBoxConfigTestingProgram {
         [String]$JournalPath,
         
         [Parameter(Mandatory=$True)]
-        [String]$OutputFolder
+        [String]$OutputFolder,
+
+        [Parameter(Mandatory=$True)]
+        [String]$GitHubUrlSite
     )
     
     Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'Start Testing Program'
@@ -2463,7 +2478,7 @@ function Export-BBoxConfigTestingProgram {
         
         # Get information from BBOX API
         $FormatedData = @()
-        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath
+        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
         
         # Export result as CSV file
         $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
@@ -2495,7 +2510,7 @@ function Export-BBoxConfigTestingProgram {
         
         $global:TriggerOpenExportFolder = Switch-OpenExportFolder
         $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     }
 
     If ($global:OpenExportFolder -eq 'Y') {
@@ -2675,7 +2690,7 @@ function Export-GlobalOutputData {
             $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
         
-         # Choose Display format => HTML or Table
+        # Choose Display format => HTML or Table
         If ($global:TriggerDisplayFormat -eq 0) {
             
             $global:TriggerDisplayFormat = Switch-DisplayFormat
@@ -2683,11 +2698,12 @@ function Export-GlobalOutputData {
             $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
         
+        # Choose if open export folder
         If ($global:TriggerOpenExportFolder -eq 0) {
         
             $global:TriggerOpenExportFolder = Switch-OpenExportFolder
             $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath  $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
+            $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         }
 
         # Apply Export Format
@@ -2695,11 +2711,6 @@ function Export-GlobalOutputData {
         
         # Apply Display Format
         Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-        
-        If ($global:OpenExportFolder -eq 'Y') {
-            Write-Log -Type INFO -Name 'Program run - Testing Program' -Message "Open folder : $OutputFolder"
-            Invoke-Item -Path $OutputFolder
-        }
     }
     Else {
         EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -5906,19 +5917,9 @@ Function Get-HOSTSME {
         $DeviceLine |Add-Member -Name 'Scan Status'                   -MemberType Noteproperty -Value $Json.scan.status
     }
     $DeviceLine | Add-Member -Name 'Scan State'                       -MemberType Noteproperty -Value (Get-State -State $Json.scan.enable)
-    $DeviceLine | Add-Member -Name 'Services Detected'                -MemberType Noteproperty -Value $Json.scan.services #$Services
-    If ($Json.wirelesshosts) {
-        $DeviceLine | Add-Member -Name 'wirelesshosts'                -MemberType Noteproperty -Value $Json.wirelesshosts -join ","
-    }
-    Else {
-        $DeviceLine | Add-Member -Name 'wirelesshosts'                -MemberType Noteproperty -Value $Json.wirelesshosts.ToString()
-    }
-    If ($Json.extenderhosts) {
-        $DeviceLine | Add-Member -Name 'extenderhosts'                -MemberType Noteproperty -Value $Json.extenderhosts -join ","
-    }
-    Else {
-        $DeviceLine | Add-Member -Name 'extenderhosts'                -MemberType Noteproperty -Value $Json.extenderhosts.ToString()
-    }
+    $DeviceLine | Add-Member -Name 'Services Detected'                -MemberType Noteproperty -Value $Json.scan.services
+    $DeviceLine | Add-Member -Name 'wirelesshosts'                    -MemberType Noteproperty -Value $Json.wirelesshosts
+    $DeviceLine | Add-Member -Name 'extenderhosts'                    -MemberType Noteproperty -Value $Json.extenderhosts
 
     <# Get Services open for devices
     $Services = @()
