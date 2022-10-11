@@ -10,7 +10,7 @@ REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\
 REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-report;
 SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Computer;Computer;Program;Yes;Yes;HTML/Table/Out-Gridview;html-table-outgridview;
 SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Computer;Computer;Program;Yes;Yes;CSV/JSON;csv-json;
-SWITCH-OEF;Switch-OpenExportFormat;Switch Open Export Format;Switch_Open_Export;Switch_Open_Export;Switch;Computer;Computer;Program;Yes;Yes;List;open;
+SWITCH-OEF;Switch-OpenExportFolder;Switch Open Export Folder;Switch_Open_Export_Folder;Switch_Open_Export_Folder;Switch;Computer;Computer;Program;Yes;Yes;List;open-folder;
 SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Computer;Computer;Program;Yes;Yes;HTML;html;
 REMOVE-BBoxC;Remove-BBoxCredential;Remove BBox Credential stored in Windows Credential Manager;Remove_BBox_Credential;Remove_BBox_Credential;Remove;Computer;Computer;Program;Yes;Yes;List;remove-cred;
 SHOW-BBoxC;Show-BBoxCredential;Show BBox Credential stored in Windows Credential Manager;Show_BBox_Credential;Show_BBox_Credential;Show;Computer;Computer;Program;Yes;Yes;List;show-cred;

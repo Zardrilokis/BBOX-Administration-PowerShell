@@ -480,7 +480,7 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         
         # Various
         $Mail = $global:JSONSettingsProgramContent.various.mail
-        $GitHubUrlSite = $global:JSONSettingsProgramContent.various.$GitHubUrlSite
+        $GitHubUrlSite = $global:JSONSettingsProgramContent.various.GitHubUrlSite
         
         Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Success' -NotDisplay
     }
@@ -1005,13 +1005,13 @@ While ($Null -eq $global:TriggerExit) {
         # Get data
         Switch ($APIName) {
             
-            'Full'                 {$APISName = ($Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.Action -notmatch $APINameScopeExclusionsFull))}).APIName | Select-Object -Unique
+            'Full'                 {$APISName = ($Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Action -notmatch $APINameScopeExclusionsFull))}).APIName | Select-Object -Unique
                                     $FormatedData = Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath
                                     Break
                                    }
             
-            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program) -and ($_.Scope -notmatch $ActionsExclusionsScope))} | Select-Object *
-                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath
+            'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program))} | Select-Object *
+                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
                                     Break
                                    }
             
