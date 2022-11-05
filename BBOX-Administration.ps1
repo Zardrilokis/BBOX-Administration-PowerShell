@@ -258,6 +258,7 @@
     Update       : Update syntaxe in function : 'Get-BackupList'
     Update       : Use Resolve-DnsName function to resole HostName from IP address
     Update       : Correct some display bug in functions when data has been exported
+    Update       : Manage if BBOX authentification is needed or not, depending of bbox connection (Local/Remote)
 
 .LINKS
     
@@ -955,6 +956,8 @@ While ($Null -eq $global:TriggerExit) {
         $Description = $Action.Description
         $ReportType = $Action.ReportType
         $ExportFile = $Action.ExportFile
+        $LocalPermissions = $Action.LocalPermissions
+        $RemotePermissions = $Action.RemotePermissions
         #$Scope = $Action.Scope
         $ActionProgram = $Action.Action
         
@@ -981,23 +984,34 @@ While ($Null -eq $global:TriggerExit) {
             #endregion Start in Background chromeDriver
         
             #region Start BBox Authentification
-            If ($Null -eq $TriggerAuthentification){
-        
-                Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
-                Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
+            If ((($RemotePermissions -eq 'private') -and ($ConnexionType -eq 'R')) -or (($LocalPermissions -eq 'private') -and ($ConnexionType -eq 'L'))) {
                 
-                Try {
-                    $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                    Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
-                    Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
-                    Clear-Variable -Name Password
-                    $TriggerAuthentification = 1
+                Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification needed' -NotDisplay
+                
+                If ($Null -eq $TriggerAuthentification) {
+                    
+                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
+                    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
+                    
+                    Try {
+                        $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
+                        Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
+                        Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
+                        Clear-Variable -Name Password
+                        $TriggerAuthentification = 1
+                    }
+                    Catch {
+                        Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
+                        Stop-Program -ErrorAction Stop
+                    }
+                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
                 }
-                Catch {
-                    Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
-                    Stop-Program -ErrorAction Stop
+                Else {
+                    Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification already set' -NotDisplay
                 }
-                Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
+            }
+            Else {
+                Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification not needed' -NotDisplay
             }
             #endregion Start BBox Authentification
         }
@@ -1022,7 +1036,6 @@ While ($Null -eq $global:TriggerExit) {
                                    }
         }
     }
-    
     Else {
         Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Action chosen : '
         Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Cancelled by user'
