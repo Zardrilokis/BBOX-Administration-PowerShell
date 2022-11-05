@@ -1992,7 +1992,6 @@ Function Format-DisplayResult {
             }
     }
     Write-Log -Type INFO -Name 'Program run - Display Result' -Message 'End display result' -NotDisplay
-
 }
 
 # Used only to export result to CSV File, linked to : "Format-ExportResult"
