@@ -199,7 +199,7 @@
     Update       : Update function : 'Connect-BBOX' to manage if wrong password enter to connect to BBox web interface
     Update       : Change default value for : '$global:TriggerExit' from '0' to '$null'
     Update       : Optimise syntaxe code for string of characters
-    Update       : New Varaiable : '$global:TriggerDialogBox'
+    Update       : New Varaiable : '$global:TriggerDialogBox' to manage if DialogBox need to be display or not
     Update       : Update functions : 'Get-HostStatus' and 'Get-PortStatus' to integrate Windows Form Dialog Box
     Update       : Replace ALL 'Write-Host' by 'Write-Log' function
     Update       : Display warning action for end-user with function : 'Show-WindowsFormDialogBox'
@@ -259,7 +259,9 @@
     Update       : Use Resolve-DnsName function to resole HostName from IP address
     Update       : Correct some display bug in functions when data has been exported
     Update       : Manage if BBOX authentification is needed or not, depending of bbox connection (Local/Remote)
-
+    Update       : Add region to stop and update Google Chrome with winget cmlt
+    Update       : Add new function : 'Reset-CurrentUserProgrammConfiguration' to reset user configuration during programm runnning
+    
 .LINKS
     
     https://api.bbox.fr/doc/
@@ -367,7 +369,8 @@ $global:LogFolderName  = 'Logs'
 $global:LogFolderPath  = "$ScriptRootFolder\$global:LogFolderName"
 
 # Transcript Logs
-$global:TranscriptFileName = 'BBOX-Administration-Transcript-Log.txt'
+$Date = $(get-date -UFormat %Y%m%d).toString()
+$global:TranscriptFileName = "BBOX-Administration-Transcript-Log-$Date.txt"
 $TranscriptFilePath = "$global:LogFolderPath\$global:TranscriptFileName"
 
 # System Json Configuration files
@@ -411,33 +414,37 @@ Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Mess
 
 #region Import System Json Configuration files
 
-Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Start Import JSON Settings Program' -NotDisplay
-Write-Log -Type INFONO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Import JSON Settings Program Status : ' -NotDisplay
-Try {
-    $global:JSONSettingsProgramContent = Get-Content -Path $global:JSONSettingsProgramFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-    Write-Log -Type VALUE -Name 'Program initialisation - Import JSON Settings Program' -Message 'Success' -NotDisplay
+If ($Null -eq $global:TriggerExit) {
+
+    Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Start Import JSON Settings Program' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Import JSON Settings Program Status : ' -NotDisplay
+    Try {
+        $global:JSONSettingsProgramContent = Get-Content -Path $global:JSONSettingsProgramFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        Write-Log -Type VALUE -Name 'Program initialisation - Import JSON Settings Program' -Message 'Success' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Import JSON Settings Program' -Message "Failed, due to : $($_.ToString())"
+        $global:JSONSettingsProgramContent = $Null
+        $global:TriggerExit = 1
+    }
+    Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'End Import JSON Settings Program' -NotDisplay
 }
-Catch {
-    Write-Log -Type WARNING -Name 'Program initialisation - Import JSON Settings Program' -Message "Failed, due to : $($_.ToString())"
-    $global:JSONSettingsProgramContent = $Null
-    $global:TriggerExit = 1
-}
-Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'End Import JSON Settings Program' -NotDisplay
 
 #endregion Import System Json Configuration files
 
 #region Load System Json Configuration files
 
 Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Start Load JSON Settings Program' -NotDisplay
-Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message "JSON Settings Program file path : $global:JSONSettingsProgramFilePath" -NotDisplay
-Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
 
 If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramContent)) {
     
+    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message "JSON Settings Program file path : $global:JSONSettingsProgramFilePath" -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
+
     Try {
         $global:JSONSettingsDefaultUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultFileName
         $global:JSONSettingsCurrentUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentFileName
-
+        
         # Paths
         $ExportPath              = "$ScriptRootFolder\"  + $global:JSONSettingsProgramContent.path.ExportFolderName
         $ExportCSVPath           = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportCSVFolderName
@@ -449,7 +456,7 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $BBOXModulePath          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.BBOXModuleFileName
         $APISummaryPath          = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.APISummaryFileName
         $TestedEnvironnementPath = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.TestedEnvironnementFileName
-
+        
         # Google Chrome / Chrome Driver Paths
         $global:ChromeDriver                     = $Null
         $ChromeVersionRegistry                   = $global:JSONSettingsProgramContent.GoogleChrome.ChromeVersionRegistry
@@ -545,6 +552,27 @@ If ($Null -eq $global:TriggerExit) {
 
 #endregion Import Functions
 
+#region Check if ressources folder exist
+
+If ($Null -eq $global:TriggerExit) { 
+
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'Start Folder Ressources Check' -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message "Ressources Folder Path : $RessourcesPath" -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Ressources Folder' -Message 'Ressources Folder State : ' -NotDisplay
+    
+    If (Test-Path -Path $RessourcesPath -ErrorAction Stop) {
+    
+        Write-Log -Type VALUE -Name 'Program initialisation - Ressources Folder' -Message 'Already Exist' -NotDisplay
+    }
+    Else {
+        Write-Log -Type WARNING -Name 'Program initialisation - Ressources Folder' -Message 'Not found'
+        $global:TriggerExit = 1
+    }
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'End Folder Ressources check' -NotDisplay
+}
+
+#endregion ressources folder
+
 #region Create folders/files if not yet existing
 
 If ($Null -eq $global:TriggerExit) {
@@ -570,27 +598,6 @@ If ($Null -eq $global:TriggerExit) {
 }
 
 #endregion Create folders/files
-
-#region Check if ressources folder exist
-
-If ($Null -eq $global:TriggerExit) { 
-
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'Start Folder Ressources Check' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message "Ressources Folder Path : $RessourcesPath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Ressources Folder' -Message 'Ressources Folder State : ' -NotDisplay
-    
-    If (Test-Path -Path $RessourcesPath -ErrorAction Stop) {
-    
-        Write-Log -Type VALUE -Name 'Program initialisation - Ressources Folder' -Message 'Already Exist' -NotDisplay
-    }
-    Else {
-        Write-Log -Type WARNING -Name 'Program initialisation - Ressources Folder' -Message 'Not found'
-        $global:TriggerExit = 1
-    }
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'End Folder Ressources check' -NotDisplay
-}
-
-#endregion ressources folder
 
 #region Import Actions available
 
@@ -702,9 +709,52 @@ If ($Null -eq $global:TriggerExit) {
     Else {
         Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
     }
+    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
 }
 
-Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
+#endregion Chrome Driver version
+
+#region Update Google Chrome version
+
+If ($Null -eq $global:TriggerExit) {
+
+    Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Check if Google Chrome runs status :' -NotDisplay
+    Try {
+        $ChromeProcess = Get-Process -Name chrome -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        Write-Log -Type WARNING -Name 'Program initialisation - Update Google Chrome' -Message 'Running' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message 'Not Running' -NotDisplay
+    }
+    
+    While ($null -ne $ChromeProcess) {
+        $null = Show-WindowsFormDialogBox -Title "Program initialisation - Update Google Chrome" -Message "Google Chrome is running.`nPlease save your data, then close it." -WarnIcon
+        $ChromeProcess = Get-Process -Name chrome -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    }
+    
+    Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Stop Google Chrome' -Message 'Google Chrome stop process status :' -NotDisplay
+    Try {
+        Stop-Process -Name chrome -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Stopped' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Failed, to stop running Google Chrome, due to $($_.ToString())' -NotDisplay
+    }
+    Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Stop stop Google Chrome' -NotDisplay
+
+
+    Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Google Chrome update version Status : ' -NotDisplay
+    Try{
+        winget upgrade Google.Chrome
+        Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message 'Updated' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Update Google Chrome' -Message "Failed, to update Google Chrome Version, due to : $($_.ToString())"
+    }    
+    Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
+}
 
 #endregion Chrome Driver version
 
@@ -984,7 +1034,7 @@ While ($Null -eq $global:TriggerExit) {
             #endregion Start in Background chromeDriver
         
             #region Start BBox Authentification
-            If ((($RemotePermissions -eq 'private') -and ($ConnexionType -eq 'R')) -or (($LocalPermissions -eq 'private') -and ($ConnexionType -eq 'L'))) {
+            If ((($RemotePermissions -eq 'private') -and ($ConnexionType -eq 'R')) -or (($LocalPermissions -eq 'private') -and ($ConnexionType -eq 'L')) -or ($APIName -eq 'Full_Testing_Program')  -or ($APIName -eq 'Full')) {
                 
                 Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification needed' -NotDisplay
                 
