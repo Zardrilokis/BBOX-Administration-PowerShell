@@ -15,6 +15,7 @@ SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report
 REMOVE-BBoxC;Remove-BBoxCredential;Remove BBox Credential stored in Windows Credential Manager;Remove_BBox_Credential;Remove_BBox_Credential;Remove;Computer;Computer;Program;Yes;Yes;List;remove-cred;
 SHOW-BBoxC;Show-BBoxCredential;Show BBox Credential stored in Windows Credential Manager;Show_BBox_Credential;Show_BBox_Credential;Show;Computer;Computer;Program;Yes;Yes;List;show-cred;
 ADD-BBoxC;Add-BBoxCredential;Add BBox Credential in Windows Credential Manager;Add_BBox_Credential;Add_BBox_Credential;Add;Computer;Computer;Program;Yes;Yes;List;add-cred;
+Reset-CUPC;Reset-CurrentUserProgrammConfiguration;Reset Current User Programm Configuration;Reset_Current_User_Programm_Configuration;Reset_Current_User_Programm_Configuration;Reset;Computer;Computer;Programm;Yes;Yes;List;reset-cupc;
 GET-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal;
 GET-AIRTIES;Get-Airties;Get AIRTIES Summary Information;airties;https://192.168.1.254/api/v1/airties;GET;public;Private;diag-read;No;No;List;airties;
 GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode;

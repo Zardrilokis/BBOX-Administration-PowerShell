@@ -92,7 +92,7 @@ Function Import-TUNCredentialManager {
         [Parameter(Mandatory=$True)]
         [String]$ModuleName
     )
-
+    
     Write-Log -Type INFONO -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
     
     If ($null -eq (Get-InstalledModule -name $ModuleName -ErrorAction SilentlyContinue)) {
@@ -102,7 +102,7 @@ Function Import-TUNCredentialManager {
         Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
         
         Try {
-            Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope CurrentUser -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
+            Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope Allusers -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
             Start-Sleep -Seconds 5
         }
         Catch {
@@ -137,10 +137,10 @@ Function Import-TUNCredentialManager {
 Function Remove-BBoxCredential {
     
     Param ()
-
+    
     Write-Log -Type INFO -Name 'Program run - Remove BBox Credential' -Message 'Start Remove BBox Credential' -NotDisplay
     Write-Log -Type INFONO -Name 'Program run - Remove BBox Credential' -Message 'Remove BBox Credential status : ' -NotDisplay
-
+    
     Try {
         $null = Remove-StoredCredential -Target $global:Target -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program run - Remove BBox Credential' -Message 'Success' -NotDisplay
@@ -148,7 +148,7 @@ Function Remove-BBoxCredential {
     Catch {
         Write-Log -Type WARNING -Name 'Program run - Remove BBox Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
-
+    
     Write-Log -Type INFO -Name 'Program run - Remove BBox Credential' -Message 'Start Remove BBox Credential' -NotDisplay
     Return 'Program'
 }
@@ -196,9 +196,9 @@ function Add-BBoxCredential {
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Asking password to the user ...' -NotDisplay
     
     While ([string]::IsNullOrEmpty($Credential.Password) -or [string]::IsNullOrEmpty($Credential.UserName)) {
-            
+        
         # Ask user to provide BBOX Web Interface Password
-        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface' -UserName $global:Target
+        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface`nIt will store securly in Windows Credential Manager to be used in future' -UserName $global:Target
     }
     
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
@@ -286,10 +286,10 @@ function Show-WindowsFormDialogBoxInuput {
     
     $MainFormSizeX = 330
     $MainFormSizeY = 230
-
+    
     $LabelMessageSizeX = 300
     $LabelMessageSizeY = 60
-
+    
     $TextBoxSizeX = 100
     $TextBoxSizeY = 40
     
@@ -298,16 +298,16 @@ function Show-WindowsFormDialogBoxInuput {
     
     $CancelButtonSizeX = 75
     $CancelButtonSizeY = 25
-
+    
     $LabelMessageLocationX = 20
     $LabelMessageLocationY = 40
-
+    
     $TextBoxLocationX = 20
     $TextBoxLocationY = $LabelMessageLocationY + $LabelMessageSizeY
     
     $OkButtonLocationX = 85
     $OkButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
-
+    
     $CancelButtonLocationX = $OkButtonLocationX + $OkButtonSizeX + 10
     $CancelButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
     
@@ -315,13 +315,13 @@ function Show-WindowsFormDialogBoxInuput {
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
-
+    
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
     $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
     $LabelMessage.Text = $LabelMessageText
     $MainForm.Controls.Add($LabelMessage)
-
+    
     $TextBox = New-Object System.Windows.Forms.TextBox
     $TextBox.Location = New-Object System.Drawing.Point($TextBoxLocationX,$TextBoxLocationY)
     $TextBox.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
@@ -334,7 +334,7 @@ function Show-WindowsFormDialogBoxInuput {
     $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $OkButton
     $MainForm.Controls.Add($OkButton)
-
+    
     $CancelButton = New-Object System.Windows.Forms.Button
     $CancelButton.Location = New-Object System.Drawing.Point($CancelButtonLocationX,$CancelButtonLocationY)
     $CancelButton.Size = New-Object System.Drawing.Size($CancelButtonSizeX,$CancelButtonSizeY)
@@ -342,10 +342,10 @@ function Show-WindowsFormDialogBoxInuput {
     $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $CancelButton
     $MainForm.Controls.Add($CancelButton)
-
+    
     $MainForm.Topmost = $true
     $MainForm.Add_Shown({$TextBox.Select()})
-
+    
     If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         Return $TextBox.Text
     }
@@ -373,7 +373,7 @@ function Show-WindowsFormDialogBox2Choices {
     
     $MainFormSizeX = 400
     $MainFormSizeY = 300
-
+    
     $LabelMessageSizeX = 300
     $LabelMessageSizeY = 100
     
@@ -382,13 +382,13 @@ function Show-WindowsFormDialogBox2Choices {
     
     $SecondOptionButtonSizeX = 75
     $SecondOptionButtonSizeY = 25
-
+    
     $LabelMessageLocationX = 20
     $LabelMessageLocationY = 20
     
     $FirstOptionButtonLocationX = 85
     $FirstOptionButtonLocationY = 130
-
+    
     $SecondOptionButtonLocationX = 170
     $SecondOptionButtonLocationY = 130
     
@@ -396,7 +396,7 @@ function Show-WindowsFormDialogBox2Choices {
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
-
+    
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
     $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
@@ -410,7 +410,7 @@ function Show-WindowsFormDialogBox2Choices {
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
-
+    
     $SecondOptionButton = New-Object System.Windows.Forms.Button
     $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
     $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
@@ -418,9 +418,9 @@ function Show-WindowsFormDialogBox2Choices {
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
+    
     $MainForm.Topmost = $true
-
+    
     If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         Return $MainForm.ActiveControl.Text
     }
@@ -435,20 +435,20 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$LabelMessageText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$FirstOptionButtonText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$SecondOptionButtonText
     )
-
+    
     $MainFormSizeX = 400
     $MainFormSizeY = 300
-
+    
     $LabelMessageSizeX = 300
     $LabelMessageSizeY = 100
     
@@ -457,13 +457,13 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     
     $SecondOptionButtonSizeX = 75
     $SecondOptionButtonSizeY = 25
-
+    
     $LabelMessageLocationX = 20
     $LabelMessageLocationY = 20
     
     $FirstOptionButtonLocationX = 85
     $FirstOptionButtonLocationY = 130
-
+    
     $SecondOptionButtonLocationX = 170
     $SecondOptionButtonLocationY = 130
     
@@ -471,7 +471,7 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
-
+    
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
     $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
@@ -485,7 +485,7 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
-
+    
     $SecondOptionButton = New-Object System.Windows.Forms.Button
     $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
     $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
@@ -493,9 +493,9 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
+    
     $MainForm.Topmost = $true
-
+    
     If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         Return $MainForm.ActiveControl.Text
     }
@@ -510,23 +510,23 @@ function Show-WindowsFormDialogBox3Choices {
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$LabelMessageText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$FirstOptionButtonText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$SecondOptionButtonText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$ThirdOptionButtonText
     )
-
+    
     $MainFormSizeX = 300
     $MainFormSizeY = 200
-
+    
     $LabelMessageSizeX = 300
     $LabelMessageSizeY = 90
     
@@ -535,7 +535,7 @@ function Show-WindowsFormDialogBox3Choices {
     
     $SecondOptionButtonSizeX = 75
     $SecondOptionButtonSizeY = 25
-
+    
     $ThirdOptionButtonSizeX = 75
     $ThirdOptionButtonSizeY = 25
     
@@ -544,7 +544,7 @@ function Show-WindowsFormDialogBox3Choices {
     
     $FirstOptionButtonLocationX = 20
     $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
-
+    
     $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
     $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
     
@@ -555,7 +555,7 @@ function Show-WindowsFormDialogBox3Choices {
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
-
+    
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
     $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
@@ -569,7 +569,7 @@ function Show-WindowsFormDialogBox3Choices {
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
-
+    
     $SecondOptionButton = New-Object System.Windows.Forms.Button
     $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
     $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
@@ -577,7 +577,7 @@ function Show-WindowsFormDialogBox3Choices {
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
+    
     $ThirdOptionButton = New-Object System.Windows.Forms.Button
     $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
     $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
@@ -585,9 +585,9 @@ function Show-WindowsFormDialogBox3Choices {
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $ThirdOptionButton
     $MainForm.Controls.Add($ThirdOptionButton)
-
+    
     $MainForm.Topmost = $true
-
+    
     If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         Return $MainForm.ActiveControl.Text
     }
@@ -602,23 +602,23 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$LabelMessageText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$FirstOptionButtonText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$SecondOptionButtonText,
-
+        
         [Parameter(Mandatory=$True)]
         [string]$ThirdOptionButtonText
     )   
-
+    
     $MainFormSizeX = 300
     $MainFormSizeY = 200
-
+    
     $LabelMessageSizeX = 300
     $LabelMessageSizeY = 90
     
@@ -627,7 +627,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     
     $SecondOptionButtonSizeX = 75
     $SecondOptionButtonSizeY = 25
-
+    
     $ThirdOptionButtonSizeX = 75
     $ThirdOptionButtonSizeY = 25
     
@@ -636,7 +636,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     
     $FirstOptionButtonLocationX = 20
     $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
-
+    
     $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
     $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
     
@@ -647,7 +647,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $MainForm.Text = $MainFormTitle
     $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
     $MainForm.StartPosition = 'CenterScreen'
-
+    
     $LabelMessage = New-Object System.Windows.Forms.Label
     $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
     $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
@@ -661,7 +661,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.AcceptButton = $FirstOptionButton
     $MainForm.Controls.Add($FirstOptionButton)
-
+    
     $SecondOptionButton = New-Object System.Windows.Forms.Button
     $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
     $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
@@ -669,7 +669,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
     $MainForm.CancelButton = $SecondOptionButton
     $MainForm.Controls.Add($SecondOptionButton)
-
+    
     $ThirdOptionButton = New-Object System.Windows.Forms.Button
     $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
     $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
@@ -677,9 +677,9 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
     $MainForm.CancelButton = $ThirdOptionButton
     $MainForm.Controls.Add($ThirdOptionButton)
-
+    
     $MainForm.Topmost = $true
-
+    
     If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         Return $MainForm.ActiveControl.Text
     }
@@ -702,7 +702,7 @@ Function Remove-FolderContent {
     )
     
     $FolderPath = "$FolderRoot\$FolderName"
-
+    
     Write-Log -Type INFO -Name 'Program run - Clean folder content' -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
     
     If (Test-Path -Path $FolderPath) {
@@ -770,7 +770,7 @@ Function Test-FilePath {
         
         [Parameter(Mandatory=$True)]
         [String]$FilePath,
-
+        
         [Parameter(Mandatory=$True)]
         [String]$FileName
     )
@@ -805,7 +805,7 @@ Function Get-ChromeDriverVersion {
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeVersion,
-
+        
         [Parameter(Mandatory=$True)]
         [String]$ChromeDriverPath
     )
@@ -824,7 +824,7 @@ Function Get-ChromeDriverVersion {
     }
     Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay    
     Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverVersion -NotDisplay
-
+    
     Return $ChromeDriverVersion
 }
 
@@ -1515,6 +1515,9 @@ Function Switch-Info {
             # SetBBoxWindowsPasswordManager
             Add-BBoxC            {$FormatedData = Add-BBoxCredential;Break}
             
+            # Reset-CurrentUserProgrammConfiguration
+            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgrammConfiguration;Break}
+            
             # Exit
             Q                    {Stop-Program;Break}
             
@@ -1701,8 +1704,8 @@ Function Update-ChromeDriver {
         $Temp = $Plaintxt -split '---'
         $Version = $($Temp | Where-Object {$_ -notmatch 'Index of /NameLast modifiedSizeETag2.0' -and $_ -notmatch 'icons' -and $_ -notmatch 'LATEST_RELEASE' -and $_ -match "$ChromeDriverVersionShort"})[-1]
         $url = "$ChromeDriverDownloadPathUrl$Version/"
-        
         $DestinationPath = "$ChromeDriverPath\$Version"
+        
         If ((Test-Path -Path $DestinationPath) -eq $false) {
 
             # Navigate to Chrome Driver Version choosen
@@ -1722,7 +1725,7 @@ Function Update-ChromeDriver {
             
             # Unzip new Chrome driver version to destination
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
-            Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop
+            Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
             Start-Sleep -Seconds 5
 
             # Copy DLL System
@@ -1900,6 +1903,42 @@ Function Get-JSONSettingsDefaultUserContent {
 
 #endregion Json file configuration management
 
+#region Reset User Json Configuration files
+Function Reset-CurrentUserProgrammConfiguration {
+
+    Param(
+
+    )
+    
+    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
+    Try {
+        Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force
+        Start-Sleep -Seconds 2
+        Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Success' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
+        Stop-Program -ErrorAction Stop
+    }
+    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
+
+    If (Test-Path -Path $global:JSONSettingsCurrentUserFilePath) {
+
+        Get-JSONSettingsCurrentUserContent
+    }
+    Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFilePath) {
+        
+        Get-JSONSettingsDefaultUserContent
+    }
+    Else {
+        Write-Log -Type WARNING -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find find any user settings configuration file, due to : $($_.ToString())"
+        Write-Log -Type INFO -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
+        Stop-Program -ErrorAction Stop
+    }
+}
+#endregion Reset User Json Configuration files
+
 #region Manage Output Display after data export
 
 # Used only to change Open Export Folder, linked to : "Switch-Info" and "Export-toCSV" and "Export-toJSON" and "Export-BboxConfiguration" and "Export-BBoxConfigTestingProgram"
@@ -1908,8 +1947,8 @@ Function Switch-OpenExportFolder {
     # Choose Open Export Folder : Y (Yes) or N (No)
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
-    $global:OpenExportFolder = ''
-
+    $global:OpenExportFolder = $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder
+    
     While ($global:OpenExportFolder[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenExportFolder) {
             
         #$Temp = Read-Host "Enter your choice"
@@ -1931,14 +1970,14 @@ Function Switch-OpenExportFolder {
 
 # Used only to change Display Format, linked to : "Export-GlobalOutputData"
 Function Switch-DisplayFormat {
-
+    
     # Choose Display Format : HTML or Table
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'Start data display format' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
     $global:DisplayFormat = ''
-
+    
     While ($global:DisplayFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.DisplayFormat) {
-            
+        
         #$Temp = Read-Host "Enter your choice"
         $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display Format' -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
         
@@ -2022,7 +2061,7 @@ Function Export-toCSV {
         Write-Log -Type VALUE -Name 'Program run - Export Result CSV' -Message $ExportPath -NotDisplay
         
         If ($global:TriggerOpenExportFolder -eq 0) {
-        
+            
             $global:TriggerOpenExportFolder = Switch-OpenExportFolder
             $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
             $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
@@ -2699,7 +2738,7 @@ function Export-GlobalOutputData {
         
         # Choose if open export folder
         If ($global:TriggerOpenExportFolder -eq 0) {
-        
+            
             $global:TriggerOpenExportFolder = Switch-OpenExportFolder
             $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
             $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
@@ -5692,7 +5731,7 @@ Function Get-HOSTS {
                 $DeviceLine | Add-Member -Name 'STB - Serial'                 -MemberType Noteproperty -Value ''
             }
             
-            $DeviceLine | Add-Member -Name 'IPV4 Date First Connexion'        -MemberType Noteproperty -Value $Json[$Device].firstseen
+            $DeviceLine | Add-Member -Name 'IPV4 Date First Connexion'        -MemberType Noteproperty -Value $($($($Json[$Device].firstseen).replace("T"," ")).replace("+0100",""))
             $DeviceLine | Add-Member -Name 'IPV4 Date Last Connexion'         -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json[$Device].lastseen)
             
             # If IPV6 part
@@ -5700,8 +5739,8 @@ Function Get-HOSTS {
                 
                 $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value $($Json[$Device].ip6address.ipaddress -join ',')
                 $DeviceLine | Add-Member -Name 'IPV6 Statut'                  -MemberType Noteproperty -Value $($Json[$Device].ip6address.status -join ',')
-                $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $(Get-Date).AddSeconds($($Json[$Device].ip6address.lastseen) -join ',')
-                $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $($Json[$Device].ip6address.lastscan -join ',')
+                $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $($($(Get-Date).AddSeconds($($Json[$Device].ip6address.lastseen).replace("T"," ")).replace("+0100","")) -join ',')
+                $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $($($($($Json[$Device].ip6address.lastscan).replace("T"," ")).replace("+0100","")) -join ',')
             }
             Else {
                 $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value ''

@@ -77,7 +77,7 @@
   "Actions": {
     "Exclusions": {
       "Scope": "Program",
-      "Actions": "Remove|Switch|Show|Add|Quit"
+      "Actions": "Add|Quit|Remove|Reset|Show|Switch"
     }
   },
   "FormatedData": {
