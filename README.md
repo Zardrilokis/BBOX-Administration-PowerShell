@@ -59,4 +59,6 @@ What actions are required by user ?
 
 If the user wants to quit the program, he can use the "Cancel" button when program asking action or press "CTRL" + "break" keyboard keys if there is a while in the programm.
 
+Don't forget to have a look at : https://github.com/Zardrilokis/BBOX-Administration-Powershell/wiki
+
 Enjoy your first experience with this program :)
