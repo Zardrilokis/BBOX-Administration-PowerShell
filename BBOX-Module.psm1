@@ -164,7 +164,7 @@ Function Show-BBoxCredential {
     Try {
         $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password 
         
-        If($Password){
+        If ($Password) {
             
             $Password = $Password | ConvertFrom-SecureString -AsPlainText
             Write-Log -Type VALUE -Name 'Program run - Show BBox Credential' -Message 'Success' -NotDisplay
@@ -899,9 +899,9 @@ Function Get-HostStatus {
 
         If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
             
-            $BBoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
+            $BBoxDnsStatus = Test-Connection -TargetName $UrlRoot -Quiet
             
-            If ($BBoxDnsStatus -like $true) {
+            If ($BBoxDnsStatus -eq $true) {
                 
                 Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'Online' -NotDisplay
                 $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
@@ -915,10 +915,10 @@ Function Get-HostStatus {
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :"
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You are connected to internet"
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You enter a valid DNS address or IP address"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled $($global:JSONSettingsProgramContent.BBoxUrlFirewall)"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns)"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote)"
-                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled $($global:JSONSettingsProgramContent.BBoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured $($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote)" -WarnIcon
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
+                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- The `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))`n- The `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
                 $BBoxDnsStatus = $null
                 $UrlRoot = $null
             }
@@ -936,16 +936,16 @@ Function Get-HostStatus {
 Function Get-PortStatus {
     
     Param (
-        [Parameter(Mandatory=$False)]
+        [Parameter(Mandatory=$True)]
         [String]$UrlRoot
     )
 
     $PortStatus = $null
     While (($null -eq $PortStatus)) {
         
-        If ($global:TriggerDialogBox -ne 1){
+        If ($global:TriggerDialogBox -ne 1) {
             
-            [int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is 8560`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel'
+            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is 8560`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel'
             Write-Log -Type INFONO -Name 'Program run - Check Port' -Message "Port `"$Port`" status : " -NotDisplay
         }
         Else {
@@ -956,13 +956,14 @@ Function Get-PortStatus {
             Break
         }
         
-        If ($global:TriggerDialogBox -ne 1){
+        If ($global:TriggerDialogBox -ne 1) {
 
             If (($Port -ge 1) -and ($Port -le 65535)) {
                 
-                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed | Out-Null
+                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
+                Write-Log -Type WARNING -Name 'Program run - Check Port' -Message $PortStatus -NotDisplay
                 
-                If ($PortStatus.TcpTestSucceeded -like $true) {
+                If ($PortStatus.TcpTestSucceeded -eq $true) {
                     
                     Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'Opened' -NotDisplay
                     $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
@@ -974,10 +975,10 @@ Function Get-PortStatus {
                 Else {
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'Closed' -NotDisplay
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message '- You enter a valid port number'
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))" 
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- You enter a valid port number"
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))" 
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n'- You enter a valid port number'`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.Firewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
                     $Port = $null
                     $PortStatus = $null
                 }
@@ -1675,7 +1676,7 @@ Function Update-ChromeDriver {
     ) 
     
     Try {
-        # Set Varibales
+        # Set Variables
         $ChromeDriverDownloadHomeUrl = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadHomeUrl
         $ChromeDriverDownloadPathUrl = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadPathUrl
         $ChromeDriverVersionShort = $($ChromeDriverVersion -split ".")[0]
@@ -1716,7 +1717,7 @@ Function Update-ChromeDriver {
             # Start setup file downloading
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
             $global:ChromeDriver.FindElementByLinkText($FileName).click()
-            Start-Sleep -Seconds 15
+            Start-Sleep -Seconds 30
 
             # Create new directory to use chrome Driver update
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
@@ -1947,7 +1948,7 @@ Function Switch-OpenExportFolder {
     # Choose Open Export Folder : Y (Yes) or N (No)
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
-    $global:OpenExportFolder = $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder
+    $global:OpenExportFolder = ""
     
     While ($global:OpenExportFolder[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenExportFolder) {
             
@@ -2068,7 +2069,8 @@ Function Export-toCSV {
         }
 
         If ($global:OpenExportFolder -eq 'Y') {
-            Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message "Open folder : $ExportCSVPath"
+            Write-Log -Type INFONO -Name 'Program run - Export Result CSV' -Message "Opening folder : "
+            Write-Log -Type VALUE -Name 'Program run - Export Result CSV' -Message "$ExportCSVPath"
             Invoke-Item -Path $ExportCSVPath
         }
     }
@@ -2114,7 +2116,8 @@ Function Export-toJSON {
         }
         
         If ($global:OpenExportFolder -eq 'Y') {
-            Write-Log -Type INFO -Name 'Program run - Export Result JSON' -Message "Open folder : $ExportJSONPath"
+            Write-Log -Type INFONO -Name 'Program run - Export Result JSON' -Message "Opening folder : "
+            Write-Log -Type VALUE -Name 'Program run - Export Result JSON' -Message "$ExportJSONPath"
             Invoke-Item -Path $ExportJSONPath
         }
     }
@@ -2381,7 +2384,8 @@ Function Export-HTMLReport {
     }
     
     If ($global:OpenExportFolder -eq 'Y') {
-        Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message "Open folder : $ReportPath"
+        Write-Log -Type INFONO -Name 'Program run - Export Result CSV' -Message "Opening folder : "
+        Write-Log -Type VALUE -Name 'Program run - Export Result CSV' -Message "$ReportPath"
         Invoke-Item -Path $ReportPath
     }
 }
@@ -2475,7 +2479,8 @@ function Export-BboxConfiguration {
     }
 
     If ($global:OpenExportFolder -eq 'Y') {
-        Write-Log -Type INFO -Name 'Program run - Export Bbox Configuration To JSON' -Message "Open folder : $OutputFolder"
+        Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To JSON' -Message "Opening folder : "
+        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message "$OutputFolder"
         Invoke-Item -Path $OutputFolder
     }
     Return 'Program'
@@ -2552,7 +2557,8 @@ function Export-BBoxConfigTestingProgram {
     }
 
     If ($global:OpenExportFolder -eq 'Y') {
-        Write-Log -Type INFO -Name 'Program run - Testing Program' -Message "Open folder : $OutputFolder"
+        Write-Log -Type INFONO -Name 'Program run - Testing Program' -Message "Opening folder : "
+        Write-Log -Type VALUE -Name 'Program run - Testing Program' -Message "$OutputFolder"
         Invoke-Item -Path $OutputFolder
     }
     
@@ -2718,7 +2724,7 @@ function Export-GlobalOutputData {
     )
     
     # Format data before choose output format
-    If (($FormatedData -notmatch "Program") -and ($FormatedData -notmatch "Domain") -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')){
+    If (($FormatedData -notmatch "Program") -and ($FormatedData -notmatch "Domain") -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')) {
         
         # Choose Export format => CSV or JSON
         If ($global:TriggerExportFormat -eq 0) {
@@ -3409,8 +3415,8 @@ Function Get-BackupList {
         $Message = "No local backups in BBox configuration were found.`nBBox cloud save synchronisation settings :
         - State : $Enable
         - Status : $Status
-        - User consent : $Authorized
-        - Last Synchronisation : $Datelastsave
+        - User Consent for Cloud Synchronisation : $Authorized
+        - Last Cloud Synchronisation : $Datelastsave
         "
         
         Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
@@ -5495,7 +5501,7 @@ Function Get-FIREWALLRules {
             $RuleLine | Add-Member -Name 'Priority'                       -MemberType Noteproperty -Value $Json[$Rule].order
             $RuleLine | Add-Member -Name 'TCP/UDP Protocols'              -MemberType Noteproperty -Value $Json[$Rule].protocols
             $RuleLine | Add-Member -Name 'IP Protocols'                   -MemberType Noteproperty -Value $Json[$Rule].ipprotocol
-            $RuleLine | Add-Member -Name 'Nb time used ?'                 -MemberType Noteproperty -Value (Get-Status -Status $Json[$Rule].utilisation)
+            $RuleLine | Add-Member -Name 'Nb time used'                   -MemberType Noteproperty -Value (Get-Status -Status $Json[$Rule].utilisation)
             
             # Add lines to $Array
             $Array += $RuleLine
@@ -5901,7 +5907,7 @@ Function Get-HOSTSME {
     
     $DeviceLine | Add-Member -Name 'Physical Port'                    -MemberType Noteproperty -Value $Json.ethernet.physicalport
     $DeviceLine | Add-Member -Name 'Logical Port'                     -MemberType Noteproperty -Value $Json.ethernet.logicalport
-    $DeviceLine | Add-Member -Name 'Speed connexion'                  -MemberType Noteproperty -Value $Json.ethernet.speed
+    $DeviceLine | Add-Member -Name 'Ethernet Speed'                   -MemberType Noteproperty -Value $Json.ethernet.speed
     $DeviceLine | Add-Member -Name 'Mode'                             -MemberType Noteproperty -Value $Json.ethernet.mode
     $DeviceLine | Add-Member -Name 'Band'                             -MemberType Noteproperty -Value $Json.wireless.band
     $DeviceLine | Add-Member -Name 'RSSIO'                            -MemberType Noteproperty -Value $Json.wireless.rssi0
@@ -5916,7 +5922,7 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name 'TXPhyrate'                        -MemberType Noteproperty -Value $Json.plc.txphyrate
     $DeviceLine | Add-Member -Name 'Associated Device'                -MemberType Noteproperty -Value $Json.plc.associateddevice
     $DeviceLine | Add-Member -Name 'Interface'                        -MemberType Noteproperty -Value $Json.plc.interface
-    $DeviceLine | Add-Member -Name 'Ethernet Speed'                   -MemberType Noteproperty -Value $Json.plc.ethernetspeed
+    $DeviceLine | Add-Member -Name 'PCL Ethernet Speed'               -MemberType Noteproperty -Value $Json.plc.ethernetspeed
     $DeviceLine | Add-Member -Name 'Parental Control - State'         -MemberType Noteproperty -Value (Get-State -State $Json.parentalcontrol.enable)
     $DeviceLine | Add-Member -Name 'Parental Control - Status'        -MemberType Noteproperty -Value (Get-Status -Status $Json.parentalcontrol.status)
     If ($Json.parentalcontrol.statusRemaining -ne 0) {
@@ -6242,7 +6248,7 @@ Function Get-LANIP {
     $IPLine | Add-Member -Name 'MAC Address'                     -MemberType Noteproperty -Value $Json.ip.mac
     $IPLine | Add-Member -Name 'BBOX Hostname'                   -MemberType Noteproperty -Value $Json.ip.hostname
     $IPLine | Add-Member -Name 'BBOX Domain'                     -MemberType Noteproperty -Value $Json.ip.domain
-    $IPLine | Add-Member -Name 'BBOX Alias (DNS)'                -MemberType Noteproperty -Value $Json.ip.aliases.replace(' ',',')
+    $IPLine | Add-Member -Name 'BBOX Aliases (DNS)'              -MemberType Noteproperty -Value $Json.ip.aliases.replace(' ',',')
     
     $IP += $IPLine
     
@@ -6676,8 +6682,8 @@ Function Get-NOTIFICATIONConfigContacts {
             $ContactsLine = New-Object -TypeName PSObject
             $ContactsLine | Add-Member -Name 'ID'    -MemberType Noteproperty -Value $Json[$Contacts].id
             $ContactsLine | Add-Member -Name 'State' -MemberType Noteproperty -Value (Get-Status -Status $Json[$Contacts].enable)
-            $ContactsLine | Add-Member -Name 'Mail'  -MemberType Noteproperty -Value $Json[$Contacts].mail
             $ContactsLine | Add-Member -Name 'Name'  -MemberType Noteproperty -Value $Json[$Contacts].name
+            $ContactsLine | Add-Member -Name 'Mail'  -MemberType Noteproperty -Value $Json[$Contacts].mail
             
             # Add lines to $Array
             $Array += $ContactsLine
@@ -6851,8 +6857,8 @@ Function Get-NOTIFICATIONEvents {
             $EventsLine = New-Object -TypeName PSObject
             $EventsLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $($Json[$Events].name)
             $EventsLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $($Json[$Events].category) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
             $EventsLine | Add-Member -Name 'Message'     -MemberType Noteproperty -Value $($Json[$Events].humanReadable) # Syntaxe to be reviewed
+            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
             
             # Add lines to $Array
             $Array += $EventsLine
@@ -7338,8 +7344,8 @@ Function Get-SUMMARY {
     $DeviceLine | Add-Member -Name 'WAN IPV6'                          -MemberType Noteproperty -Value (Get-State -State $Json.wan.ip.state.ipv6)
     $DeviceLine | Add-Member -Name 'WAN IP stats Tx Occupation'        -MemberType Noteproperty -Value $Json.wan.ip.stats.tx.occupation
     $DeviceLine | Add-Member -Name 'WAN IP stats Rx Occupation'        -MemberType Noteproperty -Value $Json.wan.ip.stats.rx.occupation
-    $DeviceLine | Add-Member -Name 'Nb Alerts'                         -MemberType Noteproperty -Value $Json.alerts.count
-    $DeviceLine | Add-Member -Name 'Nb CPL'                            -MemberType Noteproperty -Value $Json.cpl.count
+    $DeviceLine | Add-Member -Name 'Alerts Count'                      -MemberType Noteproperty -Value $Json.alerts.count
+    $DeviceLine | Add-Member -Name 'CPL Count'                         -MemberType Noteproperty -Value $Json.cpl.count
 
     # Add lines to $Array
     $Array += $DeviceLine
@@ -7465,7 +7471,7 @@ Function Get-DeviceUSBDevices {
             $USBDeviceLine | Add-Member -Name 'File System type'   -MemberType Noteproperty -Value $Json.child[$USBDevice].ident
             $USBDeviceLine | Add-Member -Name 'Parent'             -MemberType Noteproperty -Value $Json.child[$USBDevice].parent
             $USBDeviceLine | Add-Member -Name 'UUID'               -MemberType Noteproperty -Value $Json.child[$USBDevice].uuid
-            $USBDeviceLine | Add-Member -Name 'Label Partition'    -MemberType Noteproperty -Value $Json.child[$USBDevice].label
+            $USBDeviceLine | Add-Member -Name 'Partition Label'    -MemberType Noteproperty -Value $Json.child[$USBDevice].label
             $USBDeviceLine | Add-Member -Name 'Description'        -MemberType Noteproperty -Value $Json.child[$USBDevice].description
             $USBDeviceLine | Add-Member -Name 'File System'        -MemberType Noteproperty -Value $Json.child[$USBDevice].fs
             $USBDeviceLine | Add-Member -Name 'Samba Name'         -MemberType Noteproperty -Value $Json.child[$USBDevice].name
@@ -7607,7 +7613,7 @@ Function Get-VOIP {
     $VOIPLine | Add-Member -Name 'Status'                       -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $VOIPLine | Add-Member -Name 'Call State'                   -MemberType Noteproperty -Value $Json.callstate
     $VOIPLine | Add-Member -Name 'SIP Phone Number'             -MemberType Noteproperty -Value $Json.uri
-    $VOIPLine | Add-Member -Name 'Anonymous call Blocked State' -MemberType Noteproperty -Value $Json.blockstate
+    $VOIPLine | Add-Member -Name 'Anonymous call Blocked State' -MemberType Noteproperty -Value (Get-State -State $Json.blockstate)
     $VOIPLine | Add-Member -Name 'Anonymous Call State'         -MemberType Noteproperty -Value (Get-State -State $Json.anoncallstate)
     $VOIPLine | Add-Member -Name 'Is Voice Mail waiting ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.mwi)
     $VOIPLine | Add-Member -Name 'Voice Mail Count waiting'     -MemberType Noteproperty -Value $Json.message_count
@@ -8453,6 +8459,7 @@ Function Get-WANIP {
     $IPLine | Add-Member -Name 'WAN MAC Address'                   -MemberType Noteproperty -Value $Json.ip.mac
     $IPLine | Add-Member -Name 'WAN MTU'                           -MemberType Noteproperty -Value $Json.ip.mtu
     $IPLine | Add-Member -Name 'WAN IPV6 State'                    -MemberType Noteproperty -Value (Get-State -State $Json.ip.ip6state)
+    $IPLine | Add-Member -Name 'WAN DNS Servers IPV6'              -MemberType Noteproperty -Value $Json.ip.dnsserversv6
     
     If ($Json.ip.ip6address) {
         $IPLine | Add-Member -Name 'WAN IPV6 Address'              -MemberType Noteproperty -Value $Json.ip.ip6address.ipaddress
