@@ -14,13 +14,13 @@
     
     .\BBOX-Aministration.ps1
     .\BBOX-Module.psm1
-    .\SecuredPassword.txt
     .\Settings-Default-User.json
     .\Settings-Current-User.json
     .\Settings-Program.json
     Web url bbox content
     BBOX Rest API
     Hand User actions
+    Windows Credential Manager
     
 .OUTPUTS
     
@@ -242,7 +242,7 @@
     Update       : Update defaut chrome driver to version : 106.0.5249.21
     
     Version 2.6 - BBOX version 22.3.12
-    Updated Date : 2022/10/09
+    Updated Date : 2023/02/20
     Update       : Update program to be conmpabible with : BBOX version 22.3.12
     Update       : Add new function : 'Get-WIRELESSFastScanMe'
     Update       : Modify function : 'Get-APIRessourcesMap', correct field : 'API url' with the complete URL
@@ -261,6 +261,11 @@
     Update       : Manage if BBOX authentification is needed or not, depending of bbox connection (Local/Remote)
     Update       : Add region to stop and update Google Chrome with winget cmlt
     Update       : Add new function : 'Reset-CurrentUserProgrammConfiguration' to reset user configuration during programm runnning
+    Update       : Correct display syntaxe when output folders opened
+    Update       : Change order 'Update Chrome Driver' and 'Update Google Chrome' and the control between the 2 versions
+    Update       : Correct 'BBoxUrlFirewall' setting in function : 'Get-HostStatus' and 'Get-PortStatus'
+    Update       : Debug function : 'Get-PortStatus'
+    Update       : Debug function : Switch-OpenExportFolder
     
 .LINKS
     
@@ -370,7 +375,7 @@ $global:LogFolderPath  = "$ScriptRootFolder\$global:LogFolderName"
 
 # Transcript Logs
 $Date = $(get-date -UFormat %Y%m%d).toString()
-$global:TranscriptFileName = "BBOX-Administration-Transcript-Log-$Date.txt"
+$global:TranscriptFileName = "BBOX-Administration-Transcript-Log-$Date.log"
 $TranscriptFilePath = "$global:LogFolderPath\$global:TranscriptFileName"
 
 # System Json Configuration files
@@ -391,7 +396,7 @@ $Port       = $Null
 $UrlAuth    = $Null
 $UrlHome    = $Null
 $UrlToGo    = $Null
-
+$DYNDNS     = ""
 
 #endregion Main Variables
 
@@ -550,7 +555,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
 }
 
-#endregion Import Functions
+#endregion Import Functions with Module : 'BBOX-Module.psm1'
 
 #region Check if ressources folder exist
 
@@ -571,7 +576,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'End Folder Ressources check' -NotDisplay
 }
 
-#endregion ressources folder
+#endregion Check if ressources folder exist
 
 #region Create folders/files if not yet existing
 
@@ -597,7 +602,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Program Folders/Files check' -Message 'End Program Folders/Files check' -NotDisplay
 }
 
-#endregion Create folders/files
+#endregion Create folders/files if not yet existing
 
 #region Import Actions available
 
@@ -617,7 +622,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message 'End Referentiel Actions Availables Importation' -NotDisplay
 }
 
-#endregion Import Actions
+#endregion Import Actions available
 
 #region Check if Google Chrome is already install
 
@@ -643,7 +648,7 @@ If ($Null -eq $global:TriggerExit) {
     }
 }
 
-#endregion Google Chrome
+#endregion Check if Google Chrome is already install
 
 #region Get Google Chrome binary Path
 
@@ -674,23 +679,6 @@ If ($Null -eq $global:TriggerExit) {
 
 #endregion Google Chrome binary Path
 
-#region Chrome Version choice function chrome version installed
-
-If ($Null -eq $global:TriggerExit) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start Chrome Driver version selection function Chrome Version installed on device' -NotDisplay   
-    Try {
-        $ChromeDriverVersion = Get-ChromeDriverVersion -ChromeVersion $ChromeVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
-        $global:TriggerExit = 1
-    }
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End Chrome Driver version selection function Chrome Version installed on device' -NotDisplay
-}
-
-#endregion Chrome Version choice
-
 #region Update Chrome Driver version
 
 If ($Null -eq $global:TriggerExit) {
@@ -712,12 +700,12 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
 }
 
-#endregion Chrome Driver version
+#endregion Update Chrome Driver version
 
 #region Update Google Chrome version
 
 If ($Null -eq $global:TriggerExit) {
-
+    
     Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Check if Google Chrome runs status :' -NotDisplay
     Try {
@@ -743,8 +731,7 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Failed, to stop running Google Chrome, due to $($_.ToString())' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Stop stop Google Chrome' -NotDisplay
-
-
+    
     Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Google Chrome update version Status : ' -NotDisplay
     Try{
         winget upgrade Google.Chrome
@@ -752,18 +739,70 @@ If ($Null -eq $global:TriggerExit) {
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Update Google Chrome' -Message "Failed, to update Google Chrome Version, due to : $($_.ToString())"
-    }    
+    }
+    
+    Write-Log -Type INFONO -Name 'Program initialisation - Restore Google Chrome' -Message 'Google Chrome restore last session Status : ' -NotDisplay
+    Try {
+        Start-Process -FilePath $ChromeBinaryPath -ArgumentList "-restore-last-session" -WindowStyle Minimized
+        Start-Sleep -Seconds 5
+        $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
+        Write-Log -Type VALUE -Name 'Program initialisation - Restore Google Chrome' -Message 'Success' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Restore Google Chrome' -Message "Failed, to restore last session for Google Chrome, due to : $($_.ToString())"
+    }
+
     Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
 }
 
-#endregion Chrome Driver version
+#endregion Update Google Chrome version
+
+#region Get Google Chrome installed version
+
+If ($Null -eq $global:TriggerExit) {
+    
+    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome installed version' -Message 'Start Google Chrome installed version' -NotDisplay    
+    Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome installed version' -Message 'Google Chrome installed version status : ' -NotDisplay
+    
+    Try {
+        $ChromeVersion = (Get-ItemProperty $ChromeVersionRegistry -ErrorAction Stop).Version
+        Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome installed version' -Message 'Successful' -NotDisplay
+        Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'Current Google Chrome version : ' -NotDisplay
+        Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome Version' -Message $ChromeVersion -NotDisplay
+        Write-Log -Type INFO -Name 'Program initialisation - Google Chrome installed version' -Message 'End Google Chrome installed version' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome installed version' -Message 'Failed, not found' -NotDisplay
+        Write-Log -Type INFO -Name 'Program initialisation - Google Chrome installed version' -Message 'End Google Chrome installed version' -NotDisplay
+        $global:TriggerExit = 1
+    }
+}
+
+#endregion Get Google Chrome installed version
+
+#region Chrome Driver Version choice function chrome version installed
+
+If ($Null -eq $global:TriggerExit) {
+    
+    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start Chrome Driver version selection function Chrome Version installed on device' -NotDisplay   
+    Try {
+        $ChromeDriverVersion = Get-ChromeDriverVersion -ChromeVersion $ChromeVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
+        $global:TriggerExit = 1
+    }
+    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End Chrome Driver version selection function Chrome Version installed on device' -NotDisplay
+}
+
+#endregion Chrome Driver Version choice function chrome version installed
 
 #region End Program Initialisation
 
 If ($Null -eq $global:TriggerExit) {
     Write-Log -Type VALUE -Name 'Program initialisation - Start Program' -Message 'Finished without errors'
 }
-Else{
+Else {
     Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 'Finished with errors'
     Stop-Program -ErrorAction Stop
 }
@@ -980,14 +1019,6 @@ If ($Null -eq $global:TriggerExit) {
 }
 
 #endregion Set Bbox connexion settings regarding user selection
-
-#region Get Already Active Google Chrome Process
-
-If ($Null -eq $global:TriggerExit) {
-    $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
-}
-
-#endregion Get Already Active Google Chrome Process
 
 #region process
 
