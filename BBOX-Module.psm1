@@ -34,11 +34,11 @@ function Write-Log {
         $Logname = "$global:LogFolderPath\$global:LogFileName"
     )
     
-    $global:logpath = $Logname + $(get-date -UFormat %Y%m%d).toString() + '.csv'
+    $logpath = $Logname + $(get-date -UFormat %Y%m%d).toString() + '.csv'
     
     # Create log object 
-    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; Type=$type ; Name=$name ; Message=$Message  ; user= $(whoami) ; PID=$PID} 
-    $log | Add-member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
+    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; user= $(whoami) ; Type=$type ; Name=$name ; Message=$Message} 
+    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
     
     # Append to global journal
     [Object[]] $Global:journal += $log.toString()
@@ -63,10 +63,10 @@ function Write-Log {
     
     # Create or open Mutex
     Try {
-        $mtx = [System.Threading.Mutex]::OpenExisting("Global\PegaseMutex")
+        $mtx = [System.Threading.Mutex]::OpenExisting('Global\PegaseMutex')
     }
     Catch {
-        $mtx = New-Object System.Threading.Mutex($false,"Global\PegaseMutex")
+        $mtx = New-Object System.Threading.Mutex($false,'Global\PegaseMutex')
     }
     
     Try {
@@ -74,9 +74,9 @@ function Write-Log {
 	    # Write Header if file don't exists yet
         
         If (-not (Test-Path $logpath)) {
-            Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "date;type;name;message;user;pid" 
+            Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "date;pid;user;type;name;message" 
         }
-        Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "$($Log.date);$($Log.type);$($Log.name);$($Log.Message);$($Log.user);$($Log.pid)" 
+        Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.name);$($Log.Message)" 
     }
     Finally {
         $mtx.ReleaseMutex()
@@ -183,7 +183,6 @@ Function Show-BBoxCredential {
     }
 
     Write-Log -Type INFO -Name 'Program run - Show BBox Credential' -Message 'Start Show BBox Credential' -NotDisplay
-    Return 'Program'
 }
 
 # Add BBox Credential in Windows Credential Manager
@@ -198,7 +197,7 @@ function Add-BBoxCredential {
     While ([string]::IsNullOrEmpty($Credential.Password) -or [string]::IsNullOrEmpty($Credential.UserName)) {
         
         # Ask user to provide BBOX Web Interface Password
-        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface`nIt will store securly in Windows Credential Manager to be used in future' -UserName $global:Target
+        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future' -UserName $global:Target
     }
     
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
@@ -1220,8 +1219,6 @@ Function Switch-Info {
             Get-ErrorCodeTest    {$FormatedData = Get-ErrorCodeTest -UrlToGo $UrlToGo;Break}
             
             # Airties
-            Get-Airties          {$FormatedData = Get-Airties -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
             Get-AirtiesL         {$FormatedData = Get-AirtiesLANmode -UrlToGo $UrlToGo;Break}
             
             # Backup
@@ -1440,6 +1437,8 @@ Function Switch-Info {
             # WIRELESS
             Get-WIRELESS         {$FormatedData = Get-WIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
+            Get-WIRELESSSTD      {$FormatedData = Get-WIRELESSSTANDARD -UrlToGo $UrlToGo;Break}
+            
             GET-WIRELESS24       {$FormatedData = Get-WIRELESS24Ghz -UrlToGo $UrlToGo;Break}
             
             GET-WIRELESS24S      {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo;Break}
@@ -1458,7 +1457,7 @@ Function Switch-Info {
             
             GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-WIRELESSFSM      {$FormatedData = Get-WIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
+            #GET-WIRELESSFSM      {$FormatedData = Get-WIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
             
             GET-WIRELESSS        {$FormatedData = Get-WIRELESSScheduler -UrlToGo $UrlToGo;Break}
             
@@ -2430,7 +2429,7 @@ Function Out-GridviewDisplay {
 
 #region Export data (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
 
-# Used only to export Full BBOX Configuration to JSON files
+# Used only to export Full BBOX Configuration to JSON files, linked to : Switch-OpenExportFolder
 function Export-BboxConfiguration {
     
     Param (
@@ -2441,27 +2440,41 @@ function Export-BboxConfiguration {
         [String]$UrlRoot,
         
         [Parameter(Mandatory=$True)]
-        [String]$OutputFolder
+        [String]$JSONFolder,
+
+        [Parameter(Mandatory=$True)]
+        [String]$CSVFolder,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$GitHubUrlSite,
+
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$Mail
     ) 
     
     Foreach ($APIName in $APISName) {
         
-        $UrlToGo = "$UrlRoot/$APIName"
+        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
         
         # Get information from BBOX API
-        Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Get $APIName configuration ..."
+        Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Get $($APIName.Label) configuration ..."
         $Json = Get-BBoxInformation -UrlToGo $UrlToGo
         
-        # Export result as JSON file
         $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $Exportfile = $APIName.replace("/","-")
-        $FullPath = "$OutputFolder\$Date-$Exportfile.json"
+        
+        # Export result as JSON file
+        $ExportPathJson = "$JSONFolder\$Date-$($APIName.Exportfile).json"
+        
         Write-Log -Type INFO -Name 'Program run - Export Bbox Configuration To JSON' -Message 'Start Export Bbox Configuration To JSON' -NotDisplay
         Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To JSON' -Message 'Export configuration to : '
-        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message $FullPath
+        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message $ExportPathJson
         Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To JSON' -Message 'Export Bbox Configuration To JSON status : ' -NotDisplay
+        
         Try {
-            $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
+            $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $ExportPathJson -Force
             Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message 'Success' -NotDisplay
         }
         Catch {
@@ -2469,6 +2482,28 @@ function Export-BboxConfiguration {
         }
         
         Write-Log -Type INFO -Name 'Program run - Export Bbox Configuration To JSON' -Message "End Export Bbox Configuration To JSON" -NotDisplay
+
+        # Export result as CSV file
+        $ExportPathCSV =  "$CSVFolder\$Date-$($APIName.Exportfile).csv"
+        $FormatedData =  Switch-Info -Label $APIName.label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
+                
+        If (-not ([string]::IsNullOrEmpty($FormatedData))) {
+        
+            Write-Log -Type INFO -Name 'Program run - Export Bbox Configuration To CSV' -Message 'Start Export Bbox Configuration To CSV' -NotDisplay
+            Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To CSV' -Message 'Export configuration to : '
+            Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To CSV' -Message $ExportPathCSV
+            Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To CSV' -Message 'Export Bbox Configuration To CSV status : ' -NotDisplay    
+            
+            Try {
+                $FormatedData | Export-Csv -Path $ExportPathCSV -Encoding utf8 -Force -Delimiter ";" -NoTypeInformation
+                Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To CSV' -Message 'Success' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type WARNING -Name 'Program run - Export Bbox Configuration To CSV' -Message "Failed, due to $($_.tostring())"
+            }
+            
+            Write-Log -Type INFO -Name 'Program run - Export Bbox Configuration To CSV' -Message "End Export Bbox Configuration To CSV" -NotDisplay
+        }
     }
 
     If ($global:TriggerOpenExportFolder -eq 0) {
@@ -2479,9 +2514,13 @@ function Export-BboxConfiguration {
     }
 
     If ($global:OpenExportFolder -eq 'Y') {
+        
         Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To JSON' -Message "Opening folder : "
-        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message "$OutputFolder"
-        Invoke-Item -Path $OutputFolder
+        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To JSON' -Message "$JSONFolder"
+        Invoke-Item -Path $JSONFolder
+        Write-Log -Type INFONO -Name 'Program run - Export Bbox Configuration To CSV' -Message "Opening folder : "
+        Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To CSV' -Message "$CSVFolder"
+        Invoke-Item -Path $CSVFolder
     }
     Return 'Program'
 }
@@ -2852,6 +2891,7 @@ Function Get-Status {
         Allowed      {$Value = 'Allowed';Break}
         Forbidden    {$Value = 'Forbidden';Break}
         Done         {$Value = 'Done';Break}
+        Preferred    {$Value = 'Preferred';Break}
         Default      {$Value = 'Unknow / Dev Error';Break}
     }
     
@@ -2874,6 +2914,40 @@ Function Get-YesNoAsk {
     
     Return $Value
 }
+
+# Used only when date is in second for the the last Seen Date settings
+Function Get-LastSeenDate {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Int]$Seconds
+    )
+    
+    $Value = $(Get-Date).AddSeconds(-$Seconds)
+    
+    Return $Value
+}
+
+Function Edit-Date {
+    
+    Param (
+        [Parameter(Mandatory=$False)]
+        [String]$Date
+    )
+    
+    If (-not ([string]::IsNullOrEmpty($Date))) {
+    
+        $Temp = $Date.replace("T"," ")
+        $Temp = $Temp.replace("Z","")
+        $Temp = $Temp.Split("+")[0]
+        
+        Return $Temp
+    }
+    Else {
+        Return $Null
+    }
+}
+
 
 # Used only to get USB folder type, linked to : "Get-USBStorage"
 Function Get-USBFolderType {
@@ -3182,49 +3256,6 @@ Function Get-PasswordRecoveryVerify {
 
 #region Airties
 
-# Depreciated
-function Get-Airties {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.$APIName
-    
-    # Create New PSObject and add values to array
-    $Airties = New-Object -TypeName PSObject
-    $Airties | Add-Member -Name 'Agent Status'                    -MemberType Noteproperty -Value $(Get-Status -Status $Json.agent.enable)
-    $Airties | Add-Member -Name 'Band Steering Status'            -MemberType Noteproperty -Value $(Get-Status -Status $Json.bandsteering.enable)
-    $Airties | Add-Member -Name 'Mesh Steering Status'            -MemberType Noteproperty -Value $(Get-Status -Status $Json.meshsteering.enable)
-    $Airties | Add-Member -Name 'Remote Manager Status'           -MemberType Noteproperty -Value $(Get-Status -Status $Json.remotemanager.enable)
-    $Airties | Add-Member -Name 'CACS Status'                     -MemberType Noteproperty -Value $(Get-Status -Status $Json.cacs.enable)
-    $Airties | Add-Member -Name 'Live View Status'                -MemberType Noteproperty -Value $(Get-Status -Status $Json.liveview.enable)
-    $Airties | Add-Member -Name 'Zero Touch Status'               -MemberType Noteproperty -Value $(Get-Status -Status $Json.zerotouch.enable) # New Since version : 20.2.16
-    $Airties | Add-Member -Name 'Device Serial Number'            -MemberType Noteproperty -Value $Json.device.serialnumber
-    $Airties | Add-Member -Name 'Device Firmware Main Version'    -MemberType Noteproperty -Value $Json.device.main.version
-    $Airties | Add-Member -Name 'Device Firmware Main Date'       -MemberType Noteproperty -Value $Json.device.main.date
-    $Airties | Add-Member -Name 'Device Firmware Running Version' -MemberType Noteproperty -Value $Json.device.running.version
-    $Airties | Add-Member -Name 'Device Firmware Running date'    -MemberType Noteproperty -Value $Json.device.running.date
-    $Airties | Add-Member -Name 'IP Address'                      -MemberType Noteproperty -Value $Json.lanmode.ip
-    $Airties | Add-Member -Name 'IP Lan Address'                  -MemberType Noteproperty -Value $Json.lanmode.iplan
-
-    # Add lines to $Array
-    $Array += $Airties
-    
-    Return $Array
-}
-
 function Get-AirtiesLANMode {
     
     Param (
@@ -3376,7 +3407,9 @@ Function Get-BackupList {
             $ConfigLine = New-Object -TypeName PSObject
             $ConfigLine | Add-Member -Name 'ID'                      -MemberType Noteproperty -Value $Json[$Config].id
             $ConfigLine | Add-Member -Name 'Backup Name'             -MemberType Noteproperty -Value $Json[$Config].name
-            $ConfigLine | Add-Member -Name 'Backup Creation Date'    -MemberType Noteproperty -Value $Json[$Config].date
+            If ($Json[$Config].date) {
+                $ConfigLine | Add-Member -Name 'Backup Creation Date' -MemberType Noteproperty -Value $(Edit-Date -Date $Json[$Config].date)
+            }
             $ConfigLine | Add-Member -Name 'Backup Firmware Version' -MemberType Noteproperty -Value $Json[$Config].firmware
             
             # Add lines to $Array
@@ -3396,8 +3429,9 @@ Function Get-BackupList {
         $Enable = $(Get-State -State $CloudSynchronisationState.$APIName.enable)
         $Status = $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
         $Authorized = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
-        $Datelastsave = $($CloudSynchronisationState.$APIName.datelastsave)
-
+        $Datelastsave = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastsave)
+        $Datelastrestore = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
+        
         Write-Log -Type WARNING -Name 'Program run - Get BBOX Configuration Save' -Message 'No local backups were found'
         
         Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Checking BBox cloud save synchronisation state : '
@@ -3412,11 +3446,16 @@ Function Get-BackupList {
         Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Last Time BBox Configuration save to the cloud : '
         Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Datelastsave
         
+        Write-Log -Type INFONO -Name 'Program run - Get BBOX Configuration Save' -Message 'Last Time BBox Configuration restored from the cloud : '
+        If ($Datelastrestore) {Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message $Datelastrestore}
+        Else {Write-Log -Type VALUE -Name 'Program run - Get BBOX Configuration Save' -Message ''}
+        
         $Message = "No local backups in BBox configuration were found.`nBBox cloud save synchronisation settings :
         - State : $Enable
         - Status : $Status
         - User Consent for Cloud Synchronisation : $Authorized
         - Last Cloud Synchronisation : $Datelastsave
+        - Last Cloud Restoration : $Datelastrestore
         "
         
         Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
@@ -3449,16 +3488,17 @@ Function Get-USERSAVE {
     
     # Create New PSObject and add values to array
     $UsersaveLine = New-Object -TypeName PSObject
-    $UsersaveLine | Add-Member -Name 'Service'              -MemberType Noteproperty -Value $APIName
-    $UsersaveLine | Add-Member -Name 'State'                -MemberType Noteproperty -Value (Get-State -State $Json.enable)
-    $UsersaveLine | Add-Member -Name 'Status'               -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
-    $UsersaveLine | Add-Member -Name 'Boots Number'       -MemberType Noteproperty -Value $Json.numberofboots # Since Version : 19.2.12
-    $UsersaveLine | Add-Member -Name 'Last Restore date'    -MemberType Noteproperty -Value $Json.datelastrestore
-    $UsersaveLine | Add-Member -Name 'Last Date Save'       -MemberType Noteproperty -Value $Json.datelastsave
-    $UsersaveLine | Add-Member -Name 'Restore From Factory' -MemberType Noteproperty -Value $Json.restorefromfactory
-    $UsersaveLine | Add-Member -Name 'Delay'                -MemberType Noteproperty -Value $Json.delay
-    $UsersaveLine | Add-Member -Name 'Allow Cloud Sync ?'   -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.authorized) # Since Version : 19.2.12
-    $UsersaveLine | Add-Member -Name 'Never Synced ?'       -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.neversynced) # Since Version : 19.2.12
+    $UsersaveLine | Add-Member -Name 'Service'                 -MemberType Noteproperty -Value $APIName
+    $UsersaveLine | Add-Member -Name 'State'                   -MemberType Noteproperty -Value (Get-State -State $Json.enable)
+    $UsersaveLine | Add-Member -Name 'Status'                  -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
+    $UsersaveLine | Add-Member -Name 'Boots Number'            -MemberType Noteproperty -Value $Json.numberofboots # Since Version : 19.2.12
+    If ($Json.datelastrestore) {$UsersaveLine | Add-Member     -Name 'Last Restore date' -MemberType Noteproperty -Value $(Edit-Date -Date $Json.datelastrestore)}
+    Else {$UsersaveLine | Add-Member -Name 'Last Restore date' -MemberType Noteproperty -Value $Json.datelastrestore}
+    $UsersaveLine | Add-Member -Name 'Last Date Save'          -MemberType Noteproperty -Value $(Edit-Date -Date $Json.datelastsave)
+    $UsersaveLine | Add-Member -Name 'Restore From Factory'    -MemberType Noteproperty -Value $Json.restorefromfactory
+    $UsersaveLine | Add-Member -Name 'Delay'                   -MemberType Noteproperty -Value $Json.delay
+    $UsersaveLine | Add-Member -Name 'Allow Cloud Sync ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.authorized) # Since Version : 19.2.12
+    $UsersaveLine | Add-Member -Name 'Never Synced ?'          -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.neversynced) # Since Version : 19.2.12
     
     # Add lines to $Array
     $Array += $UsersaveLine
@@ -3594,7 +3634,7 @@ Function Get-Device {
     
     # Create New PSObject and add values to array
     $DeviceLine = New-Object -TypeName PSObject
-    $DeviceLine | Add-Member -Name 'Date'                      -MemberType Noteproperty -Value $Json.now
+    $DeviceLine | Add-Member -Name 'Date'                      -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $DeviceLine | Add-Member -Name 'Status'                    -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $DeviceLine | Add-Member -Name 'Nb Boots since 1st use'    -MemberType Noteproperty -Value $Json.numberofboots
     $DeviceLine | Add-Member -Name 'Bbox Model'                -MemberType Noteproperty -Value $Json.modelname
@@ -3607,11 +3647,11 @@ Function Get-Device {
     $DeviceLine | Add-Member -Name 'Luminosity Grade (%) '     -MemberType Noteproperty -Value $Json.display.luminosity
     $DeviceLine | Add-Member -Name 'Front Screen Displayed'    -MemberType Noteproperty -Value $Json.display.state
     $DeviceLine | Add-Member -Name 'MAIN Firmware Version'     -MemberType Noteproperty -Value $Json.main.version
-    $DeviceLine | Add-Member -Name 'MAIN Firmware Date'        -MemberType Noteproperty -Value $Json.main.date
+    $DeviceLine | Add-Member -Name 'MAIN Firmware Date'        -MemberType Noteproperty -Value $(Edit-Date -Date $Json.main.date)
     $DeviceLine | Add-Member -Name 'RECOVERY Firmware Version' -MemberType Noteproperty -Value $Json.reco.version
-    $DeviceLine | Add-Member -Name 'RECOVERY Firmware Date'    -MemberType Noteproperty -Value $Json.reco.date
-    $DeviceLine | Add-Member -Name 'RUNNING Firmware Version'  -MemberType Noteproperty -Value $Json.running.version # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
-    $DeviceLine | Add-Member -Name 'RUNNING Firmware Date'     -MemberType Noteproperty -Value $Json.running.date    # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
+    $DeviceLine | Add-Member -Name 'RECOVERY Firmware Date'    -MemberType Noteproperty -Value $(Edit-Date -Date $Json.reco.date)
+    $DeviceLine | Add-Member -Name 'RUNNING Firmware Version'  -MemberType Noteproperty -Value $Json.running.version                 # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
+    $DeviceLine | Add-Member -Name 'RUNNING Firmware Date'     -MemberType Noteproperty -Value $(Edit-Date -Date $Json.running.date) # Missing in online documentation : https://api.bbox.fr/doc/apirouter/index.html
     $DeviceLine | Add-Member -Name 'BACKUP Version'            -MemberType Noteproperty -Value $Json.bcck.version
     $DeviceLine | Add-Member -Name 'BOOTLOADER 1 Version'      -MemberType Noteproperty -Value $Json.ldr1.version
     $DeviceLine | Add-Member -Name 'BOOTLOADER 2 Version'      -MemberType Noteproperty -Value $Json.ldr2.version
@@ -3650,7 +3690,7 @@ Function Get-DeviceLog {
     
     While ($Line -lt $Json.count) {
         
-        $Date = $Json[$Line].date
+        $Date = $(Edit-Date -Date $Json[$Line].date)
         
         If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';' )) {
             
@@ -3999,6 +4039,11 @@ Function Get-DeviceLog {
                                         Break
                                        }
             
+            PPP_FAIL                   {$Details = "Echec d'btention d'adresse IP via PPP : $($Json[$Line].param)"
+                                        $LogType = 'Système'
+                                        Break
+                                       }
+            
             SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$Line].param)"
                                         $LogType = 'Utilisation du réseau'
                                         Break
@@ -4129,7 +4174,7 @@ Function Get-DeviceFullLog {
         
         While ($Line -lt $Json.count) {
             
-            $Date = $Json[$Line].date
+            $Date = $(Edit-Date -Date $Json[$Line].date)
             
             If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
                 
@@ -4478,7 +4523,12 @@ Function Get-DeviceFullLog {
                                             Break
                                            }
                 
-                SCHEDULER_PARENTAL_DISABLE{$Details = "Contrôle d'accès désactivé : $($Json[$Line].param)"
+                PPP_FAIL                   {$Details = "Echec d'btention d'adresse IP via PPP : $($Json[$Line].param)"
+                                            $LogType = 'Système'
+                                            Break
+                                           }
+                
+                SCHEDULER_PARENTAL_DISABLE {$Details = "Contrôle d'accès désactivé : $($Json[$Line].param)"
                                             $LogType = 'Utilisation du réseau'
                                             Break
                                            }
@@ -4615,7 +4665,7 @@ Function Get-DeviceFullTechnicalLog {
         
         While ($Line -lt $Json.count) {
             
-            $Date = $Json[$Line].date
+            $Date = $(Edit-Date -Date $Json[$Line].date)
             
             If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
                 
@@ -4645,6 +4695,8 @@ Function Get-DeviceFullTechnicalLog {
                 LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostname : $($Params[2]), IP Address destination : $($Params[1])";Break}
                 
                 LAN_PORT_UP                {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
+                
+                LAN_PORT_DOWN              {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
                 
                 LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])";Break}
                 
@@ -4862,7 +4914,7 @@ Function Get-DeviceSummary {
     
     # Create New PSObject and add values to array
     $SummaryLine = New-Object -TypeName PSObject
-    $SummaryLine | Add-Member -Name 'Date'          -MemberType Noteproperty -Value $Json.now
+    $SummaryLine | Add-Member -Name 'Date'          -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $SummaryLine | Add-Member -Name 'Status'        -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $SummaryLine | Add-Member -Name 'Default'       -MemberType Noteproperty -Value (Get-Status -Status $Json.default)
     $SummaryLine | Add-Member -Name 'Model'         -MemberType Noteproperty -Value $Json.modelname
@@ -5394,11 +5446,11 @@ Function Get-DYNDNSClient {
             $ProviderLine | Add-Member -Name 'Host'                -MemberType Noteproperty -Value $Json[$Provider].host
             $ProviderLine | Add-Member -Name 'Record Type'         -MemberType Noteproperty -Value $Json[$Provider].record
             $ProviderLine | Add-Member -Name 'MAC Address'         -MemberType Noteproperty -Value $Json[$Provider].device
-            $ProviderLine | Add-Member -Name 'Date'                -MemberType Noteproperty -Value $Json[$Provider].status.date
+            $ProviderLine | Add-Member -Name 'Date'                -MemberType Noteproperty -Value $(Edit-Date -Date $Json[$Provider].status.date)
             $ProviderLine | Add-Member -Name 'Status'              -MemberType Noteproperty -Value $Json[$Provider].status.status
             $ProviderLine | Add-Member -Name 'Message'             -MemberType Noteproperty -Value $Json[$Provider].status.message
             $ProviderLine | Add-Member -Name 'IP Address'          -MemberType Noteproperty -Value $Json[$Provider].status.ip
-            $ProviderLine | Add-Member -Name 'Cache Date'          -MemberType Noteproperty -Value $Json[$Provider].status.cache_date
+            $ProviderLine | Add-Member -Name 'Cache Date'          -MemberType Noteproperty -Value $(Edit-Date -Date $Json[$Provider].status.cache_date)
             $ProviderLine | Add-Member -Name 'Periodic Update (H)' -MemberType Noteproperty -Value $Json[$Provider].periodicupdate
             
             $Array += $ProviderLine
@@ -5717,36 +5769,53 @@ Function Get-HOSTS {
             
             # Create New PSObject and add values to array
             $DeviceLine = New-Object -TypeName PSObject
-            $DeviceLine | Add-Member -Name 'ID'                               -MemberType Noteproperty -Value $Json[$Device].id
-            $DeviceLine | Add-Member -Name 'Hostname'                         -MemberType Noteproperty -Value $Json[$Device].hostname
-            $DeviceLine | Add-Member -Name 'MAC Address'                      -MemberType Noteproperty -Value $Json[$Device].macaddress
-            $DeviceLine | Add-Member -Name 'DUID'                             -MemberType Noteproperty -Value $Json[$Device].duid
-            $DeviceLine | Add-Member -Name 'IPV4 Adress'                      -MemberType Noteproperty -Value $Json[$Device].ipaddress
-            $DeviceLine | Add-Member -Name 'DHCP Mode'                        -MemberType Noteproperty -Value $Json[$Device].type
-            $DeviceLine | Add-Member -Name 'Link Type'                        -MemberType Noteproperty -Value $Json[$Device].link
-            $DeviceLine | Add-Member -Name 'Device Type'                      -MemberType Noteproperty -Value $Json[$Device].devicetype
+            $DeviceLine | Add-Member -Name 'ID'                                  -MemberType Noteproperty -Value $Json[$Device].id
+            $DeviceLine | Add-Member -Name 'Hostname'                            -MemberType Noteproperty -Value $Json[$Device].hostname
+            $DeviceLine | Add-Member -Name 'MAC Address'                         -MemberType Noteproperty -Value $Json[$Device].macaddress
+            $DeviceLine | Add-Member -Name 'DUID'                                -MemberType Noteproperty -Value $Json[$Device].duid
+            $DeviceLine | Add-Member -Name 'IPV4 Adress'                         -MemberType Noteproperty -Value $Json[$Device].ipaddress
+            $DeviceLine | Add-Member -Name 'DHCP Mode'                           -MemberType Noteproperty -Value $Json[$Device].type
+            $DeviceLine | Add-Member -Name 'Link Type'                           -MemberType Noteproperty -Value $Json[$Device].link
+            $DeviceLine | Add-Member -Name 'Device Type'                         -MemberType Noteproperty -Value $Json[$Device].devicetype
             
             # If STB part
             If ($Json[$Device].devicetype -like 'STB') {
                 
-                $DeviceLine | Add-Member -Name 'STB - Product'                -MemberType Noteproperty -Value $Json[$Device].stb.product
-                $DeviceLine | Add-Member -Name 'STB - Serial'                 -MemberType Noteproperty -Value $Json[$Device].stb.serial
+                $DeviceLine | Add-Member -Name 'STB - Product'                   -MemberType Noteproperty -Value $Json[$Device].stb.product
+                $DeviceLine | Add-Member -Name 'STB - Serial'                    -MemberType Noteproperty -Value $Json[$Device].stb.serial
             }
             Else {
-                $DeviceLine | Add-Member -Name 'STB - Product'                -MemberType Noteproperty -Value ''
-                $DeviceLine | Add-Member -Name 'STB - Serial'                 -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'STB - Product'                   -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'STB - Serial'                    -MemberType Noteproperty -Value ''
             }
             
-            $DeviceLine | Add-Member -Name 'IPV4 Date First Connexion'        -MemberType Noteproperty -Value $($($($Json[$Device].firstseen).replace("T"," ")).replace("+0100",""))
-            $DeviceLine | Add-Member -Name 'IPV4 Date Last Connexion'         -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json[$Device].lastseen)
+            $DeviceLine | Add-Member -Name 'IPV4 Date First Connexion'           -MemberType Noteproperty -Value $(Edit-Date -Date $Json[$Device].firstseen)
+            $DeviceLine | Add-Member -Name 'IPV4 Date Last Connexion'            -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json[$Device].lastseen)
             
             # If IPV6 part
-            If (-not ([string]::IsNullOrEmpty($Json[$Device].ip6address))) {
+            If (-not ([string]::IsNullOrEmpty($Json.ip6address))) {
+        
+                $IPV6Line = 0
+                $IPAddress = @()
+                $Status = @()
+                $Lastseen = @()
+                $Lastscan = @()
                 
-                $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value $($Json[$Device].ip6address.ipaddress -join ',')
-                $DeviceLine | Add-Member -Name 'IPV6 Statut'                  -MemberType Noteproperty -Value $($Json[$Device].ip6address.status -join ',')
-                $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $($($(Get-Date).AddSeconds($($Json[$Device].ip6address.lastseen).replace("T"," ")).replace("+0100","")) -join ',')
-                $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $($($($($Json[$Device].ip6address.lastscan).replace("T"," ")).replace("+0100","")) -join ',')
+                While ($IPV6Line -ne $Json.ip6address.count) {
+                    
+                    $IPAddress += $($Json.ip6address[$IPV6Line].ipaddress)
+                    $Status    += $($Json.ip6address[$IPV6Line].status)
+                    $Lastseen  += $(Edit-Date -Date $Json.ip6address[$IPV6Line].lastseen)
+                    $Lastscan  += $(Edit-Date -Date $Json.ip6address[$IPV6Line].lastscan)
+                    
+                    # Go to next line
+                    $IPV6Line ++
+                }
+                
+                $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value $($IPAddress -join ",")
+                $DeviceLine | Add-Member -Name 'IPV6 Statut'                  -MemberType Noteproperty -Value $($Status -join ",")
+                $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $($Lastseen -join ",")
+                $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $($Lastscan -join ",")
             }
             Else {
                 $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value ''
@@ -5755,47 +5824,47 @@ Function Get-HOSTS {
                 $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value ''
             }
             
-            $DeviceLine | Add-Member -Name 'Physical Port'                    -MemberType Noteproperty -Value $Json[$Device].ethernet.physicalport
-            $DeviceLine | Add-Member -Name 'Logical Port'                     -MemberType Noteproperty -Value $Json[$Device].ethernet.logicalport
-            $DeviceLine | Add-Member -Name 'Speed Connexion'                  -MemberType Noteproperty -Value $Json[$Device].ethernet.speed
-            $DeviceLine | Add-Member -Name 'Mode'                             -MemberType Noteproperty -Value $Json[$Device].ethernet.mode
-            $DeviceLine | Add-Member -Name 'Band'                             -MemberType Noteproperty -Value $Json[$Device].wireless.band
-            $DeviceLine | Add-Member -Name 'RSSIO'                            -MemberType Noteproperty -Value $Json[$Device].wireless.rssi0
-            $DeviceLine | Add-Member -Name 'RSSI1'                            -MemberType Noteproperty -Value $Json[$Device].wireless.rssi1
-            $DeviceLine | Add-Member -Name 'RSSI2'                            -MemberType Noteproperty -Value $Json[$Device].wireless.rssi2
-            $DeviceLine | Add-Member -Name 'MSC'                              -MemberType Noteproperty -Value $Json[$Device].wireless.mcs
-            $DeviceLine | Add-Member -Name 'Rate'                             -MemberType Noteproperty -Value $Json[$Device].wireless.rate
-            $DeviceLine | Add-Member -Name 'Idle'                             -MemberType Noteproperty -Value $Json[$Device].wireless.idle
-            $DeviceLine | Add-Member -Name 'WexIndex'                         -MemberType Noteproperty -Value $Json[$Device].wireless.wexindex
-            $DeviceLine | Add-Member -Name 'Starealmac'                       -MemberType Noteproperty -Value $Json[$Device].wireless.starealmac
-            $DeviceLine | Add-Member -Name 'Wireless Static'                  -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Device].wireless.static)
-            $DeviceLine | Add-Member -Name 'RXPhyrate'                        -MemberType Noteproperty -Value $Json[$Device].plc.rxphyrate
-            $DeviceLine | Add-Member -Name 'TXPhyrate'                        -MemberType Noteproperty -Value $Json[$Device].plc.txphyrate
-            $DeviceLine | Add-Member -Name 'Associated Device'                -MemberType Noteproperty -Value $Json[$Device].plc.associateddevice
-            $DeviceLine | Add-Member -Name 'Interface'                        -MemberType Noteproperty -Value $Json[$Device].plc.interface
-            $DeviceLine | Add-Member -Name 'Ethernet Speed'                   -MemberType Noteproperty -Value $Json[$Device].plc.ethernetspeed
-            $DeviceLine | Add-Member -Name 'DHCP Bail'                        -MemberType Noteproperty -Value $Json[$Device].lease
-            $DeviceLine | Add-Member -Name 'Is Active ?'                      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Device].active)
-            $DeviceLine | Add-Member -Name 'Parental Control - State'         -MemberType Noteproperty -Value (Get-state -State $Json[$Device].parentalcontrol.enable)
-            $DeviceLine | Add-Member -Name 'Parental Control - Status'        -MemberType Noteproperty -Value (Get-Status -Status $Json[$Device].parentalcontrol.status)
-            $DeviceLine | Add-Member -Name 'Parental Control - Last Time Status' -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json[$Device].parentalcontrol.statusRemaining)
+            $DeviceLine | Add-Member -Name 'Physical Port'                       -MemberType Noteproperty -Value $Json[$Device].ethernet.physicalport
+            $DeviceLine | Add-Member -Name 'Logical Port'                        -MemberType Noteproperty -Value $Json[$Device].ethernet.logicalport
+            $DeviceLine | Add-Member -Name 'Speed Connexion'                     -MemberType Noteproperty -Value $Json[$Device].ethernet.speed
+            $DeviceLine | Add-Member -Name 'Mode'                                -MemberType Noteproperty -Value $Json[$Device].ethernet.mode
+            $DeviceLine | Add-Member -Name 'Band'                                -MemberType Noteproperty -Value $Json[$Device].wireless.band
+            $DeviceLine | Add-Member -Name 'RSSIO'                               -MemberType Noteproperty -Value $Json[$Device].wireless.rssi0
+            $DeviceLine | Add-Member -Name 'RSSI1'                               -MemberType Noteproperty -Value $Json[$Device].wireless.rssi1
+            $DeviceLine | Add-Member -Name 'RSSI2'                               -MemberType Noteproperty -Value $Json[$Device].wireless.rssi2
+            $DeviceLine | Add-Member -Name 'MSC'                                 -MemberType Noteproperty -Value $Json[$Device].wireless.mcs
+            $DeviceLine | Add-Member -Name 'Rate'                                -MemberType Noteproperty -Value $Json[$Device].wireless.rate
+            $DeviceLine | Add-Member -Name 'Idle'                                -MemberType Noteproperty -Value $Json[$Device].wireless.idle
+            $DeviceLine | Add-Member -Name 'WexIndex'                            -MemberType Noteproperty -Value $Json[$Device].wireless.wexindex
+            $DeviceLine | Add-Member -Name 'Starealmac'                          -MemberType Noteproperty -Value $Json[$Device].wireless.starealmac
+            $DeviceLine | Add-Member -Name 'Wireless Static'                     -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Device].wireless.static)
+            $DeviceLine | Add-Member -Name 'RXPhyrate'                           -MemberType Noteproperty -Value $Json[$Device].plc.rxphyrate
+            $DeviceLine | Add-Member -Name 'TXPhyrate'                           -MemberType Noteproperty -Value $Json[$Device].plc.txphyrate
+            $DeviceLine | Add-Member -Name 'Associated Device'                   -MemberType Noteproperty -Value $Json[$Device].plc.associateddevice
+            $DeviceLine | Add-Member -Name 'Interface'                           -MemberType Noteproperty -Value $Json[$Device].plc.interface
+            $DeviceLine | Add-Member -Name 'Ethernet Speed'                      -MemberType Noteproperty -Value $Json[$Device].plc.ethernetspeed
+            $DeviceLine | Add-Member -Name 'DHCP Bail'                           -MemberType Noteproperty -Value $Json[$Device].lease
+            $DeviceLine | Add-Member -Name 'Is Active ?'                         -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Device].active)
+            $DeviceLine | Add-Member -Name 'Parental Control - State'            -MemberType Noteproperty -Value (Get-state -State $Json[$Device].parentalcontrol.enable)
+            $DeviceLine | Add-Member -Name 'Parental Control - Status'           -MemberType Noteproperty -Value (Get-Status -Status $Json[$Device].parentalcontrol.status)
+            $DeviceLine | Add-Member -Name 'Parental Control - Last Time Status' -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json[$Device].parentalcontrol.statusRemaining)
             $DeviceLine | Add-Member -Name 'Parental Control - Next Time Status' -MemberType Noteproperty -Value $Json[$Device].parentalcontrol.statusUntil
-            $DeviceLine | Add-Member -Name 'Average Ping'                     -MemberType Noteproperty -Value $Json[$Device].ping.average
-            $DeviceLine | Add-Member -Name 'Detected Active Services'         -MemberType Noteproperty -Value $($Json[$Device].scan.services -join ',')
+            $DeviceLine | Add-Member -Name 'Average Ping'                        -MemberType Noteproperty -Value $Json[$Device].ping.average
+            $DeviceLine | Add-Member -Name 'Detected Active Services'            -MemberType Noteproperty -Value $($Json[$Device].scan.services -join ',')
             
             <# If Services part
             If (-not ([string]::IsNullOrEmpty($Json[$Device].scan.services))) {
                 
-                $DeviceLine | Add-Member -Name 'Detected Protocol'            -MemberType Noteproperty -Value $Json[$Device].scan.services.protocol
-                $DeviceLine | Add-Member -Name 'Detected Port'                -MemberType Noteproperty -Value $Json[$Device].scan.services.port
-                $DeviceLine | Add-Member -Name 'Port State'                   -MemberType Noteproperty -Value $Json[$Device].scan.services.state
-                $DeviceLine | Add-Member -Name 'Reason'                       -MemberType Noteproperty -Value $Json[$Device].scan.services.reason
+                $DeviceLine | Add-Member -Name 'Detected Protocol'               -MemberType Noteproperty -Value $Json[$Device].scan.services.protocol
+                $DeviceLine | Add-Member -Name 'Detected Port'                   -MemberType Noteproperty -Value $Json[$Device].scan.services.port
+                $DeviceLine | Add-Member -Name 'Port State'                      -MemberType Noteproperty -Value $Json[$Device].scan.services.state
+                $DeviceLine | Add-Member -Name 'Reason'                          -MemberType Noteproperty -Value $Json[$Device].scan.services.reason
             }
             Else {
-                $DeviceLine | Add-Member -Name 'Detected Protocol'            -MemberType Noteproperty -Value ''
-                $DeviceLine | Add-Member -Name 'Detected Port'                -MemberType Noteproperty -Value ''
-                $DeviceLine | Add-Member -Name 'Port State'                   -MemberType Noteproperty -Value ''
-                $DeviceLine | Add-Member -Name 'Reason'                       -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'Detected Protocol'               -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'Detected Port'                   -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'Port State'                      -MemberType Noteproperty -Value ''
+                $DeviceLine | Add-Member -Name 'Reason'                          -MemberType Noteproperty -Value ''
             }
             #>
             
@@ -5866,8 +5935,9 @@ Function Get-HOSTSME {
     }
     
     $DeviceLine | Add-Member -Name 'IPV4 Date first connexion'        -MemberType Noteproperty -Value $Json.firstseen
+    
     If ($Json.lastseen -ne 0) {
-        $DeviceLine | Add-Member -Name 'IPV4 Date last connexion'     -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json.lastseen)
+        $DeviceLine | Add-Member -Name 'IPV4 Date last connexion'     -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json.lastseen)
     }
     Else {
         $DeviceLine | Add-Member -Name 'IPV4 Date last connexion'     -MemberType Noteproperty -Value $Json.lastseen
@@ -5877,26 +5947,26 @@ Function Get-HOSTSME {
     If (-not ([string]::IsNullOrEmpty($Json.ip6address))) {
         
         $IPV6Line = 0
-        $IPAddress = ''
-        $Lastseen = ''
-        $Lastscan = ''
-        $Status = ''
+        $IPAddress = @()
+        $Status = @()
+        $Lastseen = @()
+        $Lastscan = @()
         
         While ($IPV6Line -ne $Json.ip6address.count) {
             
-            $IPAddress += "$($Json.ip6address[$IPV6Line].ipaddress);"
-            $Status    += "$($Json.ip6address[$IPV6Line].status);"
-            $Lastseen  += "$(($Json.ip6address[$IPV6Line].lastseen).Replace('T',' '));"
-            $Lastscan  += "$(($Json.ip6address[$IPV6Line].lastscan).Replace('T',' '));"
+            $IPAddress += $($Json.ip6address[$IPV6Line].ipaddress)
+            $Status    += $($Json.ip6address[$IPV6Line].status)
+            $Lastseen  += $(Edit-Date -Date $Json.ip6address[$IPV6Line].lastseen)
+            $Lastscan  += $(Edit-Date -Date $Json.ip6address[$IPV6Line].lastscan)
             
             # Go to next line
             $IPV6Line ++
         }
         
-        $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value $IPAddress
-        $DeviceLine | Add-Member -Name 'IPV6 Statut'                  -MemberType Noteproperty -Value $Status
-        $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $Lastseen
-        $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $Lastscan
+        $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value $($IPAddress -join ",")
+        $DeviceLine | Add-Member -Name 'IPV6 Statut'                  -MemberType Noteproperty -Value $($Status -join ",")
+        $DeviceLine | Add-Member -Name 'IPV6 First Connexion Date'    -MemberType Noteproperty -Value $($Lastseen -join ",")
+        $DeviceLine | Add-Member -Name 'IPV6 Last Connexion Date'     -MemberType Noteproperty -Value $($Lastscan -join ",")
     }
     Else {
         $DeviceLine | Add-Member -Name 'IPV6 Address'                 -MemberType Noteproperty -Value ''
@@ -5917,16 +5987,16 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name 'Rate'                             -MemberType Noteproperty -Value $Json.wireless.rate
     $DeviceLine | Add-Member -Name 'Idle'                             -MemberType Noteproperty -Value $Json.wireless.idle
     $DeviceLine | Add-Member -Name 'wexindex'                         -MemberType Noteproperty -Value $Json.wireless.wexindex
-    $DeviceLine | Add-Member -Name 'Wireless Static'                  -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Device].wireless.static)
+    $DeviceLine | Add-Member -Name 'Wireless Static'                  -MemberType Noteproperty -Value $(Get-YesNoAsk -YesNoAsk $Json[$Device].wireless.static)
     $DeviceLine | Add-Member -Name 'RXPhyrate'                        -MemberType Noteproperty -Value $Json.plc.rxphyrate
     $DeviceLine | Add-Member -Name 'TXPhyrate'                        -MemberType Noteproperty -Value $Json.plc.txphyrate
     $DeviceLine | Add-Member -Name 'Associated Device'                -MemberType Noteproperty -Value $Json.plc.associateddevice
     $DeviceLine | Add-Member -Name 'Interface'                        -MemberType Noteproperty -Value $Json.plc.interface
     $DeviceLine | Add-Member -Name 'PCL Ethernet Speed'               -MemberType Noteproperty -Value $Json.plc.ethernetspeed
-    $DeviceLine | Add-Member -Name 'Parental Control - State'         -MemberType Noteproperty -Value (Get-State -State $Json.parentalcontrol.enable)
-    $DeviceLine | Add-Member -Name 'Parental Control - Status'        -MemberType Noteproperty -Value (Get-Status -Status $Json.parentalcontrol.status)
+    $DeviceLine | Add-Member -Name 'Parental Control - State'         -MemberType Noteproperty -Value $(Get-State -State $Json.parentalcontrol.enable)
+    $DeviceLine | Add-Member -Name 'Parental Control - Status'        -MemberType Noteproperty -Value $(Get-Status -Status $Json.parentalcontrol.status)
     If ($Json.parentalcontrol.statusRemaining -ne 0) {
-        $DeviceLine | Add-Member -Name 'Parental Control - Last Time Status' -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json.parentalcontrol.statusRemaining)
+        $DeviceLine | Add-Member -Name 'Parental Control - Last Time Status' -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json.parentalcontrol.statusRemaining)
     }
     Else {
         $DeviceLine | Add-Member -Name 'Parental Control - Last Time Status' -MemberType Noteproperty -Value $Json.parentalcontrol.statusRemaining
@@ -5935,12 +6005,12 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name 'DHCP Bail'                        -MemberType Noteproperty -Value $Json.lease
     $DeviceLine | Add-Member -Name 'First Connexion Date'             -MemberType Noteproperty -Value $Json.firstSeen
     If ($Json.lastSeen -ne 0) {
-        $DeviceLine | Add-Member -Name 'Last Connexion Date'          -MemberType Noteproperty -Value $(Get-Date).AddSeconds(-$Json.lastSeen)
+        $DeviceLine | Add-Member -Name 'Last Connexion Date'          -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json.lastSeen)
     }
     Else {
         $DeviceLine | Add-Member -Name 'Last Connexion Date'          -MemberType Noteproperty -Value $Json.lastSeen
     }
-    $DeviceLine | Add-Member -Name 'Is Active ?'                      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.active)
+    $DeviceLine | Add-Member -Name 'Is Active ?'                      -MemberType Noteproperty -Value $(Get-YesNoAsk -YesNoAsk $Json.active)
     $DeviceLine | Add-Member -Name 'Ping Min'                         -MemberType Noteproperty -Value $Json.ping.min
     $DeviceLine | Add-Member -Name 'Ping Max'                         -MemberType Noteproperty -Value $Json.ping.max
     $DeviceLine | Add-Member -Name 'Ping Average'                     -MemberType Noteproperty -Value $Json.ping.average
@@ -5948,19 +6018,19 @@ Function Get-HOSTSME {
     $DeviceLine | Add-Member -Name 'Ping Error'                       -MemberType Noteproperty -Value $Json.ping.error
     $DeviceLine | Add-Member -Name 'Ping Tries'                       -MemberType Noteproperty -Value $Json.ping.tries
     If ($Json.ping.status) {
-        $DeviceLine | Add-Member -Name 'Ping status'                  -MemberType Noteproperty -Value (Get-Status -Status $Json.ping.status)
+        $DeviceLine | Add-Member -Name 'Ping status'                  -MemberType Noteproperty -Value $(Get-Status -Status $Json.ping.status)
     }
     Else {
         $DeviceLine | Add-Member -Name 'Ping status'                  -MemberType Noteproperty -Value $Json.ping.status
     }
     $DeviceLine | Add-Member -Name 'Ping Result'                      -MemberType Noteproperty -Value $Json.ping.result
     If ($Json.scan.status) {
-        $DeviceLine | Add-Member -Name 'Scan Status'                  -MemberType Noteproperty -Value (Get-Status -Status $Json.scan.status)
+        $DeviceLine | Add-Member -Name 'Scan Status'                  -MemberType Noteproperty -Value $(Get-Status -Status $Json.scan.status)
     }
     Else {
         $DeviceLine |Add-Member -Name 'Scan Status'                   -MemberType Noteproperty -Value $Json.scan.status
     }
-    $DeviceLine | Add-Member -Name 'Scan State'                       -MemberType Noteproperty -Value (Get-State -State $Json.scan.enable)
+    $DeviceLine | Add-Member -Name 'Scan State'                       -MemberType Noteproperty -Value $(Get-State -State $Json.scan.enable)
     $DeviceLine | Add-Member -Name 'Services Detected'                -MemberType Noteproperty -Value $Json.scan.services
     $DeviceLine | Add-Member -Name 'wirelesshosts'                    -MemberType Noteproperty -Value $Json.wirelesshosts
     $DeviceLine | Add-Member -Name 'extenderhosts'                    -MemberType Noteproperty -Value $Json.extenderhosts
@@ -6177,13 +6247,14 @@ Function Get-IPTVDiags {
     
     # Create New PSObject and add values to array
     $IPTVDiagsLine = New-Object -TypeName PSObject
-    $IPTVDiagsLine | Add-Member -Name 'Date'                 -MemberType Noteproperty -Value $Json.now # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
-    $IPTVDiagsLine | Add-Member -Name 'IGMP State'           -MemberType Noteproperty -Value (Get-State -State $Json.igmp.state) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
-    $IPTVDiagsLine | Add-Member -Name 'IGMP Status'          -MemberType Noteproperty -Value (Get-Status -Status $Json.igmp.enable) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
-    $IPTVDiagsLine | Add-Member -Name 'IPTV Multicast State' -MemberType Noteproperty -Value (Get-State -State $Json.iptv.multicast.state)
-    $IPTVDiagsLine | Add-Member -Name 'IPTV Multicast Date'  -MemberType Noteproperty -Value $Json.iptv.multicast.date
-    $IPTVDiagsLine | Add-Member -Name 'IPTV Platform State'  -MemberType Noteproperty -Value (Get-State -State $Json.iptv.platform.state)
-    $IPTVDiagsLine | Add-Member -Name 'IPTV Platform Date'   -MemberType Noteproperty -Value $Json.iptv.platform.date
+    $IPTVDiagsLine | Add-Member -Name 'Date'                      -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
+    $IPTVDiagsLine | Add-Member -Name 'IGMP State'                -MemberType Noteproperty -Value (Get-State -State $Json.igmp.state) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
+    $IPTVDiagsLine | Add-Member -Name 'IGMP Status'               -MemberType Noteproperty -Value (Get-Status -Status $Json.igmp.enable) # Not present in doc : https://api.bbox.fr/doc/apirouter/index.html#api-Services-GetIPTVDiag
+    $IPTVDiagsLine | Add-Member -Name 'IPTV Multicast State'      -MemberType Noteproperty -Value (Get-State -State $Json.iptv.multicast.state)
+    If ($Json.iptv.multicast.date) {$IPTVDiagsLine | Add-Member   -Name 'IPTV Multicast Date'  -MemberType Noteproperty -Value $(Edit-Date -Date $Json.iptv.multicast.date)}
+    Else {$IPTVDiagsLine | Add-Member -Name 'IPTV Multicast Date' -MemberType Noteproperty -Value ""}
+    $IPTVDiagsLine | Add-Member -Name 'IPTV Platform State'       -MemberType Noteproperty -Value (Get-State -State $Json.iptv.platform.state)
+    If ($Json.iptv.platform.date) {$IPTVDiagsLine | Add-Member    -Name 'IPTV Platform Date' -MemberType Noteproperty -Value $(Edit-Date -Date $Json.iptv.platform.date)}
     
     # Add lines to $Array
     $Array += $IPTVDiagsLine
@@ -6725,8 +6796,8 @@ Function Get-NOTIFICATIONConfigEvents {
             $EventsLine = New-Object -TypeName PSObject
             $EventsLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $($Json[$Events].name)
             $EventsLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $($Json[$Events].category) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
             $EventsLine | Add-Member -Name 'Message'     -MemberType Noteproperty -Value $($Json[$Events].humanReadable) # Syntaxe to be reviewed
+            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
             
             # Add lines to $Array
             $Array += $EventsLine
@@ -6900,7 +6971,7 @@ Function Get-ParentalControl {
     # Create New PSObject and add values to array
     $ParentalControlLine = New-Object -TypeName PSObject
     $ParentalControlLine | Add-Member -Name 'Service'        -MemberType Noteproperty -Value 'Parental Control'
-    $ParentalControlLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $Json.now
+    $ParentalControlLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $ParentalControlLine | Add-Member -Name 'State'          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $ParentalControlLine | Add-Member -Name 'Default Policy' -MemberType Noteproperty -Value $Json.defaultpolicy
     
@@ -6931,7 +7002,7 @@ Function Get-ParentalControlScheduler {
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
     $SchedulerLine | Add-Member -Name 'Service'     -MemberType Noteproperty -Value 'Parental Control Scheduler'
-    $SchedulerLine | Add-Member -Name 'Date'        -MemberType Noteproperty -Value $Json.now
+    $SchedulerLine | Add-Member -Name 'Date'        -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $SchedulerLine | Add-Member -Name 'State'       -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name 'Rules count' -MemberType Noteproperty -Value $Json.rules.count
     
@@ -7284,7 +7355,7 @@ Function Get-SUMMARY {
     
     # Create New PSObject and add values to array
     $DeviceLine = New-Object -TypeName PSObject
-    $DeviceLine | Add-Member -Name 'Date'                              -MemberType Noteproperty -Value $Json.now
+    $DeviceLine | Add-Member -Name 'Date'                              -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $DeviceLine | Add-Member -Name 'User Authenticated State'          -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.authenticated)
     $DeviceLine | Add-Member -Name 'Luminosity State'                  -MemberType Noteproperty -Value (Get-State -State $Json.display.state)
     $DeviceLine | Add-Member -Name 'Luminosity Power (%)'              -MemberType Noteproperty -Value $Json.display.luminosity
@@ -7783,7 +7854,7 @@ Function Get-VOIPScheduler {
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
     $SchedulerLine | Add-Member -Name 'Service'        -MemberType Noteproperty -Value 'Voip Scheduler'
-    $SchedulerLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $Json.now
+    $SchedulerLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $SchedulerLine | Add-Member -Name 'State'          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name 'Unbloked ?'     -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.unblock)
     $SchedulerLine | Add-Member -Name 'Status'         -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
@@ -8003,27 +8074,25 @@ Function Get-WANAutowan {
     # Device part
 
     $DNS = $(Resolve-DnsName -Name $Json.ip.address -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).NameHost
-
+    
     # Create New PSObject and add values to array
     $DeviceLine = New-Object -TypeName PSObject
     $DeviceLine | Add-Member -Name 'Model'            -MemberType Noteproperty -Value $Json.device.model
     $DeviceLine | Add-Member -Name 'Firmware Version' -MemberType Noteproperty -Value $Json.device.firmware.main
-    $DeviceLine | Add-Member -Name 'Firmware Date'    -MemberType Noteproperty -Value $Json.device.firmware.date
+    $DeviceLine | Add-Member -Name 'Firmware Date'    -MemberType Noteproperty -Value $(Edit-Date -Date $Json.device.firmware.date)
     $DeviceLine | Add-Member -Name 'WAN IP Address'   -MemberType Noteproperty -Value $Json.ip.address
     $DeviceLine | Add-Member -Name 'WAN Bytel DNS'    -MemberType Noteproperty -Value $DNS # Not included in API
     
     # Add lines to $Array
     $Device += $DeviceLine
-    
-    
+        
     # Profile part
     # Create New PSObject and add values to array
-    $ProfileActive = $Json.Profile.active -split ','
+    $ProfileActive = $Json.Profile
     
     $ProfileLine = New-Object -TypeName PSObject
-    $ProfileLine | Add-Member -Name 'Profile Name'          -MemberType Noteproperty -Value $Json.Profile.device
-    $ProfileLine | Add-Member -Name 'Active Profile Chanel' -MemberType Noteproperty -Value $ProfileActive[0]
-    $ProfileLine | Add-Member -Name 'Active Profile Name'   -MemberType Noteproperty -Value $ProfileActive[1]
+    $ProfileLine | Add-Member -Name 'Profile Device' -MemberType Noteproperty -Value $ProfileActive.device
+    $ProfileLine | Add-Member -Name 'Profile Active' -MemberType Noteproperty -Value $ProfileActive.active
     
     # Add lines to $Array
     $ProfileWan += $ProfileLine
@@ -8278,7 +8347,7 @@ Function Get-WANDiagsAllActiveSessions {
     
     While ($Choice[0] -notmatch "Y|N") {
         
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display HostName' -LabelMessageText "Do you want to resolve IP Address ? It takes time, around 1 to 3 minutes :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Resolve IP Address to Hostname' -LabelMessageText "Do you want to resolve IP Address to Hostname ? It will takes a while, around 1 to 5 minutes (Depending of number of current Active Hosts Sessions) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
         
         Switch ($Temp) {
                 
@@ -8440,6 +8509,11 @@ Function Get-WANIP {
     $ipdnsservers | ForEach-Object {$dnsservers += $(Resolve-DnsName -Name $_).NameHost}
     $dnsservers =  $dnsservers -join ","
     
+    $dnsserversv6 = @()
+    $dnsserversv6 = $Json.ip.dnsserversv6 -split ","
+    $dnsserversv6 | ForEach-Object {$dnsserversv6 += $(Resolve-DnsName -Name $_).NameHost}
+    $dnsserversv6 =  $dnsserversv6 -join ","
+
     # Create New PSObject and add values to array
     $IPLine = New-Object -TypeName PSObject
     $IPLine | Add-Member -Name 'Internet State'                    -MemberType Noteproperty -Value (Get-State -State $Json.internet.state)
@@ -8460,6 +8534,7 @@ Function Get-WANIP {
     $IPLine | Add-Member -Name 'WAN MTU'                           -MemberType Noteproperty -Value $Json.ip.mtu
     $IPLine | Add-Member -Name 'WAN IPV6 State'                    -MemberType Noteproperty -Value (Get-State -State $Json.ip.ip6state)
     $IPLine | Add-Member -Name 'WAN DNS Servers IPV6'              -MemberType Noteproperty -Value $Json.ip.dnsserversv6
+    $IPLine | Add-Member -Name 'WAN DNS Servers IPV6 Hostname'     -MemberType Noteproperty -Value $dnsserversv6
     
     If ($Json.ip.ip6address) {
         $IPLine | Add-Member -Name 'WAN IPV6 Address'              -MemberType Noteproperty -Value $Json.ip.ip6address.ipaddress
@@ -8746,6 +8821,55 @@ Function Get-WIRELESS {
     Return $Array
 }
 
+Function Get-WIRELESSSTANDARD {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from BBOX API
+    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    $Json = $Json.wireless.standard
+    
+    $Line = 0
+    
+    While ($Line -lt $Json.'24'.Count) {
+        
+        # Create New PSObject and add values to array
+        $WIRELESSLine = New-Object -TypeName PSObject
+        $WIRELESSLine | Add-Member -Name 'Norme'   -MemberType Noteproperty -Value $Json.'24'[$Line].key
+        $WIRELESSLine | Add-Member -Name 'Comment' -MemberType Noteproperty -Value $Json.'24'[$Line].value
+        
+        # Add lines to $Array
+        $Array += $WIRELESSLine
+
+        $Line ++
+    }
+    
+    $Line = 0
+    
+    While ($Line -lt $Json.'5'.Count) {
+        
+        # Create New PSObject and add values to array
+        $WIRELESSLine = New-Object -TypeName PSObject
+        $WIRELESSLine | Add-Member -Name 'Norme'   -MemberType Noteproperty -Value $Json.'5'[$Line].key
+        $WIRELESSLine | Add-Member -Name 'Comment' -MemberType Noteproperty -Value $Json.'5'[$Line].value
+        
+        # Add lines to $Array
+        $Array += $WIRELESSLine
+
+        $Line ++
+    }
+    
+    Return $Array
+}
+
 Function Get-WIRELESS24Ghz {
     
     Param (
@@ -8936,6 +9060,7 @@ Function Get-WIRELESSACL {
     $RuleLine = New-Object -TypeName PSObject
     $RuleLine | Add-Member -Name 'Service'     -MemberType Noteproperty -Value 'Mac Address Filtering'
     $RuleLine | Add-Member -Name 'Status'      -MemberType Noteproperty -Value (Get-Status -Status $Json.enable)
+    $RuleLine | Add-Member -Name 'Rules Count' -MemberType Noteproperty -Value $Json.rules.count
     
     # Add lines to $Array
     $Array += $RuleLine
@@ -8999,7 +9124,7 @@ Function Get-WIRELESSACLRulesID {
     Return $WIRELESSACLHost
 }
 
-Function Get-WIRELESSFastScanMe {
+<#Function Get-WIRELESSFastScanMe {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -9014,7 +9139,7 @@ Function Get-WIRELESSFastScanMe {
 
     # Create New PSObject and add values to array
     $Line = New-Object -TypeName PSObject
-    $Line | Add-Member -Name 'link'       -MemberType Noteproperty -Value $Json.band
+    $Line | Add-Member -Name 'link'       -MemberType Noteproperty -Value $Json.link
     $Line | Add-Member -Name 'MACAddress' -MemberType Noteproperty -Value $Json.macaddress
     $Line | Add-Member -Name 'RSSI'       -MemberType Noteproperty -Value $Json.rssi
     $Line | Add-Member -Name 'Rate'       -MemberType Noteproperty -Value $Json.rate
@@ -9025,7 +9150,7 @@ Function Get-WIRELESSFastScanMe {
     $Array += $Line
         
     Return $Array
-}
+}#>
 
 Function Get-WIRELESSFrequencyNeighborhoodScanID {
     
@@ -9100,7 +9225,7 @@ Function Get-WIRELESSScheduler {
     
     # Create New PSObject and add values to array
     $SchedulerLine = New-Object -TypeName PSObject
-    $SchedulerLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $Json.now
+    $SchedulerLine | Add-Member -Name 'Date'           -MemberType Noteproperty -Value $(Edit-Date -Date $Json.now)
     $SchedulerLine | Add-Member -Name 'Service'        -MemberType Noteproperty -Value 'Wireless Scheduler'
     $SchedulerLine | Add-Member -Name 'State'          -MemberType Noteproperty -Value (Get-State -State $Json.enable)
     $SchedulerLine | Add-Member -Name 'Status'         -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
@@ -9173,10 +9298,20 @@ Function Get-WIRELESSRepeater {
     
     # Create New PSObject and add values to array
     $RepeaterLine = New-Object -TypeName PSObject
-    $RepeaterLine | Add-Member -Name 'Service'       -MemberType Noteproperty -Value 'WIRELESS Repeater'
-    $RepeaterLine | Add-Member -Name 'Station Count' -MemberType Noteproperty -Value $Json.stationscount
-    $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value $($Json.list -join ',')
-    $RepeaterLine | Add-Member -Name 'ZeroTouch'     -MemberType Noteproperty -Value $($Json.zerotouch.list -join ',') # Since version 20.6.8
+    $RepeaterLine | Add-Member -Name 'Service'           -MemberType Noteproperty -Value 'WIRELESS Repeater'
+    $RepeaterLine | Add-Member -Name 'Station Count'     -MemberType Noteproperty -Value $Json.stationscount
+    If ($Json.list) {
+        $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value $($Json.list -join ',')
+    }
+    Else{
+        $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value "O"
+    }
+    If ($Json.zerotouch.list) {
+        $RepeaterLine | Add-Member -Name 'ZeroTouch'     -MemberType Noteproperty -Value $($Json.zerotouch.list -join ',') # Since version 20.6.8
+    }
+    Else{
+        $RepeaterLine | Add-Member -Name 'ZeroTouch'     -MemberType Noteproperty -Value "0"
+    }
     
     # Add lines to $Array
     $Array += $RepeaterLine
