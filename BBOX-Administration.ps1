@@ -266,6 +266,23 @@
     Update       : Correct 'BBoxUrlFirewall' setting in function : 'Get-HostStatus' and 'Get-PortStatus'
     Update       : Debug function : 'Get-PortStatus'
     Update       : Debug function : Switch-OpenExportFolder
+
+    Version 2.7 - BBOX version 22.3.16
+    Updated Date : 2023/03/27
+    Update       : Update function : 'Get-WANIP' with resolve IPV6 dns servers
+    Update       : Create function : 'Get-WIRELESSSTANDARD' to get Wireless standard available configuration
+    Update       : Update function : 'Get-WIRELESSACL' add parameter 'Rules Count'
+    Update       : Update functions : 'Get-WANAutowan' and 'Get-WIRELESSRepeater'
+    Update       : Update functions : 'Get-HOSTS' and 'Get-HOSTSME' => correct IPV6 address format
+    Update       : Create function : 'Get-LastSeenDate => $(Get-Date).AddSeconds(-X) where X is the time in seconds
+    Update       : Create function : 'Edit-Date' to rewrite date format to human readable
+    Update       : Remove function : 'Get-Airties' due to depreciated
+    Update       : Update program to be compatible with : BBOX version 22.3.16
+    Update       : Update function : 'Export-BboxConfiguration' add output in csv in // of Json
+    Update       : Remove function : 'Get-WIRELESSFastScanMe' due to depreciated since BBOX version 22.3.16
+    Update       : Change/switch some command lines in block : 'Update Google Chrome version'
+    Update       : Update filter for function 'Export-BBoxConfiguration'
+    Update       : Update function : 'Write-Log' - Change Log disposition for better reading
     
 .LINKS
     
@@ -317,7 +334,7 @@ function Write-Log {
     $logpath = $Logname + $(get-date -UFormat %Y%m%d).toString() + '.csv'
     
     # Create log object 
-    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; Type=$type ; Name=$name ; Message=$Message  ; user= $(whoami) ; PID=$PID} 
+    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; user= $(whoami) ; Type=$type ; Name=$name ; Message=$Message} 
     $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
     
     # Append to global journal
@@ -354,9 +371,9 @@ function Write-Log {
 	    # Write Header if file don't exists yet
         
         If (-not (Test-Path $logpath)) {
-            Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "date;type;name;message;user;pid" 
+            Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "date;pid;user;type;name;message" 
         }
-        Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "$($Log.date);$($Log.type);$($Log.name);$($Log.Message);$($Log.user);$($Log.pid)" 
+        Out-File -FilePath $logpath -Encoding UTF8 -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.name);$($Log.Message)" 
     }
     Finally {
         $mtx.ReleaseMutex()
@@ -693,6 +710,7 @@ If ($Null -eq $global:TriggerExit) {
         
         Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver update version Status : ' -NotDisplay
         Update-ChromeDriver -ChromeDriverVersion $ChromeDriverVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
+        Stop-ChromeDriver -ErrorAction Stop
     }
     Else {
         Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
@@ -716,21 +734,23 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message 'Not Running' -NotDisplay
     }
     
-    While ($null -ne $ChromeProcess) {
-        $null = Show-WindowsFormDialogBox -Title "Program initialisation - Update Google Chrome" -Message "Google Chrome is running.`nPlease save your data, then close it." -WarnIcon
-        $ChromeProcess = Get-Process -Name chrome -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    If ($ChromeProcess) {
+        
+        While ($null -ne $ChromeProcess) {
+            $null = Show-WindowsFormDialogBox -Title "Program initialisation - Update Google Chrome" -Message "Google Chrome is running.`nPlease save your data, then close it." -WarnIcon
+            $ChromeProcess = Get-Process -Name chrome -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        }
+        Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+        Write-Log -Type INFONO -Name 'Program initialisation - Stop Google Chrome' -Message 'Google Chrome stop process status :' -NotDisplay
+        Try {
+            Stop-Process -Name chrome -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Stopped' -NotDisplay
+        }
+        Catch {
+            Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message "Failed, to stop running Google Chrome, due to $($_.ToString())" -NotDisplay
+        }
+        Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Stop stop Google Chrome' -NotDisplay
     }
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Stop Google Chrome' -Message 'Google Chrome stop process status :' -NotDisplay
-    Try {
-        Stop-Process -Name chrome -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-        Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Stopped' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type VALUE -Name 'Program initialisation - Stop Google Chrome' -Message 'Failed, to stop running Google Chrome, due to $($_.ToString())' -NotDisplay
-    }
-    Write-Log -Type INFO -Name 'Program initialisation - Stop Google Chrome' -Message 'Stop stop Google Chrome' -NotDisplay
     
     Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Google Chrome update version Status : ' -NotDisplay
     Try{
@@ -742,16 +762,23 @@ If ($Null -eq $global:TriggerExit) {
     }
     
     Write-Log -Type INFONO -Name 'Program initialisation - Restore Google Chrome' -Message 'Google Chrome restore last session Status : ' -NotDisplay
-    Try {
-        Start-Process -FilePath $ChromeBinaryPath -ArgumentList "-restore-last-session" -WindowStyle Minimized
-        Start-Sleep -Seconds 5
-        $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
-        Write-Log -Type VALUE -Name 'Program initialisation - Restore Google Chrome' -Message 'Success' -NotDisplay
+    
+    If ($ChromeProcess) {
+        
+        Try {
+            $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
+            Start-Sleep -Seconds 3
+            Start-Process -FilePath $ChromeBinaryPath -ArgumentList "-restore-last-session" -WindowStyle Minimized
+            Write-Log -Type VALUE -Name 'Program initialisation - Restore Google Chrome' -Message 'Success' -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Name 'Program initialisation - Restore Google Chrome' -Message "Failed, to restore last session for Google Chrome, due to : $($_.ToString())"
+        }
     }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program initialisation - Restore Google Chrome' -Message "Failed, to restore last session for Google Chrome, due to : $($_.ToString())"
+    Else {
+        Write-Log -Type INFO -Name 'Program initialisation - Restore Google Chrome' -Message 'Not necessary' -NotDisplay
     }
-
+    
     Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
 }
 
@@ -832,13 +859,13 @@ Write-Host '-- BBOX models'
 Write-Host '-- Firmware version'
 Write-Host '-- Available features'
 Write-Host '-- Connection mode (Local / Remote)'
-Write-Host 'This program requires the installation of PowerShell 5.1 minimum and Google Chrome'
+Write-Host 'This program requires the installation of PowerShell 7.0 minimum and Google Chrome'
 Write-Host 'For more information, please consult : ' -NoNewline
 Write-Host "$APIUrlDocumentation" -ForegroundColor Green
 Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
 Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
 Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
-Write-Host 'For any questions or additional requests, contact me to this email address : ' -NoNewline
+Write-Host 'For any questions or additionals requests, contact me to this email address : ' -NoNewline
 Write-Host "$Mail" -ForegroundColor Green
 Write-Host "Tested environnement list : "
 Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
@@ -1100,13 +1127,13 @@ While ($Null -eq $global:TriggerExit) {
         # Get data
         Switch ($APIName) {
             
-            'Full'                 {$APISName = ($Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Action -notmatch $APINameScopeExclusionsFull))}).APIName | Select-Object -Unique
-                                    $FormatedData = Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $JsonBboxconfigPath
+            'Full'                 {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Action -notmatch $APINameScopeExclusionsFull) -and ($_.Label -match "Get-") -and ($_.APIUrl -notmatch "`{id`}"))} | Select-Object Label,APIName,Exportfile
+                                    Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -JSONFolder $JsonBboxconfigPath -CSVFolder $ExportCSVPath -GitHubUrlSite $GitHubUrlSite -JournalPath $JournalPath -Mail $Mail
                                     Break
                                    }
             
             'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program))} | Select-Object *
-                                    $FormatedData = Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
+                                    Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
                                     Break
                                    }
             
