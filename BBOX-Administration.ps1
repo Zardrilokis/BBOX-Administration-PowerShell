@@ -283,6 +283,7 @@
     Update       : Change/switch some command lines in block : 'Update Google Chrome version'
     Update       : Update filter for function 'Export-BBoxConfiguration'
     Update       : Update function : 'Write-Log' - Change Log disposition for better reading
+    Update       : Update function : 'Get-HOSTSME' - Display message when no informations found
     
 .LINKS
     

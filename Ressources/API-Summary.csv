@@ -114,7 +114,7 @@ GET-WANDS;Get-WANDiagsSessions;Get WAN DIAGS Sessions Configuration Information;
 GET-WANDSHAS;Get-WANDiagsSummaryHostsActiveSessions;Get WAN DIAGS Active Summary Hosts Sessions Information;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions-host;
 GET-WANDSID;Get-WANDiagsSessionsID;Get WAN DIAGS Sessions Configuration Information by Page;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions/{ID};GET;private;Private;diag-read;No;No;Table;wan-diags-sessions-id-page;
 GET-WANDAAS;Get-WANDiagsAllActiveSessions;Get WAN DIAGS All Active Sessions Information;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions;
-GET-WANDAASH;Get-WANDiagsAllActiveSessionsHost;Get WAN DIAGS All Active Sessions Information by Host;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions-id;
+GET-WANDAASH;Get-WANDiagsAllActiveSessionsHost;Get WAN DIAGS All Active Sessions Information by Host;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions/{ID};GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions-id;
 GET-WANFS;Get-WANFStats;Get WAN FTTH STATS Information;wan/ftth/stats;https://192.168.1.254/api/v1/wan/ftth/stats;GET;public;Private;wan-read;No;Yes;List;wan-ftth-stats;
 GET-WANIP;Get-WANIP;Get WAN IP Configuration Information;wan/ip;https://192.168.1.254/api/v1/wan/ip;GET;public;Private;wan-read;No;Yes;List;wan-ip;
 GET-WANIPS;Get-WANIPStats;Get WAN IP Stats Information;wan/ip/stats;https://192.168.1.254/api/v1/wan/ip/stats;GET;public;Private;wan-read;No;Yes;List;wan-ip-stats;
