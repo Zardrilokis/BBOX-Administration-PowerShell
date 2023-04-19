@@ -284,6 +284,10 @@
     Update       : Update filter for function 'Export-BBoxConfiguration'
     Update       : Update function : 'Write-Log' - Change Log disposition for better reading
     Update       : Update function : 'Get-HOSTSME' - Display message when no informations found
+    Update       : Update 'Settings-Program.json' and add 'Sleep' part
+    Update       : Update function : 'Import-TUNCredentialManager' and 'Update-ChromeDriver' and 'Start-RefreshWIRELESSFrequencyNeighborhoodScan'
+    Update       : Add function : 'Get-ChromeDriverVersionBeforeUpdate' to help to check existing chrome driver version
+    Update       : Update defaut chrome driver to version : 112.0.5615.49
     
 .LINKS
     
@@ -405,6 +409,7 @@ $global:JSONSettingsProgramFilePath = "$RessourcesPath\$ProgramConfigurationFile
 # Main Trigger
 $global:TriggerExit = $Null
 $global:TriggerDialogBox = $Null
+$global:TriggerExportConfig = $Null
 $TriggerLANNetwork = $Null
 $TriggerAuthentification = $Null
 
@@ -697,6 +702,23 @@ If ($Null -eq $global:TriggerExit) {
 
 #endregion Google Chrome binary Path
 
+#region Check Chrome Driver Version installed
+
+If ($Null -eq $global:TriggerExit) {
+    
+    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start Chrome Driver version selection function Chrome Version installed on device' -NotDisplay   
+    Try {
+        $ChromeDriverVersion = Get-ChromeDriverVersionBeforeUpdate -ChromeVersion $ChromeVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
+        $global:TriggerExit = 1
+    }
+    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End Chrome Driver version selection function Chrome Version installed on device' -NotDisplay
+}
+
+#endregion Check Chrome Driver Version installed
+
 #region Update Chrome Driver version
 
 If ($Null -eq $global:TriggerExit) {
@@ -704,17 +726,17 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Start update ChromeDriver' -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver version Status : ' -NotDisplay
     
-    If ($ChromeVersion -notmatch $ChromeDriverVersion) {
+    If ($ChromeVersion -notmatch $ChromeDriverVersion[0]) {
         
         Write-Log -Type WARNING -Name 'Program initialisation - Update ChromeDriver' -Message 'Need to be updated' -NotDisplay
-        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
+        Start-ChromeDriver -ChromeBinaryPath $ChromeBinaryPath -ChromeDriverPath $ChromeDriverPath -ChromeDriverVersion $ChromeDriverVersion[1] -LogsPath $global:LogFolderPath -ChromeDriverDefaultProfile $ChromeDriverDefaultProfile -ErrorAction Stop
         
         Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver update version Status : ' -NotDisplay
-        Update-ChromeDriver -ChromeDriverVersion $ChromeDriverVersion -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
+        Update-ChromeDriver -ChromeDriverVersion $ChromeDriverVersion[1] -ChromeDriverPath $ChromeDriverPath -ErrorAction Stop
         Stop-ChromeDriver -ErrorAction Stop
     }
     Else {
-        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated' -NotDisplay
+        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'Updated / Up to date' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
 }
@@ -1129,16 +1151,19 @@ While ($Null -eq $global:TriggerExit) {
         Switch ($APIName) {
             
             'Full'                 {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Action -notmatch $APINameScopeExclusionsFull) -and ($_.Label -match "Get-") -and ($_.APIUrl -notmatch "`{id`}"))} | Select-Object Label,APIName,Exportfile
+                                    $global:TriggerExportConfig = $true
                                     Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -JSONFolder $JsonBboxconfigPath -CSVFolder $ExportCSVPath -GitHubUrlSite $GitHubUrlSite -JournalPath $JournalPath -Mail $Mail
                                     Break
                                    }
             
             'Full_Testing_Program' {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull_Testing_Program))} | Select-Object *
+                                    $global:TriggerExportConfig = $false
                                     Export-BBoxConfigTestingProgram -APISName $APISName -UrlRoot $UrlRoot -OutputFolder $ExportCSVPath -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
                                     Break
                                    }
             
             Default                {$UrlToGo = "$UrlRoot/$APIName"
+                                    $global:TriggerExportConfig = $false
                                     $FormatedData =  Switch-Info -Label $Label -UrlToGo $UrlToGo -APIName $APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite -ErrorAction Continue -WarningAction Continue
                                     Export-GlobalOutputData -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ExportFile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath
                                     Break
