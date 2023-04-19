@@ -82,5 +82,12 @@
   },
   "FormatedData": {
     "ExcludedValues": "Domain|Program"
-  }
+  },
+  "Sleep": {
+      "Default": "1",
+	  "UnzipChromeDriver": "5",
+	  "DownloadChromeDriver": "30",
+	  "TUNCredentialManagerModuleinstallation": "5",
+	  "RefreshWIRELESSFrequencyNeighborhoodScan": "20"
+    }
 }

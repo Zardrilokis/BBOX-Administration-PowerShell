@@ -103,7 +103,7 @@ Function Import-TUNCredentialManager {
         
         Try {
             Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope Allusers -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
-            Start-Sleep -Seconds 5
+            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.TUNCredentialManagerModuleinstallation
         }
         Catch {
             Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
@@ -798,7 +798,44 @@ Function Test-FilePath {
     Write-Log -Type INFO -Name 'Program initialisation - Program Files check' -Message "End file check : $FileName" -NotDisplay
 }
 
-# Used only to detect ChromeDriver version
+# Used only to detect ChromeDriver version before Update
+Function Get-ChromeDriverVersionBeforeUpdate {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeVersion,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverPath
+    )
+    
+    $ChromeMainVersion = $ChromeVersion.split(".")[0]
+    $ChromeDriverVersionList = Get-childItem -Path $ChromeDriverPath | Select-Object Name
+    
+    Try {
+        $ChromeDriverVersion = $($ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion})[-1].Name
+        $ChromeDriverFolder = $ChromeDriverVersion
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "No Chrome Driver version was found to match Google Chrome version : $ChromeVersion" -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Error detail : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message 'Using Chrome Driver default version' -NotDisplay
+        $ChromeDriverFolder = 'Default'
+    } 
+    
+    If ($ChromeDriverFolder -eq 'Default') {
+        
+        $ChromeDriverVersion = & "$ChromeDriverPath\Default\chromedriver.exe" --version
+        $ChromeDriverVersion = $($ChromeDriverVersion -split " ")[1]
+    }
+
+    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
+    Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverVersion -NotDisplay
+    
+    Return $ChromeDriverVersion,$ChromeDriverFolder
+}
+
+# Used only to detect ChromeDriver version after Update
 Function Get-ChromeDriverVersion {
     
     Param (
@@ -821,6 +858,7 @@ Function Get-ChromeDriverVersion {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message 'Using Chrome Driver default version' -NotDisplay
         $ChromeDriverVersion = 'Default'
     }
+    
     Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay    
     Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverVersion -NotDisplay
     
@@ -1687,17 +1725,17 @@ Function Update-ChromeDriver {
         # Navigate to the main Chrome Driver Page
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page : $ChromeDriverDownloadHomeUrl" -NotDisplay
         $global:ChromeDriver.Navigate().GoToURL("$ChromeDriverDownloadHomeUrl")
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
         
         # Get Content Page
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get HTML code page' -NotDisplay
         $Html = $global:ChromeDriver.PageSource
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
         
         # Convert-html to text
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Convert HTML code to txt' -NotDisplay
         $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-        Start-Sleep -Seconds 1
+        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
         
         # Get Chrome Driver Version list available
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get last Chrome driver version available with Google Chrome installed version' -NotDisplay
@@ -1707,32 +1745,32 @@ Function Update-ChromeDriver {
         $DestinationPath = "$ChromeDriverPath\$Version"
         
         If ((Test-Path -Path $DestinationPath) -eq $false) {
-
+            
             # Navigate to Chrome Driver Version choosen
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page for version : $url" -NotDisplay
             $global:ChromeDriver.Navigate().GoToURL($url)
-            Start-Sleep -Seconds 2
+            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
             
             # Start setup file downloading
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
             $global:ChromeDriver.FindElementByLinkText($FileName).click()
-            Start-Sleep -Seconds 30
-
+            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.DownloadChromeDriver
+            
             # Create new directory to use chrome Driver update
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
             $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
-            Start-Sleep -Seconds 1
+            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
             
             # Unzip new Chrome driver version to destination
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
             Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
-            Start-Sleep -Seconds 5
-
+            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.UnzipChromeDriver
+            
             # Copy DLL System
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
             Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $DestinationPath -Force
             Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $DestinationPath -Force
-
+            
             # Remove the downloaded source
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
             Remove-Item -Path $SourceFile -Force -ErrorAction Stop
@@ -1780,7 +1818,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     }
     
     $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("api/v1/$APIName",'diagnostic.html')))
-    Start-Sleep -Seconds 1
+    Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
     
     Switch ($APIName) {
         
@@ -1789,14 +1827,20 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName('scan5') | Where-Object -Property text -eq 'Scanner').click();Break}
     }
     
-    Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Be careful, the scan can temporary suspend your Wi-Fi network'
-    Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? : ' -NotDisplay
+    If ($global:TriggerExportConfig -eq $false) {
     
-    While ($ActionState -notmatch "Y|N") {
-            
-        #$ActionState = Read-Host "Do you want to continue ? (Y) Yes / (N) No"
-        $ActionState = Show-WindowsFormDialogBox -Title 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? (Y) Yes / (N) No' -YesNo
-        Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message "Action chosen by user : $ActionState" -NotDisplay
+        Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Be careful, the scan can temporary suspend your Wi-Fi network'
+        Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? : ' -NotDisplay
+        
+        While ($ActionState -notmatch "Y|N") {
+                
+            #$ActionState = Read-Host "Do you want to continue ? (Y) Yes / (N) No"
+            $ActionState = Show-WindowsFormDialogBox -Title 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? (Y) Yes / (N) No' -YesNo
+            Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message "Action chosen by user : $ActionState" -NotDisplay
+        }
+    }
+    Else {
+        $ActionState = N
     }
 
     If ($ActionState[0] -eq 'Y') {
@@ -1811,7 +1855,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         }
         
         Write-Log -Type INFONO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Refresh WIRELESS Frequency Neighborhood scan : ' -NotDisplay
-        Start-Sleep -Seconds 20
+        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.RefreshWIRELESSFrequencyNeighborhoodScan
         Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Ended' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
@@ -1914,7 +1958,7 @@ Function Reset-CurrentUserProgrammConfiguration {
     Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
         Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Success' -NotDisplay
     }
     Catch {
@@ -3458,7 +3502,11 @@ Function Get-BackupList {
         - Last Cloud Restoration : $Datelastrestore
         "
         
-        Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
+        If ($global:TriggerExportConfig -eq $false) {
+            
+            Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
+        }
+        
         Return "Program"
     }
 }
@@ -8351,15 +8399,21 @@ Function Get-WANDiagsAllActiveSessions {
     $Currentpage = 1
     $Choice = ''
     
-    While ($Choice[0] -notmatch "Y|N") {
+    If ($global:TriggerExportConfig -eq $false) {
         
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Resolve IP Address to Hostname' -LabelMessageText "Do you want to resolve IP Address to Hostname ? It will takes a while, around 1 to 5 minutes (Depending of number of current Active Hosts Sessions) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
-        
-        Switch ($Temp) {
-                
-            Y    {$Choice = 'Y';Break}
-            N    {$Choice = 'N';Break}
+        While ($Choice[0] -notmatch "Y|N") {
+            
+            $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Resolve IP Address to Hostname' -LabelMessageText "Do you want to resolve IP Address to Hostname ? It will takes a while, around 1 to 5 minutes (Depending of number of current Active Hosts Sessions) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+            
+            Switch ($Temp) {
+                    
+                Y    {$Choice = 'Y';Break}
+                N    {$Choice = 'N';Break}
+            }
         }
+    }
+    Else {
+        $Choice = 'N'
     }
     
     If ($Choice -match 'Y') {
