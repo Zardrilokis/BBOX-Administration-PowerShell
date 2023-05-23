@@ -89,5 +89,10 @@
 	  "DownloadChromeDriver": "30",
 	  "TUNCredentialManagerModuleinstallation": "5",
 	  "RefreshWIRELESSFrequencyNeighborhoodScan": "20"
-    }
+    },
+  "Notification": {
+	"Event": {
+		"Type": "ALARM|NOTIFY"
+	}
+  }
 }

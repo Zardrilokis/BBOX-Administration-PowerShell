@@ -269,25 +269,37 @@
 
     Version 2.7 - BBOX version 22.3.16
     Updated Date : 2023/03/27
-    Update       : Update function : 'Get-WANIP' with resolve IPV6 dns servers
-    Update       : Create function : 'Get-WIRELESSSTANDARD' to get Wireless standard available configuration
-    Update       : Update function : 'Get-WIRELESSACL' add parameter 'Rules Count'
+    Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
+    Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
+    Update       : Update function : 'Get-WIRELESSACL' - Add parameter 'Rules Count'
     Update       : Update functions : 'Get-WANAutowan' and 'Get-WIRELESSRepeater'
     Update       : Update functions : 'Get-HOSTS' and 'Get-HOSTSME' => correct IPV6 address format
-    Update       : Create function : 'Get-LastSeenDate => $(Get-Date).AddSeconds(-X) where X is the time in seconds
-    Update       : Create function : 'Edit-Date' to rewrite date format to human readable
-    Update       : Remove function : 'Get-Airties' due to depreciated
+    Update       : Create function : 'Get-LastSeenDate' - Modify $(Get-Date).AddSeconds(-X) where X is the time in seconds
+    Update       : Create function : 'Edit-Date' - Add to rewrite date format to human readable
+    Update       : Remove function : 'Get-Airties' -  Depreciated
     Update       : Update program to be compatible with : BBOX version 22.3.16
-    Update       : Update function : 'Export-BboxConfiguration' add output in csv in // of Json
-    Update       : Remove function : 'Get-WIRELESSFastScanMe' due to depreciated since BBOX version 22.3.16
+    Update       : Update function : 'Export-BboxConfiguration' - Add output in csv in // of Json
+    Update       : Remove function : 'Get-WIRELESSFastScanMe' - Depreciated since BBOX version 22.3.16
     Update       : Change/switch some command lines in block : 'Update Google Chrome version'
-    Update       : Update filter for function 'Export-BBoxConfiguration'
+    Update       : Update function : 'Export-BBoxConfiguration' - Update Filter
     Update       : Update function : 'Write-Log' - Change Log disposition for better reading
     Update       : Update function : 'Get-HOSTSME' - Display message when no informations found
-    Update       : Update 'Settings-Program.json' and add 'Sleep' part
+    Update       : Update 'Settings-Program.json' - Add 'Sleep' part
     Update       : Update function : 'Import-TUNCredentialManager' and 'Update-ChromeDriver' and 'Start-RefreshWIRELESSFrequencyNeighborhoodScan'
     Update       : Add function : 'Get-ChromeDriverVersionBeforeUpdate' to help to check existing chrome driver version
     Update       : Update defaut chrome driver to version : 112.0.5615.49
+    Update       : Update functions : 'Get-DeviceLog' and 'Get-DeviceFullLog' and 'Get-DeviceFullTechnicalLog' - Add new entries not yet managed (LAN_BAD_SUBNET,LAN_DUPLICATE_IP)
+    Update       : Update function : 'Get-NOTIFICATIONConfigEvents' - Add new headers : Index,Type,Scope,ShortName
+    Update       : Update function : 'Get-NOTIFICATIONConfig' - Change Headers
+    Update       : Rename functions : 'Get-NOTIFICATIONConfigAlerts' to 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONConfigContacts' to 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONConfigEvents' to 'Get-NOTIFICATIONEvents'
+    Update       : Remove functions : 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONEvents' - Due to duplicates functions
+    Update       : Update function : 'Switch-Info' - Change Function name : 'Get-NOTIFICATIONConfigAlerts' to 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONConfigContacts' to 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONConfigEvents' to 'Get-NOTIFICATIONEvents'
+    Update       : Update File : '.\API-Summary.csv'
+    Update       : Update function : 'Get-NOTIFICATIONAlerts' - Add Header 'Mail' to see at which email addresses was sent the alerts
+    Update       : Update function : 'Get-USERSAVE' - Change date format
+    Update       : Add new function : 'Get-DeviceConnectionHistoryLog' and  'Get-DeviceConnectionHistoryLogID' - Get Log connexion history for devices
+    Update       : Update File : '.\API-Summary.csv'
+    Update       : Update defaut chrome driver to version : 113.0.5672.24
     
 .LINKS
     
@@ -518,6 +530,9 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $Mail = $global:JSONSettingsProgramContent.various.mail
         $GitHubUrlSite = $global:JSONSettingsProgramContent.various.GitHubUrlSite
         
+        # Notification Events
+        $global:NotificationEventType = $global:JSONSettingsProgramContent.Notification.Event.Type
+        
         Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Success' -NotDisplay
     }
     Catch {
@@ -667,6 +682,7 @@ If ($Null -eq $global:TriggerExit) {
         Show-WindowsFormDialogBox -Title 'Program initialisation - Google Chrome Installation' -Message 'Please install Google Chrome before to use this Program' -WarnIcon
         Invoke-Item -Path $ChromeDownloadUrl  -ErrorAction Stop
         Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Installation' -Message 'End Google Chrome Installation' -NotDisplay
+        $ChromeVersion = "Undefine"
         $global:TriggerExit = 1
     }
 }
@@ -697,7 +713,7 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Binaries' -Message "Failed, to find google chrome Binaries, due to $($_.Tostring())"
         $global:TriggerExit = 1
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Binaries' -Message 'End Google Chrome Installation' -NotDisplay    
+    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Binaries' -Message 'End Google Chrome Binaries' -NotDisplay    
 }
 
 #endregion Google Chrome binary Path
@@ -712,6 +728,7 @@ If ($Null -eq $global:TriggerExit) {
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
+        $ChromeDriverVersion = "Undefine"
         $global:TriggerExit = 1
     }
     Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End Chrome Driver version selection function Chrome Version installed on device' -NotDisplay
@@ -789,8 +806,6 @@ If ($Null -eq $global:TriggerExit) {
     If ($ChromeProcess) {
         
         Try {
-            $Global:ActiveChromeBefore = @(Get-Process [c]hrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id})
-            Start-Sleep -Seconds 3
             Start-Process -FilePath $ChromeBinaryPath -ArgumentList "-restore-last-session" -WindowStyle Minimized
             Write-Log -Type VALUE -Name 'Program initialisation - Restore Google Chrome' -Message 'Success' -NotDisplay
         }
@@ -824,6 +839,7 @@ If ($Null -eq $global:TriggerExit) {
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome installed version' -Message 'Failed, not found' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Google Chrome installed version' -Message 'End Google Chrome installed version' -NotDisplay
+        $ChromeVersion = $Null
         $global:TriggerExit = 1
     }
 }
@@ -840,6 +856,7 @@ If ($Null -eq $global:TriggerExit) {
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct ChromeDriverVersion, due to : $($_.ToString())"
+        $ChromeDriverVersion = $Null
         $global:TriggerExit = 1
     }
     Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End Chrome Driver version selection function Chrome Version installed on device' -NotDisplay
@@ -895,7 +912,7 @@ Write-Host "- $TestedEnvironnementPath" -ForegroundColor Green
 Write-Host 'Logs files location : '
 Write-Host "- $global:LogFolderPath\$global:LogFileName*.csv" -ForegroundColor Green
 Write-Host "- $TranscriptFilePath" -ForegroundColor Green
-Write-Host 'Please make sure logs files are closed before continue' -ForegroundColor Yellow
+#Write-Host 'Please make sure logs files are closed before continue' -ForegroundColor Yellow
 
 <#
 Write-Host 'Last success tested environnement :'
