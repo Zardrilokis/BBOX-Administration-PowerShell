@@ -813,8 +813,14 @@ Function Get-ChromeDriverVersionBeforeUpdate {
     $ChromeDriverVersionList = Get-childItem -Path $ChromeDriverPath | Select-Object Name
     
     Try {
-        $ChromeDriverVersion = $($ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion})[-1].Name
-        $ChromeDriverFolder = $ChromeDriverVersion
+        $ChromeDriverVersion = $ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion}
+        If ($ChromeDriverVersion) {
+            $ChromeDriverVersion = $ChromeDriverVersion[-1].Name
+            $ChromeDriverFolder = $ChromeDriverVersion
+        }
+        Else {
+            $ChromeDriverFolder = 'Default'
+        }
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "No Chrome Driver version was found to match Google Chrome version : $ChromeVersion" -NotDisplay
@@ -828,7 +834,7 @@ Function Get-ChromeDriverVersionBeforeUpdate {
         $ChromeDriverVersion = & "$ChromeDriverPath\Default\chromedriver.exe" --version
         $ChromeDriverVersion = $($ChromeDriverVersion -split " ")[1]
     }
-
+    
     Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
     Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverVersion -NotDisplay
     
@@ -850,7 +856,13 @@ Function Get-ChromeDriverVersion {
     $ChromeDriverVersionList = Get-childItem -Path $ChromeDriverPath | Select-Object Name
     
     Try {
-        $ChromeDriverVersion = $($ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion})[-1].Name
+        $ChromeDriverVersion = $ChromeDriverVersionList | Where-Object {$_.Name -match $ChromeMainVersion}
+        If ($ChromeDriverVersion) {
+            $ChromeDriverVersion = $ChromeDriverVersion[-1].Name
+        }
+        Else {
+            $ChromeDriverVersion = 'Default'
+        }
     }
     Catch {
         Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "No Chrome Driver version was found to match Google Chrome version : $ChromeVersion" -NotDisplay
@@ -1087,7 +1099,7 @@ Function Connect-BBOX {
     }
 }
 
-# Used only to get information from API page content, linked to many functions
+# Used only to get information from API page content, linked to many functions, linked to : "ConvertFrom-HtmlToText"
 Function Get-BBoxInformation {
     
     Param (
@@ -1149,7 +1161,7 @@ Function Get-BBoxInformation {
     If ($Json.exception.domain -and ($Json.exception.domain -ne "v1/device/log")) {
         
         Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "Start get API error code" -NotDisplay
-        Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API error code : "
+        Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API Error Code : "
         Try {
             $ErrorCode = Get-ErrorCode -Json $Json
             Write-Log -Type WARNING -Name "Program run - Get API Error Code" -Message $ErrorCode.ErrorReason
@@ -1162,7 +1174,7 @@ Function Get-BBoxInformation {
             Return $null
         }
 
-        Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API error code" -NotDisplay
+        Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API Error Code" -NotDisplay
     }
     Else {
         Return $Json
@@ -1293,6 +1305,10 @@ Function Switch-Info {
             
             GET-DEVICEFTLOG      {$FormatedData = Get-DeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
             
+            GET-DEVICECHLOG      {$FormatedData = Get-DeviceConnectionHistoryLog -UrlToGo $UrlToGo;Break}
+            
+            GET-DEVICECHLOGID    {$FormatedData = Get-DeviceConnectionHistoryLogID -UrlToGo $UrlToGo;Break}
+            
             GET-DEVICEC          {$FormatedData = Get-DeviceCpu -UrlToGo $UrlToGo;Break}
             
             GET-DEVICEM          {$FormatedData = Get-DeviceMemory -UrlToGo $UrlToGo;Break}
@@ -1393,17 +1409,19 @@ Function Switch-Info {
             # SERVICES
             GET-SERVICES         {$FormatedData = Get-SERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
             
+            # IP TV
             GET-IPTV             {$FormatedData = Get-IPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             GET-IPTVD            {$FormatedData = Get-IPTVDiags -UrlToGo $UrlToGo;Break}
             
+            # NOTIFICATION
             GET-NOTIFICATION     {$FormatedData = Get-NOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            GET-NOTIFICATIONCA   {$FormatedData = Get-NOTIFICATIONConfigAlerts -UrlToGo $UrlToGo;Break}
+            GET-NOTIFICATIONCA   {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONCC   {$FormatedData = Get-NOTIFICATIONConfigContacts -UrlToGo $UrlToGo;Break}
+            GET-NOTIFICATIONCC   {$FormatedData = Get-NOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
             
-            GET-NOTIFICATIONCE   {$FormatedData = Get-NOTIFICATIONConfigEvents -UrlToGo $UrlToGo;Break}
+            GET-NOTIFICATIONCE   {$FormatedData = Get-NOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
             
             GET-NOTIFICATIONA    {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
             
@@ -1586,15 +1604,6 @@ Function Stop-Program {
         Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'Start Stop Chrome Driver' -NotDisplay
         Stop-ChromeDriver
         Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'End Stop Chrome Driver' -NotDisplay
-
-        Write-Log -Type INFO -Name 'Stop Google Chrome' -Message 'Start Stop Google Chrome' -NotDisplay
-        $Global:ActiveChromeAfter = Get-Process Chrome -ErrorAction SilentlyContinue | ForEach-Object {$_.Id} | Where-Object {$Global:ActiveChromeBefore -notcontains $_} -ErrorAction SilentlyContinue
-        
-        If ($null -ne $Global:ActiveChromeAfter) {
-            
-            Stop-Process -Id $Global:ActiveChromeAfter -Force -ErrorAction SilentlyContinue
-        }
-        Write-Log -Type INFO -Name 'Stop Google Chrome ' -Message 'End Stop Google Chrome' -NotDisplay
     }
     
     Start-Sleep 2
@@ -1828,7 +1837,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     }
     
     If ($global:TriggerExportConfig -eq $false) {
-    
+        
         Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Be careful, the scan can temporary suspend your Wi-Fi network'
         Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? : ' -NotDisplay
         
@@ -1840,7 +1849,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         }
     }
     Else {
-        $ActionState = N
+        $ActionState = 'N'
     }
 
     If ($ActionState[0] -eq 'Y') {
@@ -2807,7 +2816,7 @@ function Export-GlobalOutputData {
     )
     
     # Format data before choose output format
-    If (($FormatedData -notmatch "Program") -and ($FormatedData -notmatch "Domain") -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')) {
+    If (($FormatedData -notmatch "Domain") -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')) {
         
         # Choose Export format => CSV or JSON
         If ($global:TriggerExportFormat -eq 0) {
@@ -2859,7 +2868,7 @@ Function Get-State {
     
         ''         {$Value = 'BYTEL Dev Error';Break}
         ' '        {$Value = 'BYTEL Dev Error';Break}
-        .          {$Value = 'Not available with your device / BYTEL Dev Error';Break}
+        .          {$Value = 'Not available with your device';Break}
         -1         {$Value = 'Error';Break}
         0          {$Value = 'Disable';Break}
         1          {$Value = 'Enable';Break}
@@ -2903,8 +2912,8 @@ Function Get-Status {
     
     Switch ($Status) {
     
-        ''           {$Value = 'Cant be define because service is disabled / BYTEL Dev Error';Break}
-        .            {$Value = 'Not available with your device / BYTEL Dev Error';Break}
+        ''           {$Value = 'Cant be define because service is disabled';Break}
+        .            {$Value = 'Not available with your device';Break}
         -1           {$Value = 'Error';Break}
         0            {$Value = 'Disable';Break}
         1            {$Value = 'Enable';Break}
@@ -2991,7 +3000,6 @@ Function Edit-Date {
         Return $Null
     }
 }
-
 
 # Used only to get USB folder type, linked to : "Get-USBStorage"
 Function Get-USBFolderType {
@@ -3507,7 +3515,7 @@ Function Get-BackupList {
             Show-WindowsFormDialogBox -Title 'Program run - Get BBOX Configuration Save' -Message $Message -WarnIcon
         }
         
-        Return "Program"
+        Return $Null
     }
 }
 
@@ -3541,9 +3549,10 @@ Function Get-USERSAVE {
     $UsersaveLine | Add-Member -Name 'Status'                  -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $UsersaveLine | Add-Member -Name 'Boots Number'            -MemberType Noteproperty -Value $Json.numberofboots # Since Version : 19.2.12
     If ($Json.datelastrestore) {$UsersaveLine | Add-Member     -Name 'Last Restore date' -MemberType Noteproperty -Value $(Edit-Date -Date $Json.datelastrestore)}
-    Else {$UsersaveLine | Add-Member -Name 'Last Restore date' -MemberType Noteproperty -Value $Json.datelastrestore}
+    Else {$UsersaveLine | Add-Member -Name 'Last Restore date' -MemberType Noteproperty -Value 'Never'}
     $UsersaveLine | Add-Member -Name 'Last Date Save'          -MemberType Noteproperty -Value $(Edit-Date -Date $Json.datelastsave)
-    $UsersaveLine | Add-Member -Name 'Restore From Factory'    -MemberType Noteproperty -Value $Json.restorefromfactory
+    If ($Json.restorefromfactory) {$UsersaveLine | Add-Member  -Name 'Restore From Factory' -MemberType Noteproperty -Value $Json.restorefromfactory}
+    Else {$UsersaveLine | Add-Member -Name 'Restore From Factory' -MemberType Noteproperty -Value 'Never'}
     $UsersaveLine | Add-Member -Name 'Delay'                   -MemberType Noteproperty -Value $Json.delay
     $UsersaveLine | Add-Member -Name 'Allow Cloud Sync ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.authorized) # Since Version : 19.2.12
     $UsersaveLine | Add-Member -Name 'Never Synced ?'          -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.neversynced) # Since Version : 19.2.12
@@ -3887,7 +3896,17 @@ Function Get-DeviceLog {
                                         Break
                                        }
             
-            LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"
+            LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflict : $($Params[1])"
+                                        $LogType = 'Réseau'
+                                        Break
+                                       }
+            
+            LAN_BAD_SUBNET             {$Details = "L'équipement : $($Params[2]) ayant pour adresse Mac : $($Params[0]) et pour adresse IP : $($Params[1]), n'est pas sur le bon sous-réseau"
+                                        $LogType = 'Réseau'
+                                        Break
+                                       }
+            
+            LAN_DUPLICATE_IP           {$Details = "Les 2 équipements ayant respectivements les MAC Address : $($Params[0]) - $($Params[1]) et pour Hostname : $($Params[3]) - $($Params[4]), sont en confmlit car il ont la même IP Address : $($Params[2]),"
                                         $LogType = 'Réseau'
                                         Break
                                        }
@@ -4032,12 +4051,12 @@ Function Get-DeviceLog {
                                         Break
                                        }
             
-            WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse MAC : $($Params[0])"
+            WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse IP : $($Json[$Line].param)"
                                         $LogType = 'Internet'
                                         Break
                                        }
             
-            WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse MAC : $($Params[0])"
+            WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse IP : $($Json[$Line].param)"
                                         $LogType = 'Internet'
                                         Break
                                        }
@@ -4371,7 +4390,17 @@ Function Get-DeviceFullLog {
                                             Break
                                            }
                 
-                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])"
+                LAN_BAD_SUBNET             {$Details = "L'équipement : $($Params[2]) ayant pour adresse Mac : $($Params[0]) et pour adresse IP : $($Params[1]), n'est pas sur le bon sous-réseau"
+                                            $LogType = 'Réseau'
+                                            Break
+                                           }
+                
+                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflict : $($Params[1])"
+                                            $LogType = 'Réseau'
+                                            Break
+                                           }
+                
+                LAN_DUPLICATE_IP           {$Details = "Les 2 équipements ayant respectivements les MAC Address : $($Params[0]) - $($Params[1]) et pour Hostname : $($Params[3]) - $($Params[4]), sont en confmlit car il ont la même IP Address : $($Params[2]),"
                                             $LogType = 'Réseau'
                                             Break
                                            }
@@ -4516,12 +4545,12 @@ Function Get-DeviceFullLog {
                                             Break
                                            }
                 
-                WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse MAC : $($Params[0])"
+                WAN_ROUTE_ADDED            {$Details = "Ajout nouvelle règle de routage sur l'adresse IP : $($Json[$Line].param)"
                                             $LogType = 'Internet'
                                             Break
                                            }
                 
-                WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse MAC : $($Params[0])"
+                WAN_ROUTE_REMOVED          {$Details = "Suppression règle de routage sur l'adresse IP : $($Json[$Line].param)"
                                             $LogType = 'Internet'
                                             Break
                                            }
@@ -4742,11 +4771,15 @@ Function Get-DeviceFullTechnicalLog {
                 
                 LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostname : $($Params[2]), IP Address destination : $($Params[1])";Break}
                 
+                LAN_DUPLICATE_IP           {$Details = "MAC Address Conflict : $($Params[0]) - $($Params[1]), IP Address in conflict : $($Params[2]), Hostname Conflict : $($Params[3]) - $($Params[4])";Break}
+                
+                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflict : $($Params[1])";Break}
+                
                 LAN_PORT_UP                {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
                 
-                LAN_PORT_DOWN              {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
+                LAN_BAD_SUBNET             {$Details = "MAC Address :$($Params[0]) ,IP Address : $($Params[1]), Hostname : $($Params[2]),";Break}
                 
-                LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Hostname : $($Params[2]), IP Address in conflit : $($Params[1])";Break}
+                LAN_PORT_DOWN              {$Details = "Bbox Switch Port : $($Json[$Line].param)";Break}
                 
                 LOGIN_LOCAL                {$Details = "Hostname : $($Params[1]), IP Address : $($Params[0])";Break}
                 
@@ -4782,9 +4815,9 @@ Function Get-DeviceFullTechnicalLog {
                 
                 VOIP_UNREGISTERED          {$Details = "Phone Line : $(Get-Phoneline -Phoneline $Json[$Line].param)";Break}
                 
-                WAN_ROUTE_ADDED            {$Details = "MAC Address : $($Params[0])";Break}
+                WAN_ROUTE_ADDED            {$Details = "IP Address : $($Json[$Line].param)";Break}
                 
-                WAN_ROUTE_REMOVED          {$Details = "MAC Address : $($Params[0])";Break}
+                WAN_ROUTE_REMOVED          {$Details = "IP Address : $($Json[$Line].param)";Break}
                 
                 WAN_UPNP_ADD               {$Details = "IP Address : $($Params[0]), Local Port : $($Params[1]), External Port : $($Params[2])";Break}
                 
@@ -4821,6 +4854,126 @@ Function Get-DeviceFullTechnicalLog {
     }
     
     Return $Array
+}
+
+Function Get-DeviceConnectionHistoryLog {
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from BBOX API
+    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    $Pageid = 1
+    $Index = 0
+    
+    While ($Json.exception.code -ne '404') {
+        
+        # Select $JSON header
+        $Json = $Json.log
+        
+        $Line = 1
+        
+        While ($Line -lt $Json.count) {
+            
+            $Date = $(Edit-Date -Date $Json[$Line].date)
+            
+            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
+                
+                $Params = ($Json[$Line].param).split(';')
+            }
+            
+            If ($Json[$Line].log -match "DEVICE_NEW|DEVICE_UP|DEVICE_DOWN") {
+                
+                # Create New PSObject and add values to array
+                $LogLine = New-Object -TypeName PSObject
+                $LogLine | Add-Member -Name 'ID'          -MemberType Noteproperty -Value $Index
+                $LogLine | Add-Member -Name 'Date'        -MemberType Noteproperty -Value $Date
+                $LogLine | Add-Member -Name 'LogCategory' -MemberType Noteproperty -Value $Json[$Line].log
+                $LogLine | Add-Member -Name 'MACAddress'  -MemberType Noteproperty -Value $Params[0]
+                $LogLine | Add-Member -Name 'IPAddress'   -MemberType Noteproperty -Value $Params[1]
+                $LogLine | Add-Member -Name 'Hostname'    -MemberType Noteproperty -Value $Params[2]
+                
+                # Add lines to $Array
+                $Array += $LogLine
+            }
+            
+            # Go to next line
+            $Line ++
+            $Index ++
+        }
+        
+        # Get the next page
+        $Pageid ++
+        
+        # Get information from BBOX API
+        $Json = Get-BBoxInformation -UrlToGo "$UrlToGo/$Pageid"
+    }
+    
+    $Devices = $Array.MACAddress | Select-Object -Unique
+    $Output = @()
+    $Index = 0
+    
+    Foreach ($Device in $Devices) {
+        
+        $DeviceEntries = $Array | Where-Object {$_.MACAddress -match $Device}
+        
+        Foreach ($Entry in $DeviceEntries) {
+            
+            Switch ($Entry.LogCategory) {
+                
+                DEVICE_NEW  {$ConnexionDateStart = $Entry.Date
+                             $ConnexionDateEnd   = ''
+                            }
+                
+                DEVICE_UP   {$ConnexionDateStart = $Entry.Date
+                             $ConnexionDateEnd   = ''
+                            }
+                
+                DEVICE_DOWN {$Output[$PreviousIndex].'Connexion Date End' = $Entry.Date}
+                
+                Default     {$ConnexionDateStart = "Unknown"
+                             $ConnexionDateEnd   = "Unknown"
+                            }
+            }
+            
+            If ($Entry.LogCategory -match "DEVICE_NEW|DEVICE_UP") {
+                
+                $LogLine = New-Object -TypeName PSObject
+                $LogLine | Add-Member -Name 'ID'                   -MemberType Noteproperty -Value $Index
+                $LogLine | Add-Member -Name 'Connexion Date Start' -MemberType Noteproperty -Value $ConnexionDateStart
+                $LogLine | Add-Member -Name 'Connexion Date End'   -MemberType Noteproperty -Value $ConnexionDateEnd
+                $LogLine | Add-Member -Name 'MAC Address'          -MemberType Noteproperty -Value $Entry.MACAddress
+                $LogLine | Add-Member -Name 'IP Address'           -MemberType Noteproperty -Value $Entry.IPAddress
+                $LogLine | Add-Member -Name 'Hostname'             -MemberType Noteproperty -Value $Entry.Hostname
+                $Output += $LogLine
+                
+                $PreviousIndex = $Index
+                $Index ++
+            }
+        }
+    }
+    
+    Return $Output
+}
+
+Function Get-DeviceConnectionHistoryLogID {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    $DeviceConnectionHistoryLogIDs  = Get-DeviceConnectionHistoryLog -UrlToGo $UrlToGo
+    $DeviceConnectionHistoryLogID   = $DeviceConnectionHistoryLogIDs | Select-Object -Property 'Mac Address',Hostname -Unique | Out-GridView -Title "Devices List" -OutputMode Single
+    $DeviceConnectionHistoryLogHost = $DeviceConnectionHistoryLogIDs | Where-Object {$_.'Mac Address' -like $DeviceConnectionHistoryLogID.'Mac Address'}
+    
+    Return $DeviceConnectionHistoryLogHost
 }
 
 Function Get-DeviceCpu {
@@ -5033,6 +5186,7 @@ Function Get-DHCP {
     
     # Create New PSObject and add values to array
     $DHCP = New-Object -TypeName PSObject
+    $DHCP | Add-Member -Name 'Service'                -MemberType Noteproperty -Value "DHCP"
     $DHCP | Add-Member -Name 'State'                  -MemberType Noteproperty -Value (Get-State -State $Json.state)
     $DHCP | Add-Member -Name 'Status'                 -MemberType Noteproperty -Value (Get-Status -Status $Json.enable)
     $DHCP | Add-Member -Name 'First Range IP Address' -MemberType Noteproperty -Value $Json.minaddress
@@ -6107,7 +6261,7 @@ Function Get-HOSTSME {
         $Array += $DeviceLine
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program run - Get Hosts Me' -Message 'No information found, due to not connected directly to your local BBOX Ethernet or Wifi Network'
+        Write-Log -Type WARNING -Name 'Program run - Get Hosts Me' -Message 'No information found, due to you are connected remotly. Please connect to your local BBOX Ethernet or Wifi Network to have information'
     }
     
     Return $Array
@@ -6502,13 +6656,13 @@ Function Get-LANAlerts {
                 
                 ALERT_DISPLAY_STATE              {$Details = $Json[$Line].param;Break}
                 
-                ALERT_LAN_API_LOCKED             {$Details = "IP Address Source : $($Params[0]), Hostname : $($Params[3]), Failed Attempt Time : $($Params[1]), Block Time : $($Params[2]) min";Break}
+                ALERT_LAN_API_LOCKED             {$Details = "IP Address Source : $($Params[0]), Hostname : $($Params[3]), Failed Attempt Count : $($Params[1]), Block Time : $($Params[2]) min";Break}
                 
                 ALERT_LAN_OFFLINE_IP             {$Details = "IP Address Source : $($Params[0]), Hostname : $($Params[2]), IP Address destination : $($Params[1])";Break}
                 
                 ALERT_LAN_PORT_UP                {$Details = "BBox Switch Port : $($Json[$Line].param)";Break}
                 
-                ALERT_LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Associated Hostname : $($Params[2]), IP Address in conflit : $($Params[1])";Break}
+                ALERT_LAN_UNKNOWN_IP             {$Details = "IP Address : $($Params[0]), Associated Hostname : $($Params[2]), IP Address in conflict : $($Params[1])";Break}
                 
                 ALERT_LAN_DUP_IP                 {$Details = "IP Address conflict between : $($Json[$Line].param)";Break}
                 
@@ -6702,217 +6856,6 @@ Function Get-NATRulesID {
 
 #region Notification
 
-Function Get-NOTIFICATIONConfig {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.$APIName
-    
-    # Create New PSObject and add values to array
-    $NOTIFICATIONLine = New-Object -TypeName PSObject
-    $NOTIFICATIONLine | Add-Member -Name 'Service'                -MemberType Noteproperty -Value $APIName
-    $NOTIFICATIONLine | Add-Member -Name 'State'                  -MemberType Noteproperty -Value (Get-State -State $Json.enable)
-    $NOTIFICATIONLine | Add-Member -Name 'Nb configured Alerts'   -MemberType Noteproperty -Value $Json.alerts.count
-    $NOTIFICATIONLine | Add-Member -Name 'Nb configured Events'   -MemberType Noteproperty -Value $Json.events.count
-    $NOTIFICATIONLine | Add-Member -Name 'Nb configured Contacts' -MemberType Noteproperty -Value $Json.contacts.count
-    
-    # Add lines to $Array
-    $Array += $NOTIFICATIONLine
-    
-    Return $Array
-}
-
-Function Get-NOTIFICATIONConfigAlerts {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.notification.Alerts
-    
-    If ($Json.Count -ne 0) {
-        
-        $NOTIFICATION = 0
-        
-        While ($NOTIFICATION -lt $Json.Count) {
-            
-            # Create New PSObject and add values to array
-            $NOTIFICATIONLine = New-Object -TypeName PSObject
-            $NOTIFICATIONLine | Add-Member -Name 'ID'              -MemberType Noteproperty -Value $Json[$NOTIFICATION].id
-            $NOTIFICATIONLine | Add-Member -Name 'State'           -MemberType Noteproperty -Value (Get-State -State $Json[$NOTIFICATION].enable)
-            $NOTIFICATIONLine | Add-Member -Name 'Name'            -MemberType Noteproperty -Value $Json[$NOTIFICATION].name # To be review due to syntaxe
-            $NOTIFICATIONLine | Add-Member -Name 'Events'          -MemberType Noteproperty -Value $Json[$NOTIFICATION].events
-            $NOTIFICATIONLine | Add-Member -Name 'Action Type'     -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.type
-            $NOTIFICATIONLine | Add-Member -Name 'Send Mail Delay' -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.delay
-            $NOTIFICATIONLine | Add-Member -Name 'Contact ID'      -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.mail.dests
-            
-            # Add lines to $Array
-            $Array += $NOTIFICATIONLine
-            
-            # Go to next line
-            $NOTIFICATION ++
-        }
-        
-        Return $Array
-    }
-    Else {
-        Return $null
-    }
-}
-
-Function Get-NOTIFICATIONConfigContacts {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.notification.contacts
-    
-    If ($Json.Count -ne 0) {
-        
-        $Contacts = 0
-        
-        While ($Contacts -lt $Json.Count) {
-            
-            # Create New PSObject and add values to array
-            $ContactsLine = New-Object -TypeName PSObject
-            $ContactsLine | Add-Member -Name 'ID'    -MemberType Noteproperty -Value $Json[$Contacts].id
-            $ContactsLine | Add-Member -Name 'State' -MemberType Noteproperty -Value (Get-Status -Status $Json[$Contacts].enable)
-            $ContactsLine | Add-Member -Name 'Name'  -MemberType Noteproperty -Value $Json[$Contacts].name
-            $ContactsLine | Add-Member -Name 'Mail'  -MemberType Noteproperty -Value $Json[$Contacts].mail
-            
-            # Add lines to $Array
-            $Array += $ContactsLine
-            
-            # Go to next line
-            $Contacts ++
-        }
-        
-        Return $Array
-    }
-    Else {
-        Return $null
-    }
-}
-
-Function Get-NOTIFICATIONConfigEvents {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.notification.events
-    
-    If ($Json.Count -ne 0) {
-        
-        $Events = 0
-        
-        While ($Events -lt $Json.Count) {
-            
-            # Create New PSObject and add values to array
-            $EventsLine = New-Object -TypeName PSObject
-            $EventsLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $($Json[$Events].name)
-            $EventsLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $($Json[$Events].category) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Message'     -MemberType Noteproperty -Value $($Json[$Events].humanReadable) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
-            
-            # Add lines to $Array
-            $Array += $EventsLine
-            
-            # Go to next line
-            $Events ++
-        }
-        
-        Return $Array
-    }
-    Else {
-        Return $null
-    }
-}
-
-Function Get-NOTIFICATIONAlerts {
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from BBOX API
-    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.notification.Alerts
-    
-    If ($Json.Count -ne 0) {
-        
-        $NOTIFICATION = 0
-        
-        While ($NOTIFICATION -lt $Json.Count) {
-            
-            # Create New PSObject and add values to array
-            $NOTIFICATIONLine = New-Object -TypeName PSObject
-            $NOTIFICATIONLine | Add-Member -Name 'ID'              -MemberType Noteproperty -Value $Json[$NOTIFICATION].id
-            $NOTIFICATIONLine | Add-Member -Name 'State'           -MemberType Noteproperty -Value (Get-State -State $Json[$NOTIFICATION].enable)
-            $NOTIFICATIONLine | Add-Member -Name 'Name'            -MemberType Noteproperty -Value $Json[$NOTIFICATION].name # To be review due to syntaxe
-            $NOTIFICATIONLine | Add-Member -Name 'Events'          -MemberType Noteproperty -Value $Json[$NOTIFICATION].events
-            $NOTIFICATIONLine | Add-Member -Name 'Action Type'     -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.type
-            $NOTIFICATIONLine | Add-Member -Name 'Send Mail Delay' -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.delay
-            $NOTIFICATIONLine | Add-Member -Name 'Contact ID'      -MemberType Noteproperty -Value $Json[$NOTIFICATION].action.mail.dests
-            
-            # Add lines to $Array
-            $Array += $NOTIFICATIONLine
-            
-            # Go to next line
-            $NOTIFICATION ++
-        }
-        
-        Return $Array
-    }
-    Else {
-        Return $null
-    }
-}
-
 Function Get-NOTIFICATIONContacts {
     
     Param (
@@ -6939,14 +6882,109 @@ Function Get-NOTIFICATIONContacts {
             $ContactsLine = New-Object -TypeName PSObject
             $ContactsLine | Add-Member -Name 'ID'    -MemberType Noteproperty -Value $Json[$Contacts].id
             $ContactsLine | Add-Member -Name 'State' -MemberType Noteproperty -Value (Get-Status -Status $Json[$Contacts].enable)
-            $ContactsLine | Add-Member -Name 'Mail'  -MemberType Noteproperty -Value $Json[$Contacts].mail
             $ContactsLine | Add-Member -Name 'Name'  -MemberType Noteproperty -Value $Json[$Contacts].name
+            $ContactsLine | Add-Member -Name 'Mail'  -MemberType Noteproperty -Value $Json[$Contacts].mail
             
             # Add lines to $Array
             $Array += $ContactsLine
             
             # Go to next line
             $Contacts ++
+        }
+        
+        Return $Array
+    }
+    Else {
+        Return $null
+    }
+}
+
+Function Get-NOTIFICATIONConfig {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName
+    )
+    
+    # Get information from BBOX API
+    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    $Json = $Json.$APIName
+    
+    # Create New PSObject and add values to array
+    $NOTIFICATIONLine = New-Object -TypeName PSObject
+    $NOTIFICATIONLine | Add-Member -Name 'Service'                -MemberType Noteproperty -Value $APIName
+    $NOTIFICATIONLine | Add-Member -Name 'State'                  -MemberType Noteproperty -Value (Get-State -State $Json.enable)
+    $NOTIFICATIONLine | Add-Member -Name 'Nb Alerts Configured'   -MemberType Noteproperty -Value $Json.alerts.count
+    $NOTIFICATIONLine | Add-Member -Name 'Nb Events Configured'   -MemberType Noteproperty -Value $Json.events.count
+    $NOTIFICATIONLine | Add-Member -Name 'Nb Contacts Configured' -MemberType Noteproperty -Value $Json.contacts.count
+    
+    # Add lines to $Array
+    $Array += $NOTIFICATIONLine
+    
+    Return $Array
+}
+
+Function Get-NOTIFICATIONAlerts {
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from BBOX API
+    $Json = Get-BBoxInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    $Json = $Json.notification.Alerts
+    
+    If ($Json.Count -ne 0) {
+        
+        $Contacts = Get-NOTIFICATIONContacts -UrlToGo $($UrlToGo -replace("alerts","contacts"))
+        $Index = 0
+        
+        While ($Index -lt $Json.Count) {
+            
+            If ($Null -eq $Dests) {
+                $Mail = $Contacts.mail -join ","
+            }
+            Else {
+                $Mail = @()
+                $Dests = $Json[$Index].action.mail.dests
+                
+                Foreach ($Dest in $Dests) {
+                    
+                    $Mail += $($Contacts | Where-Object {$Dest -eq $_.id}).mail
+                }
+                $Mail = $Mail -join ","
+            }
+            
+            # Create New PSObject and add values to array
+            $NOTIFICATIONLine = New-Object -TypeName PSObject
+            $NOTIFICATIONLine | Add-Member -Name 'ID'              -MemberType Noteproperty -Value $Json[$Index].id
+            $NOTIFICATIONLine | Add-Member -Name 'State'           -MemberType Noteproperty -Value (Get-State -State $Json[$Index].enable)
+            $NOTIFICATIONLine | Add-Member -Name 'Name'            -MemberType Noteproperty -Value $Json[$Index].name # To be review due to syntaxe
+            $NOTIFICATIONLine | Add-Member -Name 'Events'          -MemberType Noteproperty -Value $Json[$Index].events
+            $NOTIFICATIONLine | Add-Member -Name 'Action Type'     -MemberType Noteproperty -Value $Json[$Index].action.type
+            $NOTIFICATIONLine | Add-Member -Name 'Send Mail Delay' -MemberType Noteproperty -Value $Json[$Index].action.delay
+            $NOTIFICATIONLine | Add-Member -Name 'Contact ID'      -MemberType Noteproperty -Value $Json[$Index].action.mail.dests
+            $NOTIFICATIONLine | Add-Member -Name 'Mail'            -MemberType Noteproperty -Value $Mail
+            
+            # Add lines to $Array
+            $Array += $NOTIFICATIONLine
+            
+            # Go to next line
+            $Index ++
         }
         
         Return $Array
@@ -6974,22 +7012,54 @@ Function Get-NOTIFICATIONEvents {
     
     If ($Json.Count -ne 0) {
         
-        $Events = 0
+        $Index = 0
         
-        While ($Events -lt $Json.Count) {
+        While ($Index -lt $Json.Count) {
+            
+            $Split = $Json[$Index].name -split "_"
+            
+            If ($Json[$Index].name -match $Global:NotificationEventType) {
+                
+                $Temp = $Split[1]
+                
+                Switch ($Temp) {
+                    
+                    ALARM   {$Type = $Split[1]
+                             $Scope = $Split[2]
+                             $ShortName = $($Json[$Index].name.Split("_",3))[-1]
+                            }
+                    NOTIFY  {$Type = $Split[1]
+                             $Scope = $Split[2]
+                             $ShortName = $($Json[$Index].name.Split("_",3))[-1]
+                            }
+                    Default {$Type = $Split[0]
+                             $Scope = $Split[2]
+                             $ShortName = $($Json[$Index].name.Split("_",3))[-1]
+                            }
+                }
+            }
+            Else {
+                $Type = $Split[0]
+                $Scope = $Split[1]
+                $ShortName = $($Json[$Index].name.Split("_",2))[-1]
+            }
             
             # Create New PSObject and add values to array
             $EventsLine = New-Object -TypeName PSObject
-            $EventsLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $($Json[$Events].name)
-            $EventsLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $($Json[$Events].category) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Message'     -MemberType Noteproperty -Value $($Json[$Events].humanReadable) # Syntaxe to be reviewed
-            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Events].description) # Syntaxe to be reviewed
+            $EventsLine | Add-Member -Name 'Index'       -MemberType Noteproperty -Value $Index
+            $EventsLine | Add-Member -Name 'Type'        -MemberType Noteproperty -Value $Type
+            $EventsLine | Add-Member -Name 'Scope'       -MemberType Noteproperty -Value $Scope
+            $EventsLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $($Json[$Index].category) # Syntaxe to be reviewed
+            $EventsLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $($Json[$Index].name)
+            $EventsLine | Add-Member -Name 'Short Name'  -MemberType Noteproperty -Value $ShortName
+            $EventsLine | Add-Member -Name 'Message'     -MemberType Noteproperty -Value $($Json[$Index].humanReadable) # Syntaxe to be reviewed
+            $EventsLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $($Json[$Index].description) # Syntaxe to be reviewed
             
             # Add lines to $Array
             $Array += $EventsLine
             
             # Go to next line
-            $Events ++
+            $Index ++
         }
         
         Return $Array
@@ -7737,7 +7807,8 @@ Function Get-VOIP {
     $VOIPLine | Add-Member -Name 'Phone line index'             -MemberType Noteproperty -Value $Json.id
     $VOIPLine | Add-Member -Name 'Status'                       -MemberType Noteproperty -Value (Get-Status -Status $Json.status)
     $VOIPLine | Add-Member -Name 'Call State'                   -MemberType Noteproperty -Value $Json.callstate
-    $VOIPLine | Add-Member -Name 'SIP Phone Number'             -MemberType Noteproperty -Value $Json.uri
+    $VOIPLine | Add-Member -Name 'SIP Phone Number Uri'         -MemberType Noteproperty -Value $Json.uri
+    $VOIPLine | Add-Member -Name 'SIP Phone Number'             -MemberType Noteproperty -Value $($Json.uri -split "@")[0] # Not included in Bbox API
     $VOIPLine | Add-Member -Name 'Anonymous call Blocked State' -MemberType Noteproperty -Value (Get-State -State $Json.blockstate)
     $VOIPLine | Add-Member -Name 'Anonymous Call State'         -MemberType Noteproperty -Value (Get-State -State $Json.anoncallstate)
     $VOIPLine | Add-Member -Name 'Is Voice Mail waiting ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.mwi)
@@ -8571,8 +8642,8 @@ Function Get-WANIP {
     
     $dnsserversv6 = @()
     $dnsserversv6 = $Json.ip.dnsserversv6 -split ","
-    $dnsserversv6 | ForEach-Object {$dnsserversv6 += $(Resolve-DnsName -Name $_).NameHost}
-    $dnsserversv6 =  $dnsserversv6 -join ","
+    #$dnsserversv6 | ForEach-Object {$dnsserversv6 += $(Resolve-DnsName -Name $_).NameHost}
+    #$dnsserversv6 =  $dnsserversv6 -join ","
 
     # Create New PSObject and add values to array
     $IPLine = New-Object -TypeName PSObject
@@ -9364,7 +9435,7 @@ Function Get-WIRELESSRepeater {
         $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value $($Json.list -join ',')
     }
     Else{
-        $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value "O"
+        $RepeaterLine | Add-Member -Name 'Station List'  -MemberType Noteproperty -Value "0"
     }
     If ($Json.zerotouch.list) {
         $RepeaterLine | Add-Member -Name 'ZeroTouch'     -MemberType Noteproperty -Value $($Json.zerotouch.list -join ',') # Since version 20.6.8
