@@ -17,8 +17,9 @@
 	"GitHubUrlSite": "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
   },
   "BBox": {
-    "BBoxUrlRemote": "https://mabbox.bytel.fr/remote.html",
-    "BBoxDns": "mabbox.bytel.fr",
+    "UrlPrefixe": "https://",
+	"BBoxUrlRemote": "https://mabbox.bytel.fr/remote.html",
+    "BBoxDns": "https://mabbox.bytel.fr",
     "BBoxUrlFirewall": "https://mabbox.bytel.fr/firewall.html",
     "APIUrlDocumentation": "https://api.bbox.fr/doc/apirouter/index.html",
     "BBoxUrlDynDns": "https://mabbox.bytel.fr/dyndns.html",

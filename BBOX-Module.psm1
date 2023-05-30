@@ -1,7 +1,8 @@
 ﻿
 # Be carefull some variables are linked from main script BBOX-Administration to :
 # - $global:JSONSettingsProgramContent
-# - $JSONSettingsCurrentUserContent or $global:JSONSettingsDefaultUserContent
+# - $JSONSettingsCurrentUserContent
+# - $global:JSONSettingsDefaultUserContent
 
 #region GLOBAL (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
 
@@ -12,14 +13,53 @@ Add-Type -AssemblyName System.Drawing
 
 #endregion Add AssemblyName Classies
 
-<#
-    .SYNOPSIS
-    Write-Log allow to write fonctionnal execution logs
-    
-    .DESCRIPTION
-    Write a log in the host console and to a csv file.
-#>
+#region Logs Files
+
 function Write-Log {
+
+<#
+.SYNOPSIS
+    Write-Log allow to write fonctionnal execution logs
+
+.DESCRIPTION
+    Write a log in the host console and to a csv file.
+
+.PARAMETER Type
+    Indicate which type off log
+    Valid values : 'INFO','INFONO','VALUE','WARNING','ERROR','DEBUG'
+    Defaut value : 'INFO'
+
+.PARAMETER Message
+    Write the message you want to display
+
+.PARAMETER Name
+    Use to structure the log by categories
+
+.PARAMETER NotDisplay
+    Use if you don't want to display the 'message' parameter to the Host Console
+
+.PARAMETER Logname
+    This is the full path of the log file
+
+.EXAMPLE
+    Message will be displayed in the PowerShell Host Console and in the log file :
+    Write-Log -Type INFO -Name "Test Message" -Message "This is a test message" -Logname "C:\Logs\Test.log"
+
+    Message will be displayed only in the log file :
+    Write-Log -Type INFO -Name "Test Message" -Message "This is a test message" -Logname "C:\Logs\Test.log" -NotDisplay
+
+.INPUTS
+    String
+
+.OUTPUTS
+    Files with '.log' extention
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to: All customs functions and the entire scripts
+
+#>
+
     Param (
         [Parameter()]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
@@ -83,11 +123,40 @@ function Write-Log {
     }
 }
 
+#endregion Logs Files
+
 #region Windows Credential Manager
 
 # Import module TUN.CredentialManager
 Function Import-TUNCredentialManager {
-    
+
+<#
+.SYNOPSIS
+    To Import 'TUNCredentialManager' Module
+
+.DESCRIPTION
+    To Import 'TUNCredentialManager' Module
+
+.PARAMETER ModuleName
+    Use the Module Name without the version
+
+.EXAMPLE
+    Import-TUNCredentialManager -ModuleName TUNCredentialManager
+
+.INPUTS
+    'TUNCredentialManager' module from: https://www.powershellgallery.com
+
+.OUTPUTS
+    Null
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program'
+    Linked to script(s): '.\BBOX-Administration.ps1'
+    Web Link: https://www.powershellgallery.com/packages/TUN.CredentialManager
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ModuleName
@@ -135,7 +204,32 @@ Function Import-TUNCredentialManager {
 
 # Remove BBox Credential stored in Windows Credential Manager
 Function Remove-BBoxCredential {
+
+<#
+.SYNOPSIS
+    To remove BBox Credential set to the Windows Credential Manager
+
+.DESCRIPTION
+    To remove BBox Credential set to the Windows Credential Manager
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Remove-BBoxCredential
+
+.INPUTS
+    Null
+
+.OUTPUTS
+    Null
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Remove-StoredCredential'
+
+#>
+
     Param ()
     
     Write-Log -Type INFO -Name 'Program run - Remove BBox Credential' -Message 'Start Remove BBox Credential' -NotDisplay
@@ -155,7 +249,32 @@ Function Remove-BBoxCredential {
 
 # Show BBox Credential stored in Windows Credential Manager
 Function Show-BBoxCredential {
+
+<#
+.SYNOPSIS
+    To display BBox Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+
+.DESCRIPTION
+    To display BBox Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Show-BBoxCredential
+
+.INPUTS
+    Credentials from Windows Credential Manager
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-StoredCredential', 'Show-WindowsFormDialogBox'
+
+#>
+
     Param ()
 
     Write-Log -Type INFO -Name 'Program run - Show BBox Credential' -Message 'Start Show BBox Credential' -NotDisplay
@@ -187,7 +306,33 @@ Function Show-BBoxCredential {
 
 # Add BBox Credential in Windows Credential Manager
 function Add-BBoxCredential {
+
+<#
+.SYNOPSIS
+    Add BBox Credential in Windows Credential Manager
+
+.DESCRIPTION
+    Add BBox Credential in Windows Credential Manager
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Add-BBoxCredential
+
+.INPUTS
+    $Credential
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox
+    Credentials stored in Windows Credential Manager
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-BBoxCredential'
+
+#>
+
     Param ()
     
     $Credential = $null
@@ -226,7 +371,46 @@ function Add-BBoxCredential {
 
 # Used only to display default Windows Form Dialog Box
 function Show-WindowsFormDialogBox {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox
+
+.PARAMETER Message
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER Title
+    This is the text display in the header of the message box
+
+.PARAMETER OKCancel,AbortRetryIgnore,YesNoCancel,YesNo,RetryCancel,ErrorIcon,QuestionIcon,WarnIcon,InfoIcon
+    This is the type of Standard System Windows Forms MessageBox you want
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -OKCancel
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -AbortRetryIgnore
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -YesNoCancel
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -YesNo
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -RetryCancel
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -ErrorIcon
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -QuestionIcon
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -WarnIcon
+    Show-WindowsFormDialogBox -Message "This is the body text " -Title "This is my Window Header text" -InfoIcon
+
+.INPUTS
+    String
+
+.OUTPUTS
+    PSCustomObject
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-BBoxCredential', 'Get-HostStatus', 'Get-PortStatus', 'Switch-Info', 'Stop-Program', 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-BackupList'
+
+#>
+
     Param (
         [string]$Message = 'Fill in the message',
         [string]$Title = 'WindowTitle',
@@ -268,7 +452,44 @@ function Show-WindowsFormDialogBox {
 
 # Used only to get user's input
 function Show-WindowsFormDialogBoxInuput {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox with user input
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox with user input
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox before user input field
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER OkButtonText
+    Text to display to validate user input
+
+.PARAMETER CancelButtonText
+    Text to display to cancel user input
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $OkButtonText
+    $CancelButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with user input
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-HostStatus', 'Get-PortStatus'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
@@ -355,7 +576,44 @@ function Show-WindowsFormDialogBoxInuput {
 
 # Used only to force user to make a choice between two options none is "Cancel"
 function Show-WindowsFormDialogBox2Choices {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between two options none is "Cancel"
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between two options none is "Cancel"
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER FirstOptionButtonText
+    Text to display to get choice 1
+
+.PARAMETER SecondOptionButtonText
+    Text to display to get choice 2
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Choice 1" -SecondOptionButtonText "Choice 2"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $FirstOptionButtonText
+    $SecondOptionButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with bouton user choice
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-WANDiagsAllActiveSessions'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
@@ -430,7 +688,44 @@ function Show-WindowsFormDialogBox2Choices {
 
 # Used only to force user to make a choice between two options where one is "Cancel"
 function Show-WindowsFormDialogBox2ChoicesCancel {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between two options where one is "Cancel"
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between two options where one is "Cancel"
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER FirstOptionButtonText
+    Text to display to validate user action
+
+.PARAMETER SecondOptionButtonText
+    Text to display to cancel action
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Action" -SecondOptionButtonText "Cancel"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $FirstOptionButtonText
+    $SecondOptionButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with bouton user action
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '',
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
@@ -505,7 +800,48 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
 
 # Used only to force user to make a choice between three options
 function Show-WindowsFormDialogBox3Choices {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between three options none is "Cancel"
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between three options none is "Cancel"
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER FirstOptionButtonText
+    Text to display to get choice 1
+
+.PARAMETER SecondOptionButtonText
+    Text to display to get choice 2
+
+.PARAMETER ThirdOptionButtonText
+    Text to display to get choice 3
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Choice 1" -SecondOptionButtonText "Choice 2" -ThirdOptionButtonText "Choice 3"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $FirstOptionButtonText
+    $SecondOptionButtonText
+    $ThirdOptionButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with bouton user choice
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-WANDiagsAllActiveSessions'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
@@ -597,7 +933,48 @@ function Show-WindowsFormDialogBox3Choices {
 
 # Used only to force user to make a choice between three options where one is "Cancel"
 function Show-WindowsFormDialogBox3ChoicesCancel {
-    
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between three options where one is "Cancel"
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between three options where one is "Cancel"
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER FirstOptionButtonText
+    Text to display to validate user action 1
+
+.PARAMETER SecondOptionButtonText
+    Text to display to validate user action 2
+
+.PARAMETER ThirdOptionButtonText
+    Text to display to cancel action
+
+.EXAMPLE
+    Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Action 1" -SecondOptionButtonText "Action 2" -ThirdOptionButtonText "Cancel"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $FirstOptionButtonText
+    $SecondOptionButtonText
+    $ThirdOptionButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with bouton user action
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '',
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [string]$MainFormTitle,
@@ -691,7 +1068,36 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
 
 # Clean folder content
 Function Remove-FolderContent {
-    
+
+<#
+.SYNOPSIS
+    Clean folder content
+
+.DESCRIPTION
+    Clean folder content
+
+.PARAMETER FolderRoot
+    This is the root Parent folder full path of the folder Name to clean
+
+.PARAMETER FolderName
+    This is the folder Name to clean content
+
+.EXAMPLE
+    Remove-FolderContent -FolderRoot 'C:\Windows' -FolderName "Temp"
+
+.INPUTS
+    $FolderRoot
+    $FolderName
+
+.OUTPUTS
+    Folder content removed
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to Actions : 'Remove-FCLogs', 'Remove-FCExportCSV', 'Remove-FCExportJSON', 'Remove-FCJournal', 'Remove-FCJBC', 'Remove-FCReport'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$FolderRoot,
@@ -724,7 +1130,40 @@ Function Remove-FolderContent {
 
 # Test and create folder if not yet existing
 Function Test-FolderPath {
-    
+
+<#
+.SYNOPSIS
+    Test and create folder if not yet existing
+
+.DESCRIPTION
+    Test and create folder if not yet existing
+
+.PARAMETER FolderRoot
+    Root Folder path where the folder is located
+
+.PARAMETER FolderPath
+    Folder full path
+
+.PARAMETER FolderName
+    Folder Name that already exist or to be create
+
+.EXAMPLE
+    Test-FolderPath -FolderRoot "C:\Windows" -FolderPath "C:\Windows\Temp" -FolderName "Temp"
+
+.INPUTS
+    $FolderRoot
+    $FolderPath
+    $FolderName
+
+.OUTPUTS
+    Folder created
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$FolderRoot,
@@ -762,7 +1201,40 @@ Function Test-FolderPath {
 
 # Test and create file if not yet existing
 Function Test-FilePath {
-    
+
+<#
+.SYNOPSIS
+    Test and create file if not yet existing
+
+.DESCRIPTION
+    Test and create file if not yet existing
+
+.PARAMETER FileRoot
+    Root File path where the file is located
+
+.PARAMETER FilePath
+    File full path
+
+.PARAMETER FilePath
+    File Name that already exist or to be create
+
+.EXAMPLE
+    Test-FilePath FileRoot "C:\Windows" -FilePath "C:\Windows\Temp" -FileName "Temp"
+
+.INPUTS
+    $FileRoot
+    $FilePath
+    $FileName
+
+.OUTPUTS
+    File created
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$FileRoot,
@@ -793,14 +1265,44 @@ Function Test-FilePath {
         }
     }
     Else {
-        Write-Log -Type VALUE -Name 'Program initialisation - Program Files check' -Message 'Already exists'  -NotDisplay
+        Write-Log -Type VALUE -Name 'Program initialisation - Program Files check' -Message 'Already exists' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program initialisation - Program Files check' -Message "End file check : $FileName" -NotDisplay
 }
 
-# Used only to detect ChromeDriver version before Update
+# Used only to detect ChromeDriver version before ChromeDriver Update
 Function Get-ChromeDriverVersionBeforeUpdate {
-    
+
+<#
+.SYNOPSIS
+    To detect ChromeDriver version before ChromeDriver Update
+
+.DESCRIPTION
+    To detect ChromeDriver version before ChromeDriver Update
+
+.PARAMETER ChromeVersion
+    This is the current google chrome version installed on the device
+
+.PARAMETER ChromeDriverPath
+    This is the full folder path where are stored the different google chrome driver available
+
+.EXAMPLE
+    Get-ChromeDriverVersionBeforeUpdate -ChromeVersion "113.0.5672.127" -ChromeDriverPath "C:\Program\GoogleChromeDriverVersion"
+
+.INPUTS
+    $ChromeVersion
+    $ChromeDriverPath
+
+.OUTPUTS
+    ChromeDriver version and path compatible obtenained
+    $ChromeDriverVersion
+    $ChromeDriverFolder
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeVersion,
@@ -831,7 +1333,7 @@ Function Get-ChromeDriverVersionBeforeUpdate {
     
     If ($ChromeDriverFolder -eq 'Default') {
         
-        $ChromeDriverVersion = & "$ChromeDriverPath\Default\chromedriver.exe" --version
+        $ChromeDriverVersion = & "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultSetupFileName)" --version
         $ChromeDriverVersion = $($ChromeDriverVersion -split " ")[1]
     }
     
@@ -841,9 +1343,38 @@ Function Get-ChromeDriverVersionBeforeUpdate {
     Return $ChromeDriverVersion,$ChromeDriverFolder
 }
 
-# Used only to detect ChromeDriver version after Update
+# Used only to detect ChromeDriver version after ChromeDriver Update
 Function Get-ChromeDriverVersion {
-    
+
+<#
+.SYNOPSIS
+    To detect ChromeDriver version after ChromeDriver Update
+
+.DESCRIPTION
+    To detect ChromeDriver version after ChromeDriver Update
+
+.PARAMETER ChromeVersion
+    This is the current google chrome version installed on the device
+
+.PARAMETER ChromeDriverPath
+    This is the full folder path where are stored the different google chrome driver available
+
+.EXAMPLE
+    Get-ChromeDriverVersionBeforeUpdate -ChromeVersion "113.0.5672.127" -ChromeDriverPath "C:\Program\GoogleChromeDriverVersion"
+
+.INPUTS
+    $ChromeVersion
+    $ChromeDriverPath
+
+.OUTPUTS
+    ChromeDriver version compatible obtenained
+    $ChromeDriverVersion
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeVersion,
@@ -879,7 +1410,34 @@ Function Get-ChromeDriverVersion {
 
 # Used only to define bbox connexion type
 Function Get-ConnexionType {
-    
+
+<#
+.SYNOPSIS
+    To define bbox connexion type
+
+.DESCRIPTION
+    To define bbox connexion type
+
+.PARAMETER TriggerLANNetwork
+    Define bbox connexion type
+
+.EXAMPLE
+    Get-ConnexionType -TriggerLANNetwork 0
+    Get-ConnexionType -TriggerLANNetwork 1
+
+.INPUTS
+    $TriggerLANNetwork
+
+.OUTPUTS
+    $ConnexionType
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-WindowsFormDialogBox3ChoicesCancel', 'Show-WindowsFormDialogBox2ChoicesCancel'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$TriggerLANNetwork
@@ -923,9 +1481,38 @@ Function Get-ConnexionType {
     Return $ConnexionType
 }
 
-# Used only to check if external Bbox DNS is online
+# Used only to check if external Bbox DNS is online 
 Function Get-HostStatus {
-    
+
+<#
+.SYNOPSIS
+    To check if external Bbox DNS is online
+
+.DESCRIPTION
+    To check if external Bbox DNS is online
+
+.PARAMETER UrlRoot
+    This the Root DNS/url to connect to the BBOX web interface
+
+.EXAMPLE
+    Get-HostStatus -UrlRoot "https://mabbox.bytel.fr"
+    Get-HostStatus -UrlRoot "https://mabbox.bytel.fr/api/v1"
+    Get-HostStatus -UrlRoot "https://www.exemple.com"
+    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1"
+
+.INPUTS
+    $UrlRoot
+
+.OUTPUTS
+    BBOX Host Status
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Test-Connection', 'Show-WindowsFormDialogBox'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$false)]
         [String]$UrlRoot
@@ -953,8 +1540,8 @@ Function Get-HostStatus {
             If ($BBoxDnsStatus -eq $true) {
                 
                 Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'Online' -NotDisplay
-                $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
-                $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
+                $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = "$global:UrlPrefixe$($global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl)"
+                $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = "$global:UrlPrefixe$UrlRoot"
                 $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
                 Return $UrlRoot
                 Break
@@ -983,7 +1570,40 @@ Function Get-HostStatus {
 
 # Used only to check if external Bbox Port is open
 Function Get-PortStatus {
-    
+
+<#
+.SYNOPSIS
+    To check if external Bbox Port is open
+
+.DESCRIPTION
+    To check if external Bbox Port is open
+
+.PARAMETER UrlRoot
+    This the Root DNS/url to connect to the BBOX web interface
+
+.PARAMETER Port
+    This the port to check if open or not
+
+.EXAMPLE
+    Get-HostStatus -UrlRoot "https://www.exemple.com" -Port "8560"
+    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1" -Port "8560"
+    Get-HostStatus -UrlRoot "https://www.exemple.com" -Port "80"
+    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1" -Port "80"
+
+.INPUTS
+    $UrlRoot
+    $Port
+
+.OUTPUTS
+    $Port
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Show-WindowsFormDialogBox', 'Test-NetConnection'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlRoot
@@ -1027,7 +1647,8 @@ Function Get-PortStatus {
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- You enter a valid port number"
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))" 
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- For remember you use the port : $($global:JSONSettingsCurrentUserContent.Site.OldRemotePort) the last time"
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))`n- For remember you use the port : $($global:JSONSettingsCurrentUserContent.Site.OldRemotePort) the last time" -WarnIcon
                     $Port = $null
                     $PortStatus = $null
                 }
@@ -1042,30 +1663,94 @@ Function Get-PortStatus {
     }
 }
 
-# Used only to get BBOX LAN Switch Port State, linked to : "Get-DeviceFullLog"
+# Used only to get BBOX LAN Switch Port State
 Function Get-LanPortState {
-    
+
+<#
+.SYNOPSIS
+    To get BBOX LAN Switch Port State
+
+.DESCRIPTION
+    To get BBOX LAN Switch Port State
+
+.PARAMETER LanPortState
+    This the switch port number to get the state
+
+.EXAMPLE
+    Get-LanPortState -LanPortState 1
+    Get-LanPortState -LanPortState 2
+    Get-LanPortState -LanPortState 3
+    Get-LanPortState -LanPortState 4
+
+.INPUTS
+    $LanPortState
+
+.OUTPUTS
+    $State
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-DeviceFullLog'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$LanPortState
     )
     
-    Switch ($State) {
+    Switch ($LanPortState) {
     
-        0          {$Value = "Disable";Break}
-        1          {$Value = "Enable";Break}
-        2          {$Value = "Enable";Break}
-        3          {$Value = "Enable";Break}
-        4          {$Value = "Enable";Break}
-        Default    {$Value = "Unknow";Break}
+        0          {$State = "Disable";Break}
+        1          {$State = "Enable";Break}
+        2          {$State = "Enable";Break}
+        3          {$State = "Enable";Break}
+        4          {$State = "Enable";Break}
+        Default    {$State = "Unknow";Break}
     }
     
-    Return $Value
+    Return $State
 }
 
 # Used only to connect to BBox Web interface
 Function Connect-BBOX {
+
+<#
+.SYNOPSIS
+    To connect to BBox Web interface
+
+.DESCRIPTION
+    To connect to BBox Web interface
+
+.PARAMETER UrlAuth
+    This the url use to login to the BBOX web interface
+
+.PARAMETER UrlHome
+    This is the main page of BBOX web interface
+
+.PARAMETER Password
+    This the user password to authentificate to BBOX web interface
     
+.EXAMPLE
+    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr"      -UrlHome "https://mabbox.bytel.fr/index.html"      -Password "Password"
+    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr:8560" -UrlHome "https://mabbox.bytel.fr:8560/index.html" -Password "Password"
+    Connect-BBOX -UrlAuth "https://exemple.com:80"       -UrlHome "https://exemple.com:80/index.html"       -Password "Password"
+
+.INPUTS
+    $UrlAuth
+    $UrlHome
+    $Password
+
+.OUTPUTS
+    User authentificated to the BBOX Web Interface
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlAuth,
@@ -1099,9 +1784,37 @@ Function Connect-BBOX {
     }
 }
 
-# Used only to get information from API page content, linked to many functions, linked to : "ConvertFrom-HtmlToText"
+# Used only to get information from API page content
 Function Get-BBoxInformation {
-    
+
+<#
+.SYNOPSIS
+    To get information from API page content
+
+.DESCRIPTION
+    To get information from API page content
+
+.PARAMETER UrlToGo
+    This is the url that you want to collect data
+
+.EXAMPLE
+    Get-BBoxInformation -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log"
+    Get-BBoxInformation -UrlToGo "https://exemple.com:8560/api/v1/device/log"
+    Get-BBoxInformation -UrlToGo "https://exemple.com:80/api/v1/device/log"
+
+.INPUTS
+    UrlToGo
+
+.OUTPUTS
+    PSCustomObject = $Json
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-ErrorCode', 'ConvertFrom-Json'
+    linked to many functions in the module : '.\BBOX-Modules.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -1181,10 +1894,34 @@ Function Get-BBoxInformation {
     }
 }
 
-# Used only to convert HTML page to TXT, linked to : "Get-BBoxInformation"
+# Used only to convert HTML page to TXT
 Function ConvertFrom-HtmlToText {
-    
-    # Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+
+<#
+.SYNOPSIS
+    To convert HTML page to TXT
+
+.DESCRIPTION
+    To convert HTML page to TXT
+
+.PARAMETER $Html
+    This is the HTML code content from the Web API content
+
+.EXAMPLE
+    ConvertFrom-HtmlToText -Html $Html
+
+.INPUTS
+    $Html
+
+.OUTPUTS
+    $Html
+
+.NOTES
+    Author : Winston - 2010/09/21
+    Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+    Linked to function(s): 'Get-BBoxInformation', 'Update-ChromeDriver'
+
+#>
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -1240,7 +1977,40 @@ Function ConvertFrom-HtmlToText {
 
 # Used only to select function to get data from BBOX web API or do actions
 Function Switch-Info {
+
+<#
+.SYNOPSIS
+    To select function to get data from BBOX web API or do actions
+
+.DESCRIPTION
+    To select function to get data from BBOX web API or do actions
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://exemple.com:8560/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://exemple.com:80/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+
+.INPUTS
+    $Label
+    $UrlToGo
+    $APIName
+    $Mail
+    $JournalPath
+    $GitHubUrlSite
+
+.OUTPUTS
+    $FormatedData
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-BBoxConfigTestingProgram', 'Export-BBoxConfigTestingProgram'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$Label,
@@ -1571,8 +2341,8 @@ Function Switch-Info {
             # SetBBoxWindowsPasswordManager
             Add-BBoxC            {$FormatedData = Add-BBoxCredential;Break}
             
-            # Reset-CurrentUserProgrammConfiguration
-            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgrammConfiguration;Break}
+            # Reset-CurrentUserProgramConfiguration
+            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
             
             # Exit
             Q                    {Stop-Program;Break}
@@ -1591,9 +2361,32 @@ Function Switch-Info {
         Return $FormatedData
 }
 
-# Used only to quit the Program
+# Used only to stop and quit the Program
 Function Stop-Program {
-    
+
+<#
+.SYNOPSIS
+    To stop and quit the Program
+
+.DESCRIPTION
+    To stop and quit the Program
+
+.EXAMPLE
+    Stop-ChromeDriver
+
+.INPUTS
+    None
+
+.OUTPUTS
+    None
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-BBOX', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param ()
     
     $null = Show-WindowsFormDialogBox -Title 'Stop Program' -Message "Program exiting ... `nPlease dont close windows manually !`nWe are closing background processes before quit the program`nPlease wait ..." -WarnIcon
@@ -1621,7 +2414,52 @@ Function Stop-Program {
 
 # Used only to Start ChromeDriver
 Function Start-ChromeDriver {
-    
+
+<#
+.SYNOPSIS
+    To Start ChromeDriver
+
+.DESCRIPTION
+    To Start ChromeDriver
+
+.PARAMETER ChromeDriverVersion
+    Indicate the current ChromeDriver Version aligned to the Google Chrome version installed on your device
+
+.PARAMETER DownloadPath
+    Indicate your download folder
+
+.PARAMETER LogsPath
+    Indicate the folder where you want to store the dedicated ChromeDriver Logs
+
+.PARAMETER ChromeDriverPath
+    Indicate the path where chromeDriver setup is installed
+
+.PARAMETER ChromeBinaryPath
+    Indicate the full path of chromeDriver setup is installed
+
+.PARAMETER ChromeDriverDefaultProfile
+    Indicate which Google Chrome Profile must be used with ChromeDriver
+
+.EXAMPLE
+    Start-ChromeDriver -ChromeDriverVersion "113.0.0.0" -DownloadPath "C:\Windows\Temp" -LogsPath "C:\Windows\Logs" -ChromeDriverPath "C:\ProgramFiles\ChromeDriver" -ChromeBinaryPath "C:\ProgramFiles\ChromeDriver\ChromeDriver.exe" -ChromeDriverDefaultProfile "Default"
+
+.INPUTS
+    $ChromeDriverVersion
+    $DownloadPath
+    $LogsPath
+    $ChromeDriverPath
+    $ChromeBinaryPath
+    $ChromeDriverDefaultProfile
+
+.OUTPUTS
+    All ChromeDriver Processes are stopped
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ChromeDriverVersion,
@@ -1697,9 +2535,35 @@ Function Start-ChromeDriver {
     $global:ChromeDriver.Manage().Window.Minimize()
 }
 
-# Used only to stop ChromeDriver, linked to : "Stop-Program"
+# Used only to stop ChromeDriver
 Function Stop-ChromeDriver {
+
+<#
+.SYNOPSIS
+    To stop ChromeDriver
+
+.DESCRIPTION
+    To stop ChromeDriver
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Stop-ChromeDriver
+
+.INPUTS
+    None
+
+.OUTPUTS
+    None
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'Update-ChromeDriver'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param ()
     
     # Close all ChromeDriver instances openned
@@ -1711,7 +2575,37 @@ Function Stop-ChromeDriver {
 
 # Used only to update ChromeDriver version
 Function Update-ChromeDriver {
-    
+
+<#
+.SYNOPSIS
+    To update ChromeDriver version
+
+.DESCRIPTION
+    To update ChromeDriver version
+
+.PARAMETER ChromeDriverVersion
+    Indicate the chromeDriver version that aligned with the Google Chrome version installed on the device
+
+.PARAMETER ChromeDriverPath
+    Indicate the chromeDriver path where chromeDriver version are installed
+
+.EXAMPLE
+    Update-ChromeDriver -ChromeDriverVersion "113.0.0.0" -ChromeDriverPath "C:\Programfiles\ChromeDriver"
+
+.INPUTS
+    $ChromeDriverVersion
+    $ChromeDriverPath
+
+.OUTPUTS
+    ChromeDriver version is up to date
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'ConvertFrom-HtmlToText'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         
         [Parameter(Mandatory=$True)]
@@ -1765,20 +2659,36 @@ Function Update-ChromeDriver {
             $global:ChromeDriver.FindElementByLinkText($FileName).click()
             Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.DownloadChromeDriver
             
-            # Create new directory to use chrome Driver update
-            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
-            $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
-            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
-            
-            # Unzip new Chrome driver version to destination
-            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
-            Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
-            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.UnzipChromeDriver
+            If ((Test-Path -Path $SourceFile) -eq $True) {
+                
+                # Create new directory to use chrome Driver update
+                Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
+                $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
+                Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+                
+                # Unzip new Chrome driver version to destination
+                If ((Test-Path -Path $DestinationPath) -eq $True) {
+                    
+                    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
+                    Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository status : " -NotDisplay
+                    Try {
+                        Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
+                        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.UnzipChromeDriver
+                        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "OK" -NotDisplay
+                    }
+                    Catch {
+                        Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+                    }
+                }
+            }
             
             # Copy DLL System
-            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
-            Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $DestinationPath -Force
-            Copy-Item -Path "$ChromeDriverPath\Default\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $DestinationPath -Force
+            If ((Test-Path -Path $SourceFile) -eq $True) {
+                
+                Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
+                Copy-Item -Path "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $DestinationPath -Force
+                Copy-Item -Path "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $DestinationPath -Force
+            }
             
             # Remove the downloaded source
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
@@ -1799,9 +2709,45 @@ Function Update-ChromeDriver {
 
 #endregion ChromeDriver
 
-# Used only to Refresh WIRELESS Frequency Neighborhood Scan, linked to : "Format-Date1970"
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan
 function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
-    
+
+<#
+.SYNOPSIS
+    To Refresh WIRELESS Frequency Neighborhood Scan
+
+.DESCRIPTION
+    To Refresh WIRELESS Frequency Neighborhood Scan
+
+.PARAMETER APIName
+    Indicate the API name associated to wireless scan result
+
+.PARAMETER UrlToGo
+    Indicate the url to start the wireless scan
+
+.EXAMPLE
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
+
+.INPUTS
+    $APIName
+    $UrlToGo
+
+.OUTPUTS
+    Wireless scan neighborhood done
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-Date1970', 'Get-WIRELESSFrequencyNeighborhoodScan'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$APIName,
@@ -1870,8 +2816,44 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
     Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
 }
 
-# Used only to Refresh WIRELESS Frequency Neighborhood Scan ID and linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-WIRELESSFrequencyNeighborhoodScanID"
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan ID
 Function Get-WIRELESSFrequencyNeighborhoodScan {
+
+<#
+.SYNOPSIS
+    To Refresh WIRELESS Frequency Neighborhood Scan ID
+
+.DESCRIPTION
+    To Refresh WIRELESS Frequency Neighborhood Scan ID
+
+.PARAMETER APIName
+    Indicate the API name associated to wireless scan result
+
+.PARAMETER UrlToGo
+    Indicate the url to start the wireless scan
+
+.EXAMPLE
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
+    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
+
+.INPUTS
+    $APIName
+    $UrlToGo
+
+.OUTPUTS
+    $FormatedData
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-WIRELESSFrequencyNeighborhoodScanID'
+
+#>
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -1890,13 +2872,37 @@ Function Get-WIRELESSFrequencyNeighborhoodScan {
 
 #endregion GLOBAL
 
-#region Json file configuration management
+#region Load user Json file configuration management
 
 Function Get-JSONSettingsCurrentUserContent {
 
-    Param(
+<#
+.SYNOPSIS
+    Load current user Json file configuration management
 
-    )
+.DESCRIPTION
+    Load current user Json file configuration management
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Get-JSONSettingsCurrentUserContent
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Current User Settings loaded
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
+    Param(    )
 
     Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Start Json Current User Settings Importation' -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Json Current User Settings Importation Status : ' -NotDisplay
@@ -1925,9 +2931,33 @@ Function Get-JSONSettingsCurrentUserContent {
 
 Function Get-JSONSettingsDefaultUserContent {
 
-    Param(
+<#
+.SYNOPSIS
+    Load default user Json file configuration management
 
-    )
+.DESCRIPTION
+    Load default user Json file configuration management
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Get-JSONSettingsdefaultUserContent
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Default User Settings loaded
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
+    Param(    )
 
     Write-Log -Type INFO -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Start Json Default User Settings Importation' -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Json Default User Settings Importation Status : '
@@ -1957,11 +2987,35 @@ Function Get-JSONSettingsDefaultUserContent {
 #endregion Json file configuration management
 
 #region Reset User Json Configuration files
-Function Reset-CurrentUserProgrammConfiguration {
+Function Reset-CurrentUserProgramConfiguration {
 
-    Param(
+<#
+.SYNOPSIS
+    Reset User Json Configuration files
 
-    )
+.DESCRIPTION
+    Reset User Json Configuration files
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Reset-CurrentUserProgramConfiguration
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Current User Program Configuration is reset
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '', ''
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
+    Param(    )
     
     Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
     Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
@@ -1994,9 +3048,36 @@ Function Reset-CurrentUserProgrammConfiguration {
 
 #region Manage Output Display after data export
 
-# Used only to change Open Export Folder, linked to : "Switch-Info" and "Export-toCSV" and "Export-toJSON" and "Export-BboxConfiguration" and "Export-BBoxConfigTestingProgram"
+# Used only to change Open Export Folder
 Function Switch-OpenExportFolder {
 
+<#
+.SYNOPSIS
+    To change Open Export Folder
+
+.DESCRIPTION
+    To change Open Export Folder
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Switch-OpenExportFolder
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    Open or not export folder
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-WindowsFormDialogBox2Choices', 'Switch-Info', "Export-toCSV", "Export-toJSON", "Export-BboxConfiguration", "Export-BBoxConfigTestingProgram", "Export-GlobalOutputData"
+
+#>
+
+    Param ()
+    
     # Choose Open Export Folder : Y (Yes) or N (No)
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
@@ -2021,8 +3102,35 @@ Function Switch-OpenExportFolder {
     Return 'Program'
 }
 
-# Used only to change Display Format, linked to : "Export-GlobalOutputData"
+# Used only to change Display Format
 Function Switch-DisplayFormat {
+
+<#
+.SYNOPSIS
+    To change Display Format
+
+.DESCRIPTION
+    To change Display Format
+
+.PARAMETER 
+    Switch-DisplayFormat
+
+.EXAMPLE
+    
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    HTML or Table format
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Show-WindowsFormDialogBox2Choices', 'Switch-Info'
+
+#>
+
+    Param(  )
     
     # Choose Display Format : HTML or Table
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'Start data display format' -NotDisplay
@@ -2048,9 +3156,55 @@ Function Switch-DisplayFormat {
     Return 'Program'
 }
 
-# Used only to format display result function user choice, linked to : "Export-GlobalOutputData" and "Export-HTMLReport" and "Out-GridviewDisplay" and "Open-HTMLReport"
+# Used only to format display result function user choice
 Function Format-DisplayResult {
-    
+
+<#
+.SYNOPSIS
+    To format display result function user choice
+
+.DESCRIPTION
+    To format display result function user choice
+
+.PARAMETER FormatedData
+    Data were already format and will be displayed
+
+.PARAMETER APIName
+    Title report name or Title the Out-GridView Window
+
+.PARAMETER Description
+    Description of the report
+
+.PARAMETER ReportType
+    Report type can be : Table or List
+
+.PARAMETER ReportPath
+    Path of the report folder
+
+.PARAMETER Exportfile
+    Full path of export file
+
+.EXAMPLE
+    Format-DisplayResult -FormatedData $FormatedData -APIName "device/log" -Description "Device log" -ReportType "Table" -ReportPath "C:\Windows\Report" -Exportfile "C:\Windows\Report\device-log.csv"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $Description
+    $ReportType
+    $ReportPath
+    $Exportfile
+
+.OUTPUTS
+    Result is Displayed in HTML or in table under Out-Gridview
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Export-HTMLReport', 'Out-GridviewDisplay', 'Open-HTMLReport'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
@@ -2086,9 +3240,46 @@ Function Format-DisplayResult {
     Write-Log -Type INFO -Name 'Program run - Display Result' -Message 'End display result' -NotDisplay
 }
 
-# Used only to export result to CSV File, linked to : "Format-ExportResult"
+# Used only to export result to CSV File
 Function Export-toCSV {
-    
+
+<#
+.SYNOPSIS
+    To export result to CSV File
+
+.DESCRIPTION
+    To export result to CSV File
+
+.PARAMETER FormatedData
+    This is the data you want to export to the csv file
+
+.PARAMETER APIName
+    This is the name of the API where data are retrived
+
+.PARAMETER ExportCSVPath
+    This is the folder path of the Export CSV folder
+
+.PARAMETER Exportfile
+    This the name of the export CSV File (Include file extention)
+
+.EXAMPLE
+    Export-toCSV -FormatedData "$FormatedData" -APIName "Device\log" -ExportCSVPath "C:\ExportFolder" -Exportfile "Device-log.csv"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $Exportfile
+
+.OUTPUTS
+    Csv File
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-ExportResult'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
@@ -2133,9 +3324,46 @@ Function Export-toCSV {
     Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message 'End export result as CSV' -NotDisplay
 }
 
-# Used only to export result to JSON File, linked to : "Format-ExportResult"
+# Used only to export result to JSON File
 Function Export-toJSON {
-    
+
+<#
+.SYNOPSIS
+    To export result to JSON File
+
+.DESCRIPTION
+    To export result to JSON File
+
+.PARAMETER FormatedData
+    This is the data you want to export to the JSON file
+
+.PARAMETER APIName
+    This is the name of the API where data are retrived
+
+.PARAMETER ExportJSONPath
+    This is the folder path of the Export JSON folder
+
+.PARAMETER Exportfile
+    This the name of the export JSON File (Include file extention)
+
+.EXAMPLE
+    Export-toJSON -FormatedData "$FormatedData" -APIName "Device\log" -ExportJSONPath "C:\ExportFolder" -Exportfile "Device-log.json"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportJSONPath
+    $Exportfile
+
+.OUTPUTS
+    JSON File
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-ExportResult'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
@@ -2180,9 +3408,35 @@ Function Export-toJSON {
     Write-Log -Type INFO -Name 'Program run - Export Result JSON' -Message 'End export result as JSON' -NotDisplay
 }
 
-# Used only to change Export Format, linked to : "Export-GlobalOutputData"
+# Used only to Switch Export Format
 Function Switch-ExportFormat {
+
+<#
+.SYNOPSIS
+    To Switch Export Format
+
+.DESCRIPTION
+    To Switch Export Format
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Switch-ExportFormat
+
+.INPUTS
+    User Choice
+
+.OUTPUTS
+    Export format is define to CSV or JSON
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-Info', 'Export-GlobalOutputData'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     # Choose Export Format : CSV or JSON
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Start data export format' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
@@ -2207,9 +3461,52 @@ Function Switch-ExportFormat {
     Return 'Program'
 }
 
-# Used only to format export result function user choice, linked to : "Export-GlobalOutputData" and "Export-toCSV" and "Export-toJSON"
+# Used only to format export result function user choice
 Function Format-ExportResult {
-    
+
+<#
+.SYNOPSIS
+    To format export result function user choice
+
+.DESCRIPTION
+    To format export result function user choice
+
+.PARAMETER FormatedData
+    Data you want to export
+
+.PARAMETER APIName
+    API path use to get data to export
+
+.PARAMETER ExportCSVPath
+    Path Folder for CSV file
+
+.PARAMETER ExportJSONPath
+    Path Folder for JSON file
+
+.PARAMETER Exportfile
+    Export file Name
+
+.EXAMPLE
+    Format-ExportResult -FormatedData "$FormatedData" -APIName "" -ExportCSVPath "" -ExportJSONPath "" -Exportfile ""
+
+.INPUTS
+    $global:ExportFormat
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $ExportJSONPath
+    $Exportfile
+
+.OUTPUTS
+    Data exported to CSV or JSON file depending of : $global:ExportFormat value
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Export-toCSV', 'Export-toJSON'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [Array]$FormatedData,
@@ -2238,9 +3535,34 @@ Function Format-ExportResult {
     }
 }
 
-# Used only to open or not HTML Report, linked to : "Export-HTMLReport" and "Open-HTMLReport"
+# Used only to open or not HTML Report
 Function Switch-OpenHTMLReport {
+
+<#
+.SYNOPSIS
+    To open or not HTML Report
+
+.DESCRIPTION
+    To open or not HTML Report
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Switch-OpenHTMLReport
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    HTML report will be open or not
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-HTMLReport', 'Open-HTMLReport', 'Switch-info'
+
+#>
+
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
     $global:OpenHTMLReport = ''
@@ -2263,9 +3585,34 @@ Function Switch-OpenHTMLReport {
     Return 'Program'
 }
 
-# Used only to open HTML Report, linked to : "Export-HTMLReport"
+# Used only to open HTML Report
 Function Open-HTMLReport {
-    
+
+<#
+.SYNOPSIS
+    To open HTML Report
+
+.DESCRIPTION
+    To open HTML Report
+
+.PARAMETER Path
+    This is the full path of the HTML file to open
+
+.EXAMPLE
+    Open-HTMLReport -Path "C:\HTMLReportFolder\ReportHTML.html"
+
+.INPUTS
+    $Path
+
+.OUTPUTS
+    HTML report openned
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-HTMLReport'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$Path
@@ -2291,9 +3638,41 @@ Function Open-HTMLReport {
     Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "End Open HTML Report" -NotDisplay
 }
 
-# Used only to create HTML Report, linked to : "Format-DisplayResult" and "Switch-OpenHTMLReport" and "Open-HTMLReport"
+# Used only to create HTML Report
 Function Export-HTMLReport {
+
+<#
+.SYNOPSIS
+    To create HTML Report
+
+.DESCRIPTION
+    To create HTML Report
+
+.PARAMETER 
     
+
+.EXAMPLE
+    Export-HTMLReport -DataReported "$DataReported" -ReportType "List" -ReportTitle "Report of data" -ReportPath "C:\Report" -ReportFileName "Report.html" -HTMLTitle "Main Data Reporting" -ReportPrecontent "Subtitle / Subcategory" -Description "This is the main data to report"
+
+.INPUTS
+    $DataReported
+    $ReportType
+    $ReportTitle
+    $ReportPath
+    $ReportFileName
+    $HTMLTitle
+    $ReportPrecontent
+    $Description
+
+.OUTPUTS
+    HTML Report Created
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-DisplayResult', 'Switch-OpenHTMLReport', 'Switch-OpenExportFolder', 'Open-HTMLReport', 'ConvertTo-Html'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$DataReported,
@@ -2371,8 +3750,9 @@ Function Export-HTMLReport {
                 </style>
             ")
     
-    $ReportAuthor = "Report generated by : $env:USERNAME, from : $env:COMPUTERNAME, at : $(Get-Date) (Local Time)."
     $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+    $ReportAuthor = "Report generated by : $env:USERNAME, from : $env:COMPUTERNAME, at : $Date (Local Time)."
+    
     
     Switch ($ReportPrecontent) {
         
@@ -2442,9 +3822,42 @@ Function Export-HTMLReport {
     }
 }
 
-# Used only to Out-Gridview Display, linked to : "Format-DisplayResult"
+# Used only to Out-Gridview Display
 Function Out-GridviewDisplay {
-    
+
+<#
+.SYNOPSIS
+    To Out-Gridview Display
+
+.DESCRIPTION
+    To Out-Gridview Display
+
+.PARAMETER FormatedData
+    Data you want to be displayed by out-gridview 
+
+.PARAMETER APIName
+    This is the name of API where data have been obtained
+
+.PARAMETER Description
+    This is the description of data have been collected by the API Name
+
+.EXAMPLE
+    Out-GridviewDisplay -FormatedData "$FormatedData" -APIName "device/log" - "Get log"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $Description
+
+.OUTPUTS
+    Data displayed by out-gridview
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-DisplayResult'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$FormatedData,
@@ -2482,9 +3895,60 @@ Function Out-GridviewDisplay {
 
 #region Export data (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
 
-# Used only to export Full BBOX Configuration to JSON files, linked to : Switch-OpenExportFolder
+# Used only to export Full BBOX Configuration to CSV/JSON files
 function Export-BboxConfiguration {
-    
+
+<#
+.SYNOPSIS
+    To export Full BBOX Configuration to CSV/JSON files
+
+.DESCRIPTION
+    To export Full BBOX Configuration to CSV/JSON files
+
+.PARAMETER APISName
+    This is the list of API name that based to collect data
+
+.PARAMETER UrlRoot
+    This the root API url that API name are based to collect data
+
+.PARAMETER JSONFolder
+    This the folder path use for JSON export file
+
+.PARAMETER CSVFolder
+    This the folder path use for CSV export file
+
+.PARAMETER GitHubUrlSite
+    This the url of the Github Project
+
+.PARAMETER JournalPath
+    This is the path of the folder use to store BBOX Journal
+
+.PARAMETER Mail
+    This is the mail address of the developper
+
+.EXAMPLE
+    Export-BboxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -JSONFolder "C:\Export\JSON" CSVFolder "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+    Export-BboxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -JSONFolder "C:\Export\JSON" CSVFolder "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+
+.INPUTS
+    $APISName
+    $UrlRoot
+    $JSONFolder
+    $CSVFolder
+    $GitHubUrlSite
+    $JournalPath
+    $Mail
+
+.OUTPUTS
+    Data exported to csv and json files
+
+.NOTES
+    Author : @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-OpenExportFolder', 'Get-BBoxInformation'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$APISName,
@@ -2578,9 +4042,55 @@ function Export-BboxConfiguration {
     Return 'Program'
 }
 
-# Used only to export Full BBOX Configuration to JSON files
+# Used only to export Full BBOX Configuration to JSON files to test the program
 function Export-BBoxConfigTestingProgram {
-    
+
+<#
+.SYNOPSIS
+    To export Full BBOX Configuration to JSON files to test the program
+
+.DESCRIPTION
+    To export Full BBOX Configuration to JSON files to test the program
+
+.PARAMETER APISName
+    This is the list of API name that based to collect data
+
+.PARAMETER UrlRoot
+    This the root API url that API name are based to collect data
+
+.PARAMETER OutputFolder
+    This the folder path use for export files
+
+.PARAMETER GitHubUrlSite
+    This the url of the Github Project
+
+.PARAMETER JournalPath
+    This is the path of the folder use to store BBOX Journal
+
+.PARAMETER Mail
+    This is the mail address of the developper
+
+.EXAMPLE
+    Export-BboxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+    Export-BboxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+
+.INPUTS
+    $APISName
+    $UrlRoot
+    $OutputFolder
+    $GitHubUrlSite
+    $JournalPath
+    $Mail
+
+.OUTPUTS
+    Data exported to json files
+
+.NOTES
+    Author:  @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         
         [Parameter(Mandatory=$True)]
@@ -2660,7 +4170,37 @@ function Export-BBoxConfigTestingProgram {
 
 # Used only to export BBOX Journal
 Function Get-BBoxJournal {
-    
+
+<#
+.SYNOPSIS
+    To export BBOX Journal
+
+.DESCRIPTION
+    To export BBOX Journal
+
+.PARAMETER UrlToGo
+    This is the url to get data from the journal
+
+.PARAMETER JournalPath
+    This is the full path of the export file for the journal
+
+.EXAMPLE
+    Get-BBoxJournal -UrlToGo "https://mabbox.bytel.fr/log.html" -JournalPath "C:\Journal\Journal.csv"
+    Get-BBoxJournal -UrlToGo "https://mabbox.bytel.fr:8560/log.html" -JournalPath "C:\Journal\Journal.csv"
+
+.INPUTS
+    $UrlToGo
+    $JournalPath
+
+.OUTPUTS
+    Journal exported to CSV file
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-Info'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
@@ -2758,9 +4298,34 @@ Function Get-BBoxJournal {
     }
 }
 
-# Used only to manage errors when there is no data to Export/Display, linked to : "Export-GlobalOutputData"
+# Used only to manage errors when there is no data to Export/Display
 Function EmptyFormatedDATA {
-    
+
+<#
+.SYNOPSIS
+    To manage errors when there is no data to Export/Display
+
+.DESCRIPTION
+    To manage errors when there is no data to Export/Display
+
+.PARAMETER FormatedData
+    Array with data or not
+
+.EXAMPLE
+    EmptyFormatedDATA -FormatedData $FormatedData
+
+.INPUTS
+    $FormatedData
+
+.OUTPUTS
+    Write log when when there is no data to Export/Display
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData'
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [array]$FormatedData
@@ -2786,9 +4351,65 @@ Function EmptyFormatedDATA {
     Write-Log -Type INFO -Name "Program run - Export/Display Result" -Message 'End export/display result' -NotDisplay
 }
 
-# Used only to manage data Export/Display, linked to : "Switch-ExportFormat" and "Switch-DisplayFormat" and "Format-ExportResult" and "Format-DisplayResult" and "EmptyFormatedDATA"
+# Used only to manage data Export/Display
 function Export-GlobalOutputData {
-    
+
+<#
+.SYNOPSIS
+    To manage data Export/Display
+
+.DESCRIPTION
+    To manage data Export/Display
+
+.PARAMETER FormatedData
+    Data to export
+
+.PARAMETER APIName
+    API name (Url) used to get data
+
+.PARAMETER ExportCSVPath
+    Folder path for CSV files
+
+.PARAMETER ExportJSONPath
+    Folder path for JSON files
+
+.PARAMETER ExportFile
+    Name of the exoprt file
+
+.PARAMETER Description
+    Description base on the API Name and the associated action
+
+.PARAMETER ReportType
+    Type of the report 2 choices : Table / List
+
+.PARAMETER ReportPath
+    Folder path for report Files
+
+.EXAMPLE
+    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "Table" -ReportPath "C:\Export\Report"
+    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "List" -ReportPath "C:\Export\Report"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $ExportJSONPath
+    $ExportFile
+    $Description
+    $ReportType
+    $ReportPath
+
+.OUTPUTS
+    Data exported to CSV, JSON, HTML
+    Data display Out-GridView or HTML
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-ExportFormat', 'Switch-DisplayFormat', 'Format-ExportResult', 'Format-DisplayResult', 'EmptyFormatedDATA', '', '', '', '', '', '', '', '', '', '', ''
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [array]$FormatedData,
@@ -2858,7 +4479,32 @@ function Export-GlobalOutputData {
 #region Features (Functions used by functions in the PSM1 file : ".\BBOX-Module.psm1")
 
 Function Get-State {
-    
+
+<#
+.SYNOPSIS
+    Convert technical state to Human Readable state
+
+.DESCRIPTION
+    Convert technical state to Human Readable state
+
+.PARAMETER State
+    State value to convert
+
+.EXAMPLE
+    Get-State -State "0"
+
+.INPUTS
+    $State
+
+.OUTPUTS
+    Human Readable State
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to many functions
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [String]$State
@@ -2904,7 +4550,32 @@ Function Get-State {
 }
 
 Function Get-Status {
-    
+
+<#
+.SYNOPSIS
+    Convert technical status to Human Readable status
+
+.DESCRIPTION
+    Convert technical status to Human Readable status
+
+.PARAMETER status
+    status value to convert
+
+.EXAMPLE
+    Get-status -status "0"
+
+.INPUTS
+    $status
+
+.OUTPUTS
+    Human Readable status
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to many functions
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [String]$Status
@@ -2952,7 +4623,33 @@ Function Get-Status {
 }
 
 Function Get-YesNoAsk {
-    
+
+<#
+.SYNOPSIS
+    To get if answer is Yes or No
+
+.DESCRIPTION
+    To get if answer is Yes or No
+
+.PARAMETER YesNoAsk
+    To value possible : 0 / 1
+
+.EXAMPLE
+    Get-YesNoAsk -YesNoAsk 0
+    Get-YesNoAsk -YesNoAsk 1
+
+.INPUTS
+    $YesNoAsk
+
+.OUTPUTS
+    Human Readable
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to many functions
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$YesNoAsk
@@ -2970,19 +4667,72 @@ Function Get-YesNoAsk {
 
 # Used only when date is in second for the the last Seen Date settings
 Function Get-LastSeenDate {
-    
+
+<#
+.SYNOPSIS
+    Convert when date is in second for the the last Seen Date settings
+
+.DESCRIPTION
+    Convert when date is in second for the the last Seen Date settings
+
+.PARAMETER $Seconds
+    Time in second to convert to date
+
+.EXAMPLE
+    Get-LastSeenDate -Seconds 1
+    Get-LastSeenDate -Seconds 100
+
+.INPUTS
+    $Seconds
+
+.OUTPUTS
+    Seconds converted to date
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-HOSTS', 'Get-HOSTSME'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [Int]$Seconds
     )
     
-    $Value = $(Get-Date).AddSeconds(-$Seconds)
+    $Date = $(Get-Date).AddSeconds(-$Seconds)
     
-    Return $Value
+    Return $Date
 }
 
 Function Edit-Date {
-    
+
+<#
+.SYNOPSIS
+    Edit Bad formated date
+
+.DESCRIPTION
+    Edit Bad formated date
+
+.PARAMETER Date
+    Date with bad format
+
+.EXAMPLE
+    Edit-Date -Date "2023-01-01T00:00:00Z+001"
+    Edit-Date -Date "2023-01-01T00:00:00Z+002"
+
+.INPUTS
+    $Date
+
+.OUTPUTS
+    Date properly formated
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-BackupList', 'Get-USERSAVE', 'Get-Device', 'Get-DeviceLog', 'Get-DeviceFullLog', 'Get-DeviceFullTechnicalLog', 'Get-DeviceConnectionHistoryLog', 'Get-DeviceSummary', 'Get-DYNDNSClient', 'Get-HOSTS', 'Get-IPTVDiags', 'Get-ParentalControl', 'Get-ParentalControlScheduler', 'Get-SUMMARY', 'Get-VOIPScheduler', 'Get-WANAutowan', 'Get-WIRELESSScheduler'
+
+#>
+
     Param (
         [Parameter(Mandatory=$False)]
         [String]$Date
@@ -3001,9 +4751,35 @@ Function Edit-Date {
     }
 }
 
-# Used only to get USB folder type, linked to : "Get-USBStorage"
+# Used only to get USB folder type
 Function Get-USBFolderType {
-    
+
+<#
+.SYNOPSIS
+    Convert Usb Folder Type to Human readable
+
+.DESCRIPTION
+    Convert Usb Folder Type to Human readable
+
+.PARAMETER USBFolderType
+    Technical value for folder type
+
+.EXAMPLE
+    Get-USBFolderType -USBFolderType 0
+    Get-USBFolderType -USBFolderType 1
+
+.INPUTS
+    $USBFolderType
+
+.OUTPUTS
+    Human readable for Usb folder Type
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-USBStorage'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$USBFolderType
@@ -3023,9 +4799,36 @@ Function Get-USBFolderType {
     Return $Value
 }
 
-# Format Custom Date/Time, linked to : "Start-RefreshWIRELESSFrequencyNeighborhoodScan" and "Get-VOIPCallLogLineX" and "Get-VOIPFullCallLogLineX"
+# Format Custom Date/Time
 function Format-Date1970 {
-    
+
+<#
+.SYNOPSIS
+    Convert Date/Time based on date 01/01/1970
+
+.DESCRIPTION
+    Convert Date/Time based on date 01/01/1970
+
+.PARAMETER Seconds
+    Time in seconds
+
+.EXAMPLE
+    Format-Date1970 -Seconds 1
+    Format-Date1970 -Seconds 10
+
+.INPUTS
+    $Seconds
+
+.OUTPUTS
+    Date converted
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-VOIPCallLogLineX', 'Get-VOIPFullCallLogLineX'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$Seconds
@@ -3036,9 +4839,35 @@ function Format-Date1970 {
     Return $Date
 }
 
-# Used only to get USB right, linked to : "Get-DeviceUSBDevices"
+# Used only to get USB right
 Function Get-USBRight {
-    
+
+<#
+.SYNOPSIS
+    To convert USB right to Human readable
+
+.DESCRIPTION
+    To convert USB right to Human readable
+
+.PARAMETER USBRight
+    Technical right to be convert
+
+.EXAMPLE
+    Get-USBRight -USBRight 0
+    Get-USBRight -USBRight 1
+
+.INPUTS
+    $USBRight
+
+.OUTPUTS
+    Human readable for Usb folder rights
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-DeviceUSBDevices'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$USBRight
@@ -3054,9 +4883,38 @@ Function Get-USBRight {
     Return $Value
 }
 
-# Used only to know which call type, linked to : "Get-VOIPCallLogLineX"
+# Used only to get which call type
 Function Get-VoiceCallType {
-    
+
+<#
+.SYNOPSIS
+    To get which call type
+
+.DESCRIPTION
+    To get which call type
+
+.PARAMETER VoiceCallType
+    Voice call Type must be : in, in_reject, in_barred, out
+
+.EXAMPLE
+    Get-VoiceCallType -VoiceCallType in
+    Get-VoiceCallType -VoiceCallType in_reject
+    Get-VoiceCallType -VoiceCallType in_barred
+    Get-VoiceCallType -VoiceCallType out
+    Get-VoiceCallType -VoiceCallType ?
+
+.INPUTS
+    VoiceCallType
+
+.OUTPUTS
+    Human readable for Voice Call Type
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-VOIPCallLogLineX'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$VoiceCallType
@@ -3074,9 +4932,38 @@ Function Get-VoiceCallType {
     Return $Value
 }
 
-# Used only to get Powersatus for leds, linked to : "Get-DeviceLED"
+# Used only To get Power Status for leds ethernet ports
 Function Get-PowerStatus {
-    
+
+<#
+.SYNOPSIS
+    To get Power Status for leds ethernet ports
+
+.DESCRIPTION
+    To get Power Status for leds ethernet ports
+
+.PARAMETER PowerStatus
+    Power Status for leds ethernet ports
+
+.EXAMPLE
+    Get-PowerStatus -PowerStatus on
+    Get-PowerStatus -PowerStatus off
+    Get-PowerStatus -PowerStatus Up
+    Get-PowerStatus -PowerStatus Down
+    Get-PowerStatus -PowerStatus blink
+
+.INPUTS
+    $PowerStatus 
+
+.OUTPUTS
+    Human Readable for leds ethernet ports status
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-DeviceLED'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$PowerStatus
@@ -3095,9 +4982,36 @@ Function Get-PowerStatus {
     Return $Value
 }
 
-# Used only to get phone line linked to : Get-DeviceLog
+# Used only to get phone line
 Function Get-PhoneLine {
-    
+
+<#
+.SYNOPSIS
+    To get phone line
+
+.DESCRIPTION
+    To get phone line
+
+.PARAMETER Phoneline
+    Phone line position number, 2 possible values : 1,2
+
+.EXAMPLE
+    Get-PhoneLine -Phoneline 1
+    Get-PhoneLine -Phoneline 2
+
+.INPUTS
+    $Phoneline
+
+.OUTPUTS
+    Phone line position detailled
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-DeviceLog', 'Get-LANAlerts', "Get-DeviceFullTechnicalLog", "Get-DeviceFullLog", "", "", "", "", "", ""
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$Phoneline
@@ -3105,16 +5019,43 @@ Function Get-PhoneLine {
     
     Switch ($Phoneline) {
     
-        1       {$Value = 'Line 1';Break}
-        2       {$Value = 'Line 2';Break}
-        Default {$Value = 'Unknow';Break}
+        1       {$PhoneLinePosition = 'Line 1';Break}
+        2       {$PhoneLinePosition = 'Line 2';Break}
+        Default {$PhoneLinePosition = 'Unknow';Break}
     }
     
-    Return $Value
+    Return $PhoneLinePosition
 }
 
-# Used only to select by user the phone line to check, linked to : Get-VOIPCallLogLine / Get-VOIPFullCallLogLine
+# Used only to select by user the phone line to check
 Function Get-PhoneLineID {
+
+<#
+.SYNOPSIS
+    To select by user the phone line to check
+
+.DESCRIPTION
+    To select by user the phone line to check
+
+.PARAMETER LineID
+    Phone line position
+
+.EXAMPLE
+    Get-PhoneLineID -LineID 1
+    Get-PhoneLineID -LineID 2
+
+.INPUTS
+    User phone line selection
+
+.OUTPUTS
+    $LineID
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-VOIPCallLogLine', 'Get-VOIPFullCallLogLine'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
 
     While ($LineID -notmatch $global:JSONSettingsProgramContent.Values.LineNumber) {
         
@@ -3125,9 +5066,39 @@ Function Get-PhoneLineID {
     Return $LineID
 }
 
-# Used by Function : Switch-Info, linked to "Get-PhoneLineID" and "Get-VOIPCalllogLineX"
+# Used by Function : 'Switch-Info' - To get Call log by line ID
 Function Get-VOIPCallLogLine {
+
+<#
+.SYNOPSIS
+    To get Call log by line ID
+
+.DESCRIPTION
+    To get Call log by line ID
+
+.PARAMETER UrlToGo
+    Url to get the call log for the selected line ID
+
+.EXAMPLE
+    Get-VOIPCallLogLine -UrlToGo "https://mabbox.bytel.fr/api/v1/voip/calllog/1"
+    Get-VOIPCallLogLine -UrlToGo "https://mabbox.bytel.fr/api/v1/voip/calllog/2"
+    Get-VOIPCallLogLine -UrlToGo "https://exemple.com:8560/api/v1/voip/calllog/1"
+    Get-VOIPCallLogLine -UrlToGo "https://exemple.com:8560/api/v1/voip/calllog/2"
     
+.INPUTS
+    $UrlToGo
+    $LineID
+
+.OUTPUTS
+    Calls log history for the line ID selected
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-PhoneLineID', 'Get-VOIPCalllogLineX', 'Switch-Info'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -3139,9 +5110,39 @@ Function Get-VOIPCallLogLine {
     Return $FormatedData
 }
 
-# Used by Function : Switch-Info, linked to "Get-PhoneLineID" and "Get-VOIPFullcalllogLineX"
+# Used by Function : Switch-Info  - To get full Call log by line ID
 Function Get-VOIPFullCallLogLine {
+
+<#
+.SYNOPSIS
+    To get full Call log by line ID
+
+.DESCRIPTION
+    To get full Call log by line ID
+
+.PARAMETER UrlToGo
+    Url to get the full call log for the selected line ID
+
+.EXAMPLE
+    Get-VOIPFullCallLogLine -UrlToGo "https://mabbox.bytel.fr/api/v1/voip/fullcalllog/1"
+    Get-VOIPFullCallLogLine -UrlToGo "https://mabbox.bytel.fr/api/v1/voip/fullcalllog/2"
+    Get-VOIPFullCallLogLine -UrlToGo "https://exemple.com:8560/api/v1/voip/fullcalllog/1"
+    Get-VOIPFullCallLogLine -UrlToGo "https://exemple.com:8560/api/v1/voip/fullcalllog/2"
     
+.INPUTS
+    $UrlToGo
+    $LineID
+
+.OUTPUTS
+    Full Calls log history for the line ID selected
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-PhoneLineID', 'Get-VOIPFullcalllogLineX', 'Switch-Info'
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -3155,7 +5156,41 @@ Function Get-VOIPFullCallLogLine {
 
 # Used only to set (PUT/POST) information
 Function Set-BBoxInformation {
-    
+
+<#
+.SYNOPSIS
+    To set (PUT/POST) information
+
+.DESCRIPTION
+    To set (PUT/POST) information
+
+.PARAMETER UrlHome
+    BBOX login url
+
+.PARAMETER Password
+    BBOX Web administration password
+
+.PARAMETER UrlToGo
+    Web request to sent to the API
+
+.EXAMPLE
+    Set-BBoxInformation -UrlHome "https://mabbox.bytel.fr/login.html" -Password "password" -UrlToGo ""
+
+.INPUTS
+    $UrlHome
+    $Password
+    $UrlToGo
+
+.OUTPUTS
+    Return result of the resquest send to API
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '', ''
+    Linked to script(s): '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlHome,
