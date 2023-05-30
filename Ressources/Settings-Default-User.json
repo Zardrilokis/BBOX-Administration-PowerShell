@@ -5,11 +5,11 @@
     "Comment": "Credentials to connect to BYTEL Web Admin Console"
   },
   "Site": {
-    "OldRemotePort": "",
+	"OldRemotePort": "",
     "OldRemoteUrl": "",
     "DefaultLocalUrl": "https://mabbox.bytel.fr",
     "DefaultRemotePort": "8560",
-    "LocalUrl": "",
+    "CurrentLocalUrl": "",
     "CurrentRemoteUrl": "",
     "CurrentRemotePort": ""
   },

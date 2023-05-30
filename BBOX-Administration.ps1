@@ -3,7 +3,7 @@
 <#
 .SYNOPSIS
     
-   Get / Set BBOX informations.
+   Get / Set / Add BBOX informations.
     
 .DESCRIPTION
     
@@ -28,15 +28,24 @@
     Out-GridviewDisplay -FormatedData $FormatedData -APIName $APIName -Description $Description
     Export-toCSV        -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile
     Export-toJSON       -FormatedData $FormatedData -APIName $APIName -JsonBboxconfigPath $ExportJSONPath -Exportfile $Exportfile
+    Windows Dialog form boxes
+    PowerShell Host Console
+    .\Logs\BBOX_Administration_Log-Date.csv
+    .\BBOX-Administration-Transcript-Log-Date.log
     
+.EXAMPLE
+
+    cd "$Path" where $Path is the directory path where store the program
+    .\BBOX-Administration.ps1
+
 .NOTES
     
     Creation Date : 2020/04/30
-    Author : Zardrilokis => Tom78_91_45@yahoo.fr
+    Author : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     
     Version 1.0
     Updated Date : 2022/05/15
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Powershell script creation
     Update       : Add module : '.\BBOX-Module.psm1'
     Update       : Add checks / controls
@@ -84,7 +93,7 @@
     
     Version 2.0
     Updated Date : 2022/01/13
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Add 2 new functions : 'Switch-DisplayFormat' and 'Switch-ExportFormat' in '.\BBOX-Module.psm1'
     Update       : Add new requests in file : '.\Ressources\API-Summary.csv' => Switch-DisplayFormat / Switch-ExportFormat
     Update       : Add new function : 'EmptyFormatedDATA' in '.\BBOX-Module.psm1'
@@ -137,7 +146,7 @@
     
     Version 2.1 - BBOX version 20.8.6
     Updated Date : 2022/02/16
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Update logs files / Correct missing information in functions from BBOX-Module.psm1
     Update       : Correct Switch $APIName for 'Default' way
     Update       : Correct Grammatical Syntaxe
@@ -162,14 +171,14 @@
 
     Version 2.2 - BBOX version 20.8.8
     Updated Date : 2022/05/18
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Change display date format in functions : 'Get-DeviceLog', 'Get-DeviceFullLog', 'Get-DeviceFullTechnicalLog', 'Get-Device', 'Get-DeviceFullTechnicalLog', 'Get-DeviceToken', 'Get-DeviceSummary', 'Get-DYNDNSClient', 'Get-HOSTS', 'Get-HOSTSME', 'Get-IPTVDiags', 'Get-LANAlerts', 'GET-PARENTALCONTROL', 'Get-ParentalControlScheduler', 'Get-SUMMARY', 'Get-UPNPIGDRules', 'Get-VOIPScheduler', 'Get-WANAutowan', 'Get-WANDiagsSessions', 'et-WIRELESSScheduler'
     Update       : Replace variable $ID by $Index and $log by $Line in functions : 'Get-DeviceLog', 'Get-DeviceFullLog', 'Get-DeviceFullTechnicalLog'
     Update       : Remove function 'Format-Date'
     
     Version 2.3 - BBOX version 20.8.8
     Updated Date : 2022/08/20
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : New variable : $global:TranscriptFileName
     Update       : Create json system configuration file : '.\Settings-Program.json'
     Update       : Create json user file : '.\Settings-Default-User.json'
@@ -212,7 +221,7 @@
     
     Version 2.4 - BBOX version 20.8.8
     Updated Date : 2022/09/23
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : #Requires -Version 7.0
     Update       : Add new function 'Import-CredentialManager' to manage credential in 'Windows Credential Manager'
     Update       : Install / import new module : 'TUN.CredentialManager'
@@ -235,7 +244,7 @@
     
     Version 2.5 - BBOX version 20.8.8
     Updated Date : 2022/09/27
-    Updated By   : Zardrilokis => Tom78_91_45@yahoo.fr
+    Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Update json program file : '.\Settings-Program.json'
     Update       : Add new function 'Update-ChromeDriver' to manage ChromeDriver update
     Update       : Add new parameter in function : 'Get-ChromeDriverVersion' => -ChromeDriverPath
@@ -260,15 +269,15 @@
     Update       : Correct some display bug in functions when data has been exported
     Update       : Manage if BBOX authentification is needed or not, depending of bbox connection (Local/Remote)
     Update       : Add region to stop and update Google Chrome with winget cmlt
-    Update       : Add new function : 'Reset-CurrentUserProgrammConfiguration' to reset user configuration during programm runnning
+    Update       : Add new function : 'Reset-CurrentUserProgramConfiguration' to reset user configuration during program runnning
     Update       : Correct display syntaxe when output folders opened
     Update       : Change order 'Update Chrome Driver' and 'Update Google Chrome' and the control between the 2 versions
     Update       : Correct 'BBoxUrlFirewall' setting in function : 'Get-HostStatus' and 'Get-PortStatus'
     Update       : Debug function : 'Get-PortStatus'
     Update       : Debug function : Switch-OpenExportFolder
 
-    Version 2.7 - BBOX version 22.3.16
-    Updated Date : 2023/03/27
+    Version 2.7 - BBOX version 22.3.22
+    Updated Date : 2023/05/30
     Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
     Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
     Update       : Update function : 'Get-WIRELESSACL' - Add parameter 'Rules Count'
@@ -300,6 +309,14 @@
     Update       : Add new function : 'Get-DeviceConnectionHistoryLog' and  'Get-DeviceConnectionHistoryLogID' - Get Log connexion history for devices
     Update       : Update File : '.\API-Summary.csv'
     Update       : Update defaut chrome driver to version : 113.0.5672.24
+    Update       : Update log file : 'BBOX_Administration_Log-Date.csv' and 'BBOX-Administration-Transcript-Log-Date.log'
+    Update       : Update function : 'Update-ChromeDriver' - Correct Folder creation, Unzip issue, DLLs files copy
+    Update       : Add foreach custom function in module : '.\BBOX-Modules.psm1' A get-help based on comments
+    Update       : Add foreach custom function their functions dependencies if exist in the header. Use 'get-help' for more details (https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help)
+    Update       : Update function : 'Get-PortStatus' - Add more help to diagnostize
+    Update       : Update 'Site.CurrentLocalUrl' parameter in Json files : '.\Ressources\Settings-Default-User.json' and '.\Ressources\Settings-Current-User.json'
+    Update       : Add 'Bbox.UrlPrefixe' parameter in Json file : '.\Ressources\Settings-Program.json' and remplace 'https://' by '$global:UrlPrefixe'
+    Update       : Update File : '.\API-Summary.csv' - Correct wrong function association and syntaxe
     
 .LINKS
     
@@ -308,9 +325,10 @@
     https://chromedriver.chromium.org/
     https://mabbox.bytel.fr/
     https://mabbox.bytel.fr/api/v1
-    http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     https://www.bbox-mag.fr/box/firmware/
     https://www.powershellgallery.com/packages/TUN.CredentialManager
+    http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+    https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help
     
 #>
 
@@ -439,16 +457,29 @@ $DYNDNS     = ""
 
 Start-Transcript -Path $TranscriptFilePath -Append -Force -NoClobber
 Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message '#################################################### Initialisation #####################################################'
-Write-Log -Type INFO -Name 'Program initialisation - Start Program' -Message 'Start Program initialisation'  -NotDisplay
+Write-Log -Type INFO -Name 'Program initialisation - Start Program' -Message 'Start Program initialisation' -NotDisplay
 Write-Log -Type INFONO -Name 'Program initialisation - Start Program' -Message 'Program loading ... : '
 
 #endregion Start Program initialisation
 
 #region Create logs folder
 
-Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation'  -NotDisplay
-$Null = New-Item -Path $ScriptRootFolder -Name $global:LogFolderName -ItemType Directory -Force -ErrorAction Stop
-Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation'  -NotDisplay
+Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation' -NotDisplay
+Write-Log -Type INFONO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation status : ' -NotDisplay
+If (-not (Test-Path -Path $ScriptRootFolder)) {
+    
+    Try {
+        $Null = New-Item -Path $ScriptRootFolder -Name $global:LogFolderName -ItemType Directory -Force -ErrorAction Stop
+        Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Success' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Name 'Program initialisation - Logs Folder Creation' -Message "Failed, due to :$($_.string())" -NotDisplay
+    }
+}
+Else {
+    Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Already exist' -NotDisplay
+}
+Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
 
 #endregion Create logs folder
 
@@ -487,8 +518,6 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         
         # Paths
         $ExportPath              = "$ScriptRootFolder\"  + $global:JSONSettingsProgramContent.path.ExportFolderName
-        $ExportCSVPath           = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportCSVFolderName
-        $ExportJSONPath          = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportJSONFolderName
         $JournalPath             = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JournalFolderName
         $JsonBboxconfigPath      = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JsonBboxconfigFolderName
         $RessourcesPath          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.RessourcesFolderName
@@ -496,6 +525,8 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $BBOXModulePath          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.BBOXModuleFileName
         $APISummaryPath          = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.APISummaryFileName
         $TestedEnvironnementPath = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.TestedEnvironnementFileName
+        $ExportCSVPath           = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportCSVFolderName
+        $ExportJSONPath          = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportJSONFolderName
         
         # Google Chrome / Chrome Driver Paths
         $global:ChromeDriver                     = $Null
@@ -521,6 +552,7 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $ActionsExclusionsActions = $global:JSONSettingsProgramContent.Actions.Exclusions.Actions
         
         # BBox
+        $global:UrlPrefixe   = $global:JSONSettingsProgramContent.bbox.UrlPrefixe
         $APIVersion          = $global:JSONSettingsProgramContent.bbox.APIVersion
         $BBoxDns             = $global:JSONSettingsProgramContent.bbox.BBoxDns
         $BBoxUrlRemote       = $global:JSONSettingsProgramContent.bbox.BBoxUrlRemote
@@ -1019,6 +1051,8 @@ If ($Null -eq $global:TriggerExit) {
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message $($DnsName.Address) -NotDisplay
         Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Localy' -NotDisplay
+        $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl = $BBoxDns
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         $TriggerLANNetwork = 1
     }
     Catch {
@@ -1027,6 +1061,8 @@ If ($Null -eq $global:TriggerExit) {
         Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local BBOX Network`n`n- If you are connected on your local network, make sure you are connected on the BBOX's Wifi or ethernet network`n- If you use a intermediary router between your computer and the BBOX router, it will not working" -WarnIcon | Out-Null
         Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Remotely' -NotDisplay
+        $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl = "Unknow / Can't be Define / Resolve"
+        $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         $TriggerLANNetwork = 0
     }
     Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'End Check BBOX LAN network' -NotDisplay
@@ -1051,9 +1087,9 @@ If ($Null -eq $global:TriggerExit) {
     
     Switch ($ConnexionType[0]) {
         
-        L   {$UrlRoot = "https://$BBoxDns/$APIVersion"
-             $UrlAuth = "https://$BBoxDns/login.html"
-             $UrlHome = "https://$BBoxDns/index.html"
+        L   {$UrlRoot = "$global:UrlPrefixe$BBoxDns/$APIVersion"
+             $UrlAuth = "$global:UrlPrefixe$BBoxDns/login.html"
+             $UrlHome = "$global:UrlPrefixe$BBoxDns/index.html"
              Break
             }
         
@@ -1063,9 +1099,9 @@ If ($Null -eq $global:TriggerExit) {
              Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'Start Check Port' -NotDisplay
              $Port = Get-PortStatus -UrlRoot $DYNDNS
              Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'End Check Port' -NotDisplay
-             $UrlRoot = "https://$DYNDNS`:$Port/$APIVersion"
-             $UrlAuth = "https://$DYNDNS`:$Port/login.html"
-             $UrlHome = "https://$DYNDNS`:$Port/index.html"
+             $UrlRoot = "$global:UrlPrefixe$DYNDNS`:$Port/$APIVersion"
+             $UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.html"
+             $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port/index.html"
              Break
             }
         
@@ -1201,4 +1237,4 @@ While ($Null -eq $global:TriggerExit) {
 
 Stop-Program -ErrorAction Stop
 
-#endregion Close Programm
+#endregion Close Program
