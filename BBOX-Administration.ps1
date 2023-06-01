@@ -3,40 +3,40 @@
 <#
 .SYNOPSIS
     
-   Get / Set / Add BBOX informations.
+   Get / Set / Add BBox informations.
     
 .DESCRIPTION
     
-   GET/PUT/POST/DELETE/OPTION BBOX informations by Web request from ChromeDriver.
-   Collect, Modify, Remove, BBOX information using Bytel API Web request, with PowerShell script.
+   GET/PUT/POST/DELETE/OPTION BBox informations by Web request from ChromeDriver.
+   Collect, Modify, Remove, BBox information using Bytel API Web request, with PowerShell script.
     
 .INPUTS
     
-    .\BBOX-Aministration.ps1
-    .\BBOX-Module.psm1
+    .\BBox-Aministration.ps1
+    .\BBox-Module.psm1
     .\Settings-Default-User.json
     .\Settings-Current-User.json
     .\Settings-Program.json
-    Web url bbox content
-    BBOX Rest API
+    Web url BBox content
+    BBox Rest API
     Hand User actions
     Windows Credential Manager
     
 .OUTPUTS
     
-    Export-HTMLReport   -DataReported $FormatedData -ReportTitle "BBOX Configuration Report - $APIName" -ReportType $ReportType -ReportPath $ReportPath -ReportFileName $Exportfile -HTMLTitle "BBOX Configuration Report" -ReportPrecontent $APIName -Description $Description
+    Export-HTMLReport   -DataReported $FormatedData -ReportTitle "BBox Configuration Report - $APIName" -ReportType $ReportType -ReportPath $ReportPath -ReportFileName $Exportfile -HTMLTitle "BBox Configuration Report" -ReportPrecontent $APIName -Description $Description
     Out-GridviewDisplay -FormatedData $FormatedData -APIName $APIName -Description $Description
     Export-toCSV        -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile
-    Export-toJSON       -FormatedData $FormatedData -APIName $APIName -JsonBboxconfigPath $ExportJSONPath -Exportfile $Exportfile
+    Export-toJSON       -FormatedData $FormatedData -APIName $APIName -JsonBBoxconfigPath $ExportJSONPath -Exportfile $Exportfile
     Windows Dialog form boxes
     PowerShell Host Console
-    .\Logs\BBOX_Administration_Log-Date.csv
-    .\BBOX-Administration-Transcript-Log-Date.log
+    .\Logs\BBox_Administration_Log-Date.csv
+    .\BBox-Administration-Transcript-Log-Date.log
     
 .EXAMPLE
 
     cd "$Path" where $Path is the directory path where store the program
-    .\BBOX-Administration.ps1
+    .\BBox-Administration.ps1
 
 .NOTES
     
@@ -47,7 +47,7 @@
     Updated Date : 2022/05/15
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Powershell script creation
-    Update       : Add module : '.\BBOX-Module.psm1'
+    Update       : Add module : '.\BBox-Module.psm1'
     Update       : Add checks / controls
     Update       : Add WIRELESS Frequency Neighborhood Scan before export result
     Update       : Add DHCP IPV6 and Firewall IPV6 functions
@@ -68,7 +68,7 @@
     Update       : Add missing IPV6 part on all page.
     Update       : Add missing elements in all functions
     Update       : Correct information put in logs files
-    Update       : Reorganize BBOX-Module.psm1 to more clarify
+    Update       : Reorganize BBox-Module.psm1 to more clarify
     Update       : Hide ChromeDriver Service console and Chrome driver Application
     Update       : Add requirements
     Update       : Adjust remote connection port
@@ -80,32 +80,32 @@
     Update       : Add new features available since version 19.2.12
     Update       : Correct properties in function 'Get-Airties'
     Update       : Add new function : 'Get-Nat' - Get Nat Configuration Information
-    Update       : Correct wifi scan when use remote BBOX connexion, function 'Start-RefreshWIRELESSFrequencyNeighborhoodScan'
+    Update       : Correct wifi scan when use remote BBox connexion, function 'Start-RefreshWIRELESSFrequencyNeighborhoodScan'
     Update       : Correct Active Host session by host, function 'Get-WANDAASH'
     Update       : Modify Display date format for HTML report
     Update       : Add new function : 'Get-HOSTSPAUTH' => Get HOSTS PAUTH Information
-    Update       : Add new function : 'Format-Date' => To format the custom date to the standard one / Replace in functions in '.\BBOX-Module.psm1'
-    Update       : Add new function : 'Remove-FolderContent' => To remove export folder content Add in BBOX-Module.psm1
+    Update       : Add new function : 'Format-Date' => To format the custom date to the standard one / Replace in functions in '.\BBox-Module.psm1'
+    Update       : Add new function : 'Remove-FolderContent' => To remove export folder content Add in BBox-Module.psm1
     Update       : Add new requests in file : '.\Ressources\API-Summary.csv' => Remove-FCLogs / Remove-FCExportCSV / Remove-FCExportJSON / Remove-FCJournal / Remove-FCJBC / Remove-FCReport
     Update       : Add 3 last Chrome Drivers versions : 93.0.4577.15 / 92.0.4515.43 / 91.0.4472.101
-    Update       : Modify function : 'Get-DeviceToken' in '.\BBOX-Module.psm1'
+    Update       : Modify function : 'Get-DeviceToken' in '.\BBox-Module.psm1'
     Update       : Add new properties in existing functions
     
     Version 2.0
     Updated Date : 2022/01/13
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
-    Update       : Add 2 new functions : 'Switch-DisplayFormat' and 'Switch-ExportFormat' in '.\BBOX-Module.psm1'
+    Update       : Add 2 new functions : 'Switch-DisplayFormat' and 'Switch-ExportFormat' in '.\BBox-Module.psm1'
     Update       : Add new requests in file : '.\Ressources\API-Summary.csv' => Switch-DisplayFormat / Switch-ExportFormat
-    Update       : Add new function : 'EmptyFormatedDATA' in '.\BBOX-Module.psm1'
+    Update       : Add new function : 'EmptyFormatedDATA' in '.\BBox-Module.psm1'
     Update       : Add new logs informations
     Update       : Correct Syntaxt
     Update       : Correct Program Sequence order
     Update       : Add new functions : 'Format-DisplayResult' and 'Format-ExportResult'
     Update       : Add Varible : '$logFileName' and '$FormatedDataExclusion'
-    Update       : Rename variable : '$Info' and function property '-Info' to '$Label' and 'Label' in '.\BBOX-Module.psm1' and '.\BBOX-Administration.ps1'
-    Update       : Rename variable : '$Pages' and function property '-Pages' to '$APIsName' and 'APIsName' in '.\BBOX-Administration.ps1'
+    Update       : Rename variable : '$Info' and function property '-Info' to '$Label' and 'Label' in '.\BBox-Module.psm1' and '.\BBox-Administration.ps1'
+    Update       : Rename variable : '$Pages' and function property '-Pages' to '$APIsName' and 'APIsName' in '.\BBox-Administration.ps1'
     Update       : Rename variable : '$Page' and function property '-Page' to '$APIName' and 'APIName'
-    Update       : Add new function : 'Stop-Program' in '.\BBOX-Module.psm1'
+    Update       : Add new function : 'Stop-Program' in '.\BBox-Module.psm1'
     Update       : Update logs file content
     Update       : Add Chrome Driver Log Path in Chrome Driver Option in function : 'Start-ChromeDriver'
     Update       : Add Transcript logs file
@@ -115,17 +115,17 @@
     Update       : Change common footer in HTML Report
     Update       : Modify Header title from 'Record' to 'Record Type' in function : 'Get-DYNDNSClient'
     Update       : Correct bug in function 'Get-DYNDNS' (No data get after request)
-    Update       : Modify remember check remote bbox connection only if remote instead of both.
-    Update       : Modify comments if bbox dns not responding when program analyse your network connection.
+    Update       : Modify remember check remote BBox connection only if remote instead of both.
+    Update       : Modify comments if BBox dns not responding when program analyse your network connection.
     Update       : Modify comment when program quit (System / User)
     Update       : Change function's name from 'Get-WPS' to 'Get-WIRELESSWPS'
     Update       : Correct bug in function : 'Get-WIRELESSWPS' (Missing data to collect)
     Update       : Add date in file name export/report
-    Update       : Add dynamic folder path in function : 'Export-BboxConfiguration' => modify also function : 'Switch-Info'
+    Update       : Add dynamic folder path in function : 'Export-BBoxConfiguration' => modify also function : 'Switch-Info'
     Update       : Correct Log file Name display when program closing
     Update       : Modify functions : 'Test-FilePath' and 'Test-FolderPath'
     Update       : Change 'Get-BBoxJournal' function logic
-    Update       : Add new function : 'Get-CPLDeviceList' in module : '.\BBOX-Module.psm1'
+    Update       : Add new function : 'Get-CPLDeviceList' in module : '.\BBox-Module.psm1'
     Update       : Modify function : 'Get-CPL'
     Update       : Modify function : 'Get-BackupList'
     Update       : Update function 'Get-DeviceToken' with the date time format was changed
@@ -144,39 +144,39 @@
     Update       : Correct function : 'Stop-ChromeDriver' when chrome driver not yet started
     Update       : Correct the log name in function : 'Stop-Program'
     
-    Version 2.1 - BBOX version 20.8.6
+    Version 2.1 - BBox version 20.8.6
     Updated Date : 2022/02/16
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
-    Update       : Update logs files / Correct missing information in functions from BBOX-Module.psm1
+    Update       : Update logs files / Correct missing information in functions from BBox-Module.psm1
     Update       : Correct Switch $APIName for 'Default' way
     Update       : Correct Grammatical Syntaxe
     Update       : Change order code in function : 'Start-RefreshWIRELESSFrequencyNeighborhoodScan'
     Update       : Simplify paramerters in functions : 'Export-BBoxConfiguration', 'Export-BBoxConfigTestingProgram', 'Switch-Info', 'Get-WIRELESSFrequencyNeighborhoodScan'
     Update       : Correct data format in function : 'Get-WIRELESSFrequencyNeighborhoodScanID'
     Update       : Optimise code logic to manage Local / remote connection with web uri
-    Update       : Remove function : 'Switch-ConnectionType' in module : '.\BBOX-Module.psm1'
-    Update       : Add new function : 'Get-PasswordRecoveryVerify' in module : '.\BBOX-Module.psm1'
+    Update       : Remove function : 'Switch-ConnectionType' in module : '.\BBox-Module.psm1'
+    Update       : Add new function : 'Get-PasswordRecoveryVerify' in module : '.\BBox-Module.psm1'
     Update       : Add new information in function : 'Get-FIREWALLPingResponder'
     Update       : Correct SolvedTime information in function : 'Get-LANAlerts'
     Update       : Rename function : 'Get-NOTIFICATION' to 'Get-NOTIFICATIONConfig'
     Update       : Add New informations (Events/Contacts) in function : 'Get-NOTIFICATIONConfig'
-    Update       : Add 3 New functions : 'Get-NOTIFICATIONConfigAlerts', 'Get-NOTIFICATIONConfigContacts', 'Get-NOTIFICATIONConfigEvents' in module : '.\BBOX-Module.psm1'
-    Update       : Correct some headers/values in fonctions in module : '.\BBOX-Module.psm1'
-    Update       : Correct function 'Get-VOIPFullCallLogLineX' in module : '.\BBOX-Module.psm1'
-    Update       : Add function 'Export-GlobalOutputData' in module : '.\BBOX-Module.psm1'
-    Update       : BBOX in version 20.8.6
-    Update       : Add function 'Get-WANSFF' in module : '.\BBOX-Module.psm1'
-    Update       : Add function 'Get-WIRELESSVideoBridgeSetTopBoxes' and modify 'Get-Status' in module : '.\BBOX-Module.psm1'
-    Update       : Add function 'Get-WIRELESSVideoBridgeRepeaters' in module : '.\BBOX-Module.psm1'
+    Update       : Add 3 New functions : 'Get-NOTIFICATIONConfigAlerts', 'Get-NOTIFICATIONConfigContacts', 'Get-NOTIFICATIONConfigEvents' in module : '.\BBox-Module.psm1'
+    Update       : Correct some headers/values in fonctions in module : '.\BBox-Module.psm1'
+    Update       : Correct function 'Get-VOIPFullCallLogLineX' in module : '.\BBox-Module.psm1'
+    Update       : Add function 'Export-GlobalOutputData' in module : '.\BBox-Module.psm1'
+    Update       : BBox in version 20.8.6
+    Update       : Add function 'Get-WANSFF' in module : '.\BBox-Module.psm1'
+    Update       : Add function 'Get-WIRELESSVideoBridgeSetTopBoxes' and modify 'Get-Status' in module : '.\BBox-Module.psm1'
+    Update       : Add function 'Get-WIRELESSVideoBridgeRepeaters' in module : '.\BBox-Module.psm1'
 
-    Version 2.2 - BBOX version 20.8.8
+    Version 2.2 - BBox version 20.8.8
     Updated Date : 2022/05/18
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Change display date format in functions : 'Get-DeviceLog', 'Get-DeviceFullLog', 'Get-DeviceFullTechnicalLog', 'Get-Device', 'Get-DeviceFullTechnicalLog', 'Get-DeviceToken', 'Get-DeviceSummary', 'Get-DYNDNSClient', 'Get-HOSTS', 'Get-HOSTSME', 'Get-IPTVDiags', 'Get-LANAlerts', 'GET-PARENTALCONTROL', 'Get-ParentalControlScheduler', 'Get-SUMMARY', 'Get-UPNPIGDRules', 'Get-VOIPScheduler', 'Get-WANAutowan', 'Get-WANDiagsSessions', 'et-WIRELESSScheduler'
     Update       : Replace variable $ID by $Index and $log by $Line in functions : 'Get-DeviceLog', 'Get-DeviceFullLog', 'Get-DeviceFullTechnicalLog'
     Update       : Remove function 'Format-Date'
     
-    Version 2.3 - BBOX version 20.8.8
+    Version 2.3 - BBox version 20.8.8
     Updated Date : 2022/08/20
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : New variable : $global:TranscriptFileName
@@ -191,10 +191,10 @@
     Update       : Update powershell requirements from -Version 5.0 to 5.1
     Update       : Update function : 'Switch-ExportFormat' and 'Switch-DisplayFormat' and 'Switch-OpenHTMLReport' to manage trigger user settings configuration
     Update       : Update File configuration '.\Settings-Default-User.json', '.\Settings-Default-User.json', '.\Settings-Current-User.json'
-    Update       : Change function organization for better loading/run program in file : '.\BBOX-Module.psm1'
-    Update       : Optimise 'Switch' function with 'Break' in files : '.\BBOX-Aministration.ps1' and '.\BBOX-Module.psm1'
-    Update       : Change order checks in file : '.\BBOX-Aministration.ps1'
-    Update       : Create 'regions' ([region]/[endregion]) to structure the code in files : '.\BBOX-Aministration.ps1' and '.\BBOX-Module.psm1'
+    Update       : Change function organization for better loading/run program in file : '.\BBox-Module.psm1'
+    Update       : Optimise 'Switch' function with 'Break' in files : '.\BBox-Aministration.ps1' and '.\BBox-Module.psm1'
+    Update       : Change order checks in file : '.\BBox-Aministration.ps1'
+    Update       : Create 'regions' ([region]/[endregion]) to structure the code in files : '.\BBox-Aministration.ps1' and '.\BBox-Module.psm1'
     Update       : Update syntaxe for logs file and user console display
     Update       : Correct function : 'Get-APIRessourcesMap', remove double 'API/V1' syntaxe
     Update       : Correct function : 'Export-GlobalOutputData' to manage when '$FormatedData' is null or empty
@@ -205,21 +205,21 @@
     Update       : Add new function : 'Show-WindowsFormDialogBox3Choices' to get user choice as dialogbox press button among 3 choices
     Update       : Add new function : 'Show-WindowsFormDialogBox3ChoicesCancel' to get user choice as dialogbox press button among 3 choices with 'Cancel' option
     Update       : Update functions : 'Start-RefreshWIRELESSFrequencyNeighborhoodScan' and 'Get-PortStatus' and 'Get-HostStatus' and 'Get-ConnexionType' and 'Get-PhoneLineID' and 'Switch-OpenHTMLReport' and 'Switch-ExportFormat' and 'Switch-DisplayFormat' with new functions
-    Update       : Update function : 'Connect-BBOX' to manage if wrong password enter to connect to BBox web interface
+    Update       : Update function : 'Connect-BBox' to manage if wrong password enter to connect to BBox web interface
     Update       : Change default value for : '$global:TriggerExit' from '0' to '$null'
     Update       : Optimise syntaxe code for string of characters
     Update       : New Varaiable : '$global:TriggerDialogBox' to manage if DialogBox need to be display or not
     Update       : Update functions : 'Get-HostStatus' and 'Get-PortStatus' to integrate Windows Form Dialog Box
     Update       : Replace ALL 'Write-Host' by 'Write-Log' function
     Update       : Display warning action for end-user with function : 'Show-WindowsFormDialogBox'
-    Update       : Change Start Chromedriver and bbox authentification only if not already launched and if it is not a local program action
+    Update       : Change Start Chromedriver and BBox authentification only if not already launched and if it is not a local program action
     Update       : Change '.\Settings-Program.json' file structure
     Update       : Update function : 'Get-BBoxInformation' to catch better API errors
     Update       : Update function : 'Stop-Program' to manage better Google Chrome and ChromeDriver closing
     Update       : Optimise function : 'Switch-Info' to remove old value don't used
     Update       : Change Windows Form position and size
     
-    Version 2.4 - BBOX version 20.8.8
+    Version 2.4 - BBox version 20.8.8
     Updated Date : 2022/09/23
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : #Requires -Version 7.0
@@ -228,7 +228,7 @@
     Update       : Add new function : 'Import-TUNCredentialManager'
     Update       : Add new 'links' : https://www.powershellgallery.com/packages/TUN.CredentialManager
     Update       : Requires to use PowerShell Version 7.0
-    Update       : Add new functions : 'Remove-BBoxCredential', 'Show-BBoxCredential', 'Add-BBoxCredential' to manage BBOX Credential in 'Windows Credential Manager'
+    Update       : Add new functions : 'Remove-BBoxCredential', 'Show-BBoxCredential', 'Add-BBoxCredential' to manage BBox Credential in 'Windows Credential Manager'
     Update       : Add PowerShell Script Admin Execution control
     Update       : Add new block to install / Import Powershell module : 'TUN.CredentialManager'
     Update       : switch position block 'Presentation'
@@ -242,7 +242,7 @@
     Update       : Update function 'Add-BBoxCredential' to display the password set to 'Windows Credential Manager'
     Update       : Update function 'Get-BackupList', add WindowsFormDialogBox when no backup file found
     
-    Version 2.5 - BBOX version 20.8.8
+    Version 2.5 - BBox version 20.8.8
     Updated Date : 2022/09/27
     Updated By   : Thomas LANDEL alias @Zardrilokis => Tom78_91_45@yahoo.fr
     Update       : Update json program file : '.\Settings-Program.json'
@@ -250,16 +250,16 @@
     Update       : Add new parameter in function : 'Get-ChromeDriverVersion' => -ChromeDriverPath
     Update       : Update defaut chrome driver to version : 106.0.5249.21
     
-    Version 2.6 - BBOX version 22.3.12
+    Version 2.6 - BBox version 22.3.12
     Updated Date : 2023/02/20
-    Update       : Update program to be conmpabible with : BBOX version 22.3.12
+    Update       : Update program to be conmpabible with : BBox version 22.3.12
     Update       : Add new function : 'Get-WIRELESSFastScanMe'
     Update       : Modify function : 'Get-APIRessourcesMap', correct field : 'API url' with the complete URL
     Update       : Update File configuration : '.\Settings-Default-User.json', '.\Settings-Default-User.json', '.\Settings-Current-User.json'
     Update       : Update File : '.\API-Summary.csv'
     Update       : Update propose to user to re-use or not the existing stored password or define a new one
     Update       : Add new function : 'Switch-OpenExportFolder'
-    Update       : Update function : 'Switch-Info', 'Export-toCSV', 'Export-toJSON', 'Export-BboxConfiguration', 'Export-BBoxConfigTestingProgram'
+    Update       : Update function : 'Switch-Info', 'Export-toCSV', 'Export-toJSON', 'Export-BBoxConfiguration', 'Export-BBoxConfigTestingProgram'
     Update       : Update 'Export-*' function to open the output folder where data were exported
     Update       : update setting in json configuration files : '.\Ressources\Settings-Current-User.json' and '.\Ressources\Settings-Default-User.json'
     Update       : Update File : '.\API-Summary.csv'
@@ -267,7 +267,7 @@
     Update       : Update syntaxe in function : 'Get-BackupList'
     Update       : Use Resolve-DnsName function to resole HostName from IP address
     Update       : Correct some display bug in functions when data has been exported
-    Update       : Manage if BBOX authentification is needed or not, depending of bbox connection (Local/Remote)
+    Update       : Manage if BBox authentification is needed or not, depending of BBox connection (Local/Remote)
     Update       : Add region to stop and update Google Chrome with winget cmlt
     Update       : Add new function : 'Reset-CurrentUserProgramConfiguration' to reset user configuration during program runnning
     Update       : Correct display syntaxe when output folders opened
@@ -276,7 +276,7 @@
     Update       : Debug function : 'Get-PortStatus'
     Update       : Debug function : Switch-OpenExportFolder
 
-    Version 2.7 - BBOX version 22.3.22
+    Version 2.7 - BBox version 22.3.22
     Updated Date : 2023/05/30
     Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
     Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
@@ -286,9 +286,9 @@
     Update       : Create function : 'Get-LastSeenDate' - Modify $(Get-Date).AddSeconds(-X) where X is the time in seconds
     Update       : Create function : 'Edit-Date' - Add to rewrite date format to human readable
     Update       : Remove function : 'Get-Airties' -  Depreciated
-    Update       : Update program to be compatible with : BBOX version 22.3.16
-    Update       : Update function : 'Export-BboxConfiguration' - Add output in csv in // of Json
-    Update       : Remove function : 'Get-WIRELESSFastScanMe' - Depreciated since BBOX version 22.3.16
+    Update       : Update program to be compatible with : BBox version 22.3.16
+    Update       : Update function : 'Export-BBoxConfiguration' - Add output in csv in // of Json
+    Update       : Remove function : 'Get-WIRELESSFastScanMe' - Depreciated since BBox version 22.3.16
     Update       : Change/switch some command lines in block : 'Update Google Chrome version'
     Update       : Update function : 'Export-BBoxConfiguration' - Update Filter
     Update       : Update function : 'Write-Log' - Change Log disposition for better reading
@@ -309,23 +309,29 @@
     Update       : Add new function : 'Get-DeviceConnectionHistoryLog' and  'Get-DeviceConnectionHistoryLogID' - Get Log connexion history for devices
     Update       : Update File : '.\API-Summary.csv'
     Update       : Update defaut chrome driver to version : 113.0.5672.24
-    Update       : Update log file : 'BBOX_Administration_Log-Date.csv' and 'BBOX-Administration-Transcript-Log-Date.log'
+    Update       : Update log file : 'BBox_Administration_Log-Date.csv' and 'BBox-Administration-Transcript-Log-Date.log'
     Update       : Update function : 'Update-ChromeDriver' - Correct Folder creation, Unzip issue, DLLs files copy
-    Update       : Add foreach custom function in module : '.\BBOX-Modules.psm1' A get-help based on comments
+    Update       : Add foreach custom function in module : '.\BBox-Modules.psm1' A get-help based on comments
     Update       : Add foreach custom function their functions dependencies if exist in the header. Use 'get-help' for more details (https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help)
     Update       : Update function : 'Get-PortStatus' - Add more help to diagnostize
     Update       : Update 'Site.CurrentLocalUrl' parameter in Json files : '.\Ressources\Settings-Default-User.json' and '.\Ressources\Settings-Current-User.json'
-    Update       : Add 'Bbox.UrlPrefixe' parameter in Json file : '.\Ressources\Settings-Program.json' and remplace 'https://' by '$global:UrlPrefixe'
+    Update       : Add 'BBox.UrlPrefixe' parameter in Json file : '.\Ressources\Settings-Program.json' and remplace 'https://' by '$global:UrlPrefixe'
     Update       : Update File : '.\API-Summary.csv' - Correct wrong function association and syntaxe
+    Update       : Update function : 'Show-WindowsFormDialogBoxInuput' - Add new parameter : 'DefaultValue' - Define Default value in the input field
+    Update       : Switch settings between in Json files : '.\Ressources\Settings-Default-User.json' and '.\Ressources\Settings-Current-User.json'
+    Update       : Update variables linked to JSON files and convert it from 'Local:' to 'Global:'
+    Update       : Correct some minor bugs
+    Update       : Harmonize function : 'Start-sleep'
+    Update       : Optimise and convert variables from 'Local:' to 'Global:' (Reduce repetition and single usage text value to centralise management to JSON files configuration)
     
 .LINKS
     
-    https://api.bbox.fr/doc/
-    https://api.bbox.fr/doc/apirouter/index.html
+    https://api.BBox.fr/doc/
+    https://api.BBox.fr/doc/apirouter/index.html
     https://chromedriver.chromium.org/
-    https://mabbox.bytel.fr/
-    https://mabbox.bytel.fr/api/v1
-    https://www.bbox-mag.fr/box/firmware/
+    https://maBBox.bytel.fr/
+    https://maBBox.bytel.fr/api/v1
+    https://www.BBox-mag.fr/box/firmware/
     https://www.powershellgallery.com/packages/TUN.CredentialManager
     http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help
@@ -421,13 +427,13 @@ function Write-Log {
 
 # Logs file
 $ScriptRootFolder      = $PSScriptRoot
-$global:LogFileName    = 'BBOX_Administration_Log-'
+$global:LogFileName    = 'BBox_Administration_Log-'
 $global:LogFolderName  = 'Logs'
 $global:LogFolderPath  = "$ScriptRootFolder\$global:LogFolderName"
 
 # Transcript Logs
 $Date = $(get-date -UFormat %Y%m%d).toString()
-$global:TranscriptFileName = "BBOX-Administration-Transcript-Log-$Date.log"
+$global:TranscriptFileName = "BBox-Administration-Transcript-Log-$Date.log"
 $TranscriptFilePath = "$global:LogFolderPath\$global:TranscriptFileName"
 
 # System Json Configuration files
@@ -513,33 +519,43 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
     Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
 
     Try {
-        $global:JSONSettingsDefaultUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultFileName
-        $global:JSONSettingsCurrentUserFilePath = "$ScriptRootFolder\$RessourcesFolderName\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentFileName
+        $global:JSONSettingsDefaultUserFilePath = "$RessourcesPath\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultFileName
+        $global:JSONSettingsCurrentUserFilePath = "$RessourcesPath\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentFileName
         
         # Paths
-        $ExportPath              = "$ScriptRootFolder\"  + $global:JSONSettingsProgramContent.path.ExportFolderName
-        $JournalPath             = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JournalFolderName
-        $JsonBboxconfigPath      = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JsonBboxconfigFolderName
-        $RessourcesPath          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.RessourcesFolderName
-        $ReportPath              = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.ReportFolderName
-        $BBOXModulePath          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.BBOXModuleFileName
-        $APISummaryPath          = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.APISummaryFileName
-        $TestedEnvironnementPath = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.TestedEnvironnementFileName
-        $ExportCSVPath           = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportCSVFolderName
-        $ExportJSONPath          = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportJSONFolderName
+        $ExportPath                              = "$ScriptRootFolder\"  + $global:JSONSettingsProgramContent.path.ExportFolderName
+        $JournalPath                             = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JournalFolderName
+        $global:JournalName                      = $global:JSONSettingsProgramContent.Path.JournalName
+        $JsonBBoxconfigPath                      = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.JsonBBoxconfigFolderName
+        $RessourcesPath                          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.RessourcesFolderName
+        $ReportPath                              = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.ReportFolderName
+        $BBoxModulePath                          = "$ScriptRootFolder\" + $global:JSONSettingsProgramContent.path.BBoxModuleFileName
+        $APISummaryPath                          = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.APISummaryFileName
+        $TestedEnvironnementPath                 = "$RessourcesPath\" + $global:JSONSettingsProgramContent.path.TestedEnvironnementFileName
+        $ExportCSVPath                           = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportCSVFolderName
+        $ExportJSONPath                          = "$ExportPath\" + $global:JSONSettingsProgramContent.path.ExportJSONFolderName
+        $global:DownloadShellRegistryFolder      = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder
+        $global:DownloadShellRegistryFolderName  = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
         
         # Google Chrome / Chrome Driver Paths
         $global:ChromeDriver                     = $Null
         $ChromeVersionRegistry                   = $global:JSONSettingsProgramContent.GoogleChrome.ChromeVersionRegistry
         $ChromeDriverPath                        = "$RessourcesPath\" + $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverRessourcesFolderName
-        $ChromeDriverDefaultPath                 = "$ChromeDriverPath\" + $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName
-        $ChromeDriverDefaultSetupPath            = "$ChromeDriverDefaultPath\" + $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultSetupFileName
-        $ChromeDriverDefaultWebDriverDLLPath     = "$ChromeDriverDefaultPath\" + $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName
-        $ChromeDriverDefaultWebDriverSupportPath = "$ChromeDriverDefaultPath\" + $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName
+        $global:ChromeDriverDefaultFolderName    = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName
+        $ChromeDriverDefaultPath                 = "$ChromeDriverPath\" + $global:ChromeDriverDefaultFolderName
+        $global:ChromeDriverDefaultSetupFileName = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultSetupFileName
+        $ChromeDriverDefaultSetupPath            = "$ChromeDriverDefaultPath\" + $global:ChromeDriverDefaultSetupFileName
+        $global:ChromeDriverDefaultWebDriverDLLFileName  = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName
+        $ChromeDriverDefaultWebDriverDLLPath     = "$ChromeDriverDefaultPath\" + $global:ChromeDriverDefaultWebDriverDLLFileName
+        $global:ChromeDriverDefaultWebDriverSupportFileName = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName
+        $ChromeDriverDefaultWebDriverSupportPath = "$ChromeDriverDefaultPath\" + $global:ChromeDriverDefaultWebDriverSupportFileName
         $ChromeDriverDefaultProfile              = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultProfileName
         $ChromeProgramFilesInstallation          = $global:JSONSettingsProgramContent.GoogleChrome.ChromeProgramFilesInstallationPath
         $ChromeProgramFilesX86Installation       = $global:JSONSettingsProgramContent.GoogleChrome.ChromeProgramFilesX86InstallationPath
         $ChromeDownloadUrl                       = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDownloadUrl
+        $global:ChromeDriverDownloadHomeUrl      = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadHomeUrl
+        $global:ChromeDriverDownloadPathUrl      = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadPathUrl
+        $global:ChromeDriverDownloadFileName     = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadFileName
 
         # APIName
         $APINameAvailable                      = $global:JSONSettingsProgramContent.APIName.Available
@@ -552,11 +568,15 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         $ActionsExclusionsActions = $global:JSONSettingsProgramContent.Actions.Exclusions.Actions
         
         # BBox
-        $global:UrlPrefixe   = $global:JSONSettingsProgramContent.bbox.UrlPrefixe
-        $APIVersion          = $global:JSONSettingsProgramContent.bbox.APIVersion
-        $BBoxDns             = $global:JSONSettingsProgramContent.bbox.BBoxDns
-        $BBoxUrlRemote       = $global:JSONSettingsProgramContent.bbox.BBoxUrlRemote
-        $APIUrlDocumentation = $global:JSONSettingsProgramContent.bbox.APIUrlDocumentation
+        $global:APIVersion        = $global:JSONSettingsProgramContent.BBox.APIVersion
+        $global:UrlPrefixe        = $global:JSONSettingsProgramContent.BBox.UrlPrefixe
+        $global:DefaultRemotePort = $global:JSONSettingsProgramContent.BBox.DefaultRemotePort
+        $global:DefaultLocalUrl   = $global:JSONSettingsProgramContent.BBox.DefaultLocalUrl
+        $BBoxDns                  = $global:JSONSettingsProgramContent.BBox.BBoxDns
+        $global:BBoxUrlRemote     = $global:JSONSettingsProgramContent.BBox.BBoxUrlRemote
+        $global:BBoxUrlFirewall   = $global:JSONSettingsProgramContent.BBox.BBoxUrlFirewall
+        $global:BBoxUrlDynDns     = $global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns
+        $BBoxAPIUrlDocumentation  = $global:JSONSettingsProgramContent.BBox.APIUrlDocumentation
         
         # Various
         $Mail = $global:JSONSettingsProgramContent.various.mail
@@ -564,6 +584,25 @@ If (($Null -eq $global:TriggerExit) -and ($Null -ne $global:JSONSettingsProgramC
         
         # Notification Events
         $global:NotificationEventType = $global:JSONSettingsProgramContent.Notification.Event.Type
+        
+        # Start-Sleep
+        $global:SleepDefault                                  = $global:JSONSettingsProgramContent.Sleep.Default
+        $global:SleepTUNCredentialManagerModuleinstallation   = $global:JSONSettingsProgramContent.Sleep.TUNCredentialManagerModuleinstallation
+        $global:SleepRefreshWIRELESSFrequencyNeighborhoodScan = $global:JSONSettingsProgramContent.Sleep.RefreshWIRELESSFrequencyNeighborhoodScan
+        $global:SleepChromeDriverDownload                     = $global:JSONSettingsProgramContent.Sleep.ChromeDriverDownload
+        $global:SleepChromeDriverUnzip                        = $global:JSONSettingsProgramContent.Sleep.ChromeDriverUnzip
+        $global:SleepChromeDriverNavigation                   = $global:JSONSettingsProgramContent.Sleep.ChromeDriverNavigation
+        $global:SleepChromeDriverLoading                      = $global:JSONSettingsProgramContent.Sleep.ChromeDriverLoading
+        $global:SleepBboxJournalDownload                      = $global:JSONSettingsProgramContent.Sleep.BboxJournalDownload
+        
+        # Values
+        $global:ValuesLANNetworkLocal  = $global:JSONSettingsProgramContent.Values.LANNetworkLocal
+        $global:ValuesLANNetworkRemote = $global:JSONSettingsProgramContent.Values.LANNetworkRemote
+        $global:ValuesOpenExportFolder = $global:JSONSettingsProgramContent.Values.OpenExportFolder
+        $global:ValuesDisplayFormat    = $global:JSONSettingsProgramContent.Values.DisplayFormat
+        $global:ValuesExportFormat     = $global:JSONSettingsProgramContent.Values.ExportFormat
+        $global:ValuesOpenHTMLReport   = $global:JSONSettingsProgramContent.Values.OpenHTMLReport
+        $global:ValuesLineNumber       = $global:JSONSettingsProgramContent.Values.LineNumber
         
         Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Success' -NotDisplay
     }
@@ -580,28 +619,28 @@ Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program'
 
 #endregion Load System Json Configuration files
 
-#region Import Functions with Module : 'BBOX-Module.psm1'
+#region Import Functions with Module : 'BBox-Module.psm1'
 
 If ($Null -eq $global:TriggerExit) {
     
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'Start Powershell Module Importation' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $BBOXModulePath" -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $BBoxModulePath" -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
     
     Try {
-        Remove-Module -Name BBOX-Module -ErrorAction SilentlyContinue
+        Remove-Module -Name BBox-Module -ErrorAction SilentlyContinue
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BBOXModulePath can't be removed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BBoxModulePath can't be removed, due to : $($_.ToString())"
         $global:TriggerExit = 1
     }
-    Start-Sleep 1
+    Start-Sleep $global:SleepDefault
     Try {
-        Import-Module -Name $BBOXModulePath -ErrorAction Stop
+        Import-Module -Name $BBoxModulePath -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Success' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BBOXModulePath can't be imported due to : $($_.ToString())"
+        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BBoxModulePath can't be imported due to : $($_.ToString())"
         $global:TriggerExit = 1
     }
     
@@ -625,7 +664,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
 }
 
-#endregion Import Functions with Module : 'BBOX-Module.psm1'
+#endregion Import Functions with Module : 'BBox-Module.psm1'
 
 #region Check if ressources folder exist
 
@@ -660,7 +699,7 @@ If ($Null -eq $global:TriggerExit) {
     Test-FolderPath -FolderRoot $ExportPath       -FolderPath $ExportJSONPath          -FolderName $ExportJSONPath          -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $JournalPath             -FolderName $JournalPath             -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $ReportPath              -FolderName $ReportPath              -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $JsonBboxconfigPath      -FolderName $JsonBboxconfigPath      -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $JsonBBoxconfigPath      -FolderName $JsonBBoxconfigPath      -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $ChromeDriverPath        -FolderName $ChromeDriverPath        -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolder -FolderPath $ChromeDriverDefaultPath -FolderName $ChromeDriverDefaultPath -ErrorAction Stop
     
@@ -915,27 +954,27 @@ Write-Log -Type WARNING -Name 'Program initialisation - Start Program' -Message 
 
 Write-Host '##################################################### Description ######################################################' -ForegroundColor Yellow
 Write-Host 'This program is only available in English'
-Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBOX'
-Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBOX'
-Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBOX management => ' -NoNewline
-Write-Host "$BBoxUrlRemote" -ForegroundColor Green -NoNewline
+Write-Host 'It allows you to get, modify and delete information on Bouygues Telecoms BBox'
+Write-Host 'It displays advanced information that you will not see through the classic web interface of your BBox'
+Write-Host 'And this via a local or remote connection (Provided that you have activated the remote BBox management => ' -NoNewline
+Write-Host "$global:BBoxUrlRemote" -ForegroundColor Green -NoNewline
 Write-Host ')'
 Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
 Write-Host "The result can be exported in `" .csv (.csv) `" or `" .JSON (.JSON) `" format"
-Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBOX according to the model and the firmware version of this one'
+Write-Host 'The only limitation of this program is related to the requests available via the API installed on the target BBox according to the model and the firmware version of this one'
 Write-Host 'When displaying the result, some information may not be displayed, or may be missing :'
 Write-Host '- Either its an oversight on my part in the context of the development, and I apologize in advance'
 Write-Host '- Either this one is still under development'
-Write-Host '- Either this information is optional and only appears in the presence of certain bbox models :'
-Write-Host '-- BBOX models'
+Write-Host '- Either this information is optional and only appears in the presence of certain BBox models :'
+Write-Host '-- BBox models'
 Write-Host '-- Firmware version'
 Write-Host '-- Available features'
 Write-Host '-- Connection mode (Local / Remote)'
-Write-Host 'This program requires the installation of PowerShell 7.0 minimum and Google Chrome'
+Write-Host 'This program requires the installation of PowerShell 7.0 minimum and Google Chrome (MSI Install)'
 Write-Host 'For more information, please consult : ' -NoNewline
-Write-Host "$APIUrlDocumentation" -ForegroundColor Green
-Write-Host 'Be carefull, this program is reserved for an advanced use of the BBOX settings and is aimed at an informed audience !' -ForegroundColor Yellow
-Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBOX, rendering it unusable. You are Warned !' -ForegroundColor Yellow
+Write-Host "$BBoxAPIUrlDocumentation" -ForegroundColor Green
+Write-Host 'Be carefull, this program is reserved for an advanced use of the BBox settings and is aimed at an informed audience !' -ForegroundColor Yellow
+Write-Host 'Any improper handling risks causing partial or even total malfunction of your BBox, rendering it unusable. You are Warned !' -ForegroundColor Yellow
 Write-Host 'Therefore, you use this program at your own risks, I cant be responsible if you dont use it in the correct environnement' -ForegroundColor Red
 Write-Host 'For any questions or additionals requests, contact me to this email address : ' -NoNewline
 Write-Host "$Mail" -ForegroundColor Green
@@ -979,7 +1018,7 @@ Else {
     Write-Log -Type INFONO -Name 'Program initialisation - Json Current User Settings Creation' -Message 'Json Current User Settings Creation Status : ' -NotDisplay
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds $global:SleepChromeDriverNavigation
         Write-Log -Type VALUE -Name 'Program initialisation - Json Current User Settings Creation' -Message 'Success' -NotDisplay
     }
     Catch {
@@ -1011,7 +1050,7 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Start Password Status' -NotDisplay
     Write-Log -Type INFONO -Name 'Program run - Password Status' -Message 'Password Status : ' -NotDisplay
 
-    If ($null -eq ($(Get-StoredCredential -Target $global:Target -ErrorAction SilentlyContinue | Select-Object -Property Password -ErrorAction SilentlyContinue).password | ConvertFrom-SecureString -AsPlainText -ErrorAction SilentlyContinue)) {
+    If ($null -eq ($(Get-StoredCredential -Target $global:CredentialsTarget -ErrorAction SilentlyContinue | Select-Object -Property Password -ErrorAction SilentlyContinue).password | ConvertFrom-SecureString -AsPlainText -ErrorAction SilentlyContinue)) {
         
         Write-Log -Type WARNING -Name 'Program run - Password Status' -Message 'Not yet set' -NotDisplay
         Try {
@@ -1024,12 +1063,12 @@ If ($Null -eq $global:TriggerExit) {
     }
     Else {
         Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Already Set' -NotDisplay
-        $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Password Status' -LabelMessageText "Bbox password is already set.`nWhat do you want to do ? :`n- (U) Use existing Password`n- (D) Define new password`n- (Q) Quit the program" -FirstOptionButtonText 'U' -SecondOptionButtonText 'D' -ThirdOptionButtonText 'Q'
+        $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Password Status' -LabelMessageText "BBox password is already set.`nWhat do you want to do ? :`n- (U) Use existing Password`n- (D) Define new password`n- (Q) Quit the program" -FirstOptionButtonText 'U' -SecondOptionButtonText 'D' -ThirdOptionButtonText 'Q'
         switch ($Answer) {
-            'U'   {$Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
+            'U'   {$Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
             'D'   {Add-BBoxCredential -ErrorAction Stop;Break}
             'Q'  {Stop-Program -ErrorAction Stop;Break}
-            Default {$Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
+            Default {$Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText;Break}
         }
     }
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'End Password Status' -NotDisplay
@@ -1041,13 +1080,13 @@ If ($Null -eq $global:TriggerExit) {
 
 If ($Null -eq $global:TriggerExit) {
     
-    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'Start Check BBOX LAN network' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Checking BBOX LAN network : ' -NotDisplay
+    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'Start Check BBox LAN network' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Checking BBox LAN network : ' -NotDisplay
     
     Try {
         $DnsName = Resolve-DnsName -Name $BBoxDns -Type A -DnsOnly -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Connected to your Local BBOX Network' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'BBOX IP Address : ' -NotDisplay
+        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Connected to your Local BBox Network' -NotDisplay
+        Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'BBox IP Address : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message $($DnsName.Address) -NotDisplay
         Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Localy' -NotDisplay
@@ -1058,19 +1097,19 @@ If ($Null -eq $global:TriggerExit) {
     Catch {
         Write-Log -Type ERROR -Name 'Program run - Network connection' -Message 'Failed' -NotDisplay
         Write-Log -Type ERROR -Name 'Program run - Network connection' -Message "Unable to resolve $BBoxDns, due to : $($_.ToString())" -NotDisplay
-        Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local BBOX Network`n`n- If you are connected on your local network, make sure you are connected on the BBOX's Wifi or ethernet network`n- If you use a intermediary router between your computer and the BBOX router, it will not working" -WarnIcon | Out-Null
+        Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local BBox Network`n`n- If you are connected on your local network, make sure you are connected on the BBox's Wifi or ethernet network`n- If you use a intermediary router between your computer and the BBox router, it will not working" -WarnIcon | Out-Null
         Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Remotely' -NotDisplay
         $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl = "Unknow / Can't be Define / Resolve"
         $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
         $TriggerLANNetwork = 0
     }
-    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'End Check BBOX LAN network' -NotDisplay
+    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'End Check BBox LAN network' -NotDisplay
 }
 
 #endregion Check if user connect on the correct LAN Network
 
-#region Ask to the user how he want to connect to the BBOX
+#region Ask to the user how he want to connect to the BBox
 
 If ($Null -eq $global:TriggerExit) {
     
@@ -1079,15 +1118,15 @@ If ($Null -eq $global:TriggerExit) {
     Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'End Connexion Type' -NotDisplay
 }
 
-#endregion Ask to the user how he want to connect to the BBOX
+#endregion Ask to the user how he want to connect to the BBox
 
-#region Set Bbox connexion settings regarding user selection
+#region Set BBox connexion settings regarding user selection
 
 If ($Null -eq $global:TriggerExit) {
     
     Switch ($ConnexionType[0]) {
         
-        L   {$UrlRoot = "$global:UrlPrefixe$BBoxDns/$APIVersion"
+        L   {$UrlRoot = "$global:UrlPrefixe$BBoxDns/$global:APIVersion"
              $UrlAuth = "$global:UrlPrefixe$BBoxDns/login.html"
              $UrlHome = "$global:UrlPrefixe$BBoxDns/index.html"
              Break
@@ -1099,7 +1138,7 @@ If ($Null -eq $global:TriggerExit) {
              Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'Start Check Port' -NotDisplay
              $Port = Get-PortStatus -UrlRoot $DYNDNS
              Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'End Check Port' -NotDisplay
-             $UrlRoot = "$global:UrlPrefixe$DYNDNS`:$Port/$APIVersion"
+             $UrlRoot = "$global:UrlPrefixe$DYNDNS`:$Port/$global:APIVersion"
              $UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.html"
              $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port/index.html"
              Break
@@ -1121,7 +1160,7 @@ If ($Null -eq $global:TriggerExit) {
     }
 }
 
-#endregion Set Bbox connexion settings regarding user selection
+#endregion Set BBox connexion settings regarding user selection
 
 #region process
 
@@ -1170,16 +1209,16 @@ While ($Null -eq $global:TriggerExit) {
             #region Start BBox Authentification
             If ((($RemotePermissions -eq 'private') -and ($ConnexionType -eq 'R')) -or (($LocalPermissions -eq 'private') -and ($ConnexionType -eq 'L')) -or ($APIName -eq 'Full_Testing_Program')  -or ($APIName -eq 'Full')) {
                 
-                Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification needed' -NotDisplay
+                Write-Log -Type INFO -Name 'Program run - BBox Authentification' -Message 'BBox Authentification needed' -NotDisplay
                 
                 If ($Null -eq $TriggerAuthentification) {
                     
-                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBOX Authentification' -NotDisplay
-                    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBOX Authentification : ' -NotDisplay
+                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'Start BBox Authentification' -NotDisplay
+                    Write-Log -Type INFONO -Name 'Program run - ChromeDriver Authentification' -Message 'Starting BBox Authentification : ' -NotDisplay
                     
                     Try {
-                        $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                        Connect-BBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
+                        $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
+                        Connect-BBox -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop
                         Write-Log -Type VALUE -Name 'Program run - ChromeDriver Authentification' -Message 'Authentificated' -NotDisplay
                         Clear-Variable -Name Password
                         $TriggerAuthentification = 1
@@ -1188,14 +1227,14 @@ While ($Null -eq $global:TriggerExit) {
                         Write-Log -Type ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
                         Stop-Program -ErrorAction Stop
                     }
-                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBOX Authentification' -NotDisplay
+                    Write-Log -Type INFO -Name 'Program run - ChromeDriver Authentification' -Message 'End BBox Authentification' -NotDisplay
                 }
                 Else {
-                    Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification already set' -NotDisplay
+                    Write-Log -Type INFO -Name 'Program run - BBox Authentification' -Message 'BBox Authentification already set' -NotDisplay
                 }
             }
             Else {
-                Write-Log -Type INFO -Name 'Program run - BBOX Authentification' -Message 'BBOX Authentification not needed' -NotDisplay
+                Write-Log -Type INFO -Name 'Program run - BBox Authentification' -Message 'BBox Authentification not needed' -NotDisplay
             }
             #endregion Start BBox Authentification
         }
@@ -1205,7 +1244,7 @@ While ($Null -eq $global:TriggerExit) {
             
             'Full'                 {$APISName = $Actions | Where-Object {(($_.Available -eq $APINameAvailable) -and ($_.Scope -notmatch $ActionsExclusionsScope) -and ($_.APIName -notmatch $APINameExclusionsFull) -and ($_.Action -notmatch $APINameScopeExclusionsFull) -and ($_.Label -match "Get-") -and ($_.APIUrl -notmatch "`{id`}"))} | Select-Object Label,APIName,Exportfile
                                     $global:TriggerExportConfig = $true
-                                    Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -JSONFolder $JsonBboxconfigPath -CSVFolder $ExportCSVPath -GitHubUrlSite $GitHubUrlSite -JournalPath $JournalPath -Mail $Mail
+                                    Export-BBoxConfiguration -APISName $APISName -UrlRoot $UrlRoot -JSONFolder $JsonBBoxconfigPath -CSVFolder $ExportCSVPath -GitHubUrlSite $GitHubUrlSite -JournalPath $JournalPath -Mail $Mail
                                     Break
                                    }
             

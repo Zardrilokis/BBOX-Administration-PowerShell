@@ -1,7 +1,7 @@
 ﻿
 # Be carefull some variables are linked from main script BBOX-Administration to :
 # - $global:JSONSettingsProgramContent
-# - $JSONSettingsCurrentUserContent
+# - $global:JSONSettingsCurrentUserContent
 # - $global:JSONSettingsDefaultUserContent
 
 #region GLOBAL (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
@@ -172,7 +172,7 @@ Function Import-TUNCredentialManager {
         
         Try {
             Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope Allusers -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
-            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.TUNCredentialManagerModuleinstallation
+            Start-Sleep -Seconds $global:SleepTUNCredentialManagerModuleinstallation
         }
         Catch {
             Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
@@ -236,7 +236,7 @@ Function Remove-BBoxCredential {
     Write-Log -Type INFONO -Name 'Program run - Remove BBox Credential' -Message 'Remove BBox Credential status : ' -NotDisplay
     
     Try {
-        $null = Remove-StoredCredential -Target $global:Target -ErrorAction Stop
+        $null = Remove-StoredCredential -Target $global:CredentialsTarget -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program run - Remove BBox Credential' -Message 'Success' -NotDisplay
     }
     Catch {
@@ -281,7 +281,7 @@ Function Show-BBoxCredential {
     Write-Log -Type INFONO -Name 'Program run - Show BBox Credential' -Message 'Show BBox Credential status : ' -NotDisplay
 
     Try {
-        $Password = $(Get-StoredCredential -Target $global:Target | Select-Object -Property Password).password 
+        $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password 
         
         If ($Password) {
             
@@ -342,17 +342,17 @@ function Add-BBoxCredential {
     While ([string]::IsNullOrEmpty($Credential.Password) -or [string]::IsNullOrEmpty($Credential.UserName)) {
         
         # Ask user to provide BBOX Web Interface Password
-        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future' -UserName $global:Target
+        $Credential = Get-Credential -Message 'Please enter your bbox Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future' -UserName $global:CredentialsTarget
     }
     
     Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
     Write-Log -Type INFONO -Name 'Program run - Password Status' -Message 'Windows Credential Manager status : ' -NotDisplay
 
     Try {
-        $Comment = $global:Comment + " - Last modification : $(get-date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
+        $Comment = $global:CredentialsComment + " - Last modification : $(get-date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
         $Password = $Credential.Password | ConvertFrom-SecureString -AsPlainText
-        $Credentialbuild = New-StoredCredential -Target $global:Target -UserName $global:UserName -Password $Password -Comment $Comment -Type Generic -Persist Session | Out-Null
-        Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Set' -NotDisplay
+        $Credentialbuild = New-StoredCredential -Target $global:CredentialsTarget -UserName $global:CredentialsUserName -Password $Password -Comment $Comment -Type Generic -Persist Session | Out-Null
+        Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Set - $Comment' -NotDisplay
         Clear-Variable -Name Password
     }
     Catch {
@@ -472,6 +472,9 @@ function Show-WindowsFormDialogBoxInuput {
 .PARAMETER CancelButtonText
     Text to display to cancel user input
 
+.PARAMETER DefaultValue
+    Value set by default in the input field
+
 .EXAMPLE
     Show-WindowsFormDialogBox -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
 
@@ -501,7 +504,10 @@ function Show-WindowsFormDialogBoxInuput {
         [string]$OkButtonText,
 
         [Parameter(Mandatory=$True)]
-        [string]$CancelButtonText
+        [string]$CancelButtonText,
+
+        [Parameter(Mandatory=$False)]
+        [string]$DefaultValue
     )
     
     $MainFormSizeX = 330
@@ -545,6 +551,7 @@ function Show-WindowsFormDialogBoxInuput {
     $TextBox = New-Object System.Windows.Forms.TextBox
     $TextBox.Location = New-Object System.Drawing.Point($TextBoxLocationX,$TextBoxLocationY)
     $TextBox.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+    $TextBox.Text = $DefaultValue # Prefield value
     $MainForm.Controls.Add($TextBox)
     
     $OkButton = New-Object System.Windows.Forms.Button
@@ -1333,7 +1340,7 @@ Function Get-ChromeDriverVersionBeforeUpdate {
     
     If ($ChromeDriverFolder -eq 'Default') {
         
-        $ChromeDriverVersion = & "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultSetupFileName)" --version
+        $ChromeDriverVersion = & "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultSetupFileName" --version
         $ChromeDriverVersion = $($ChromeDriverVersion -split " ")[1]
     }
     
@@ -1445,11 +1452,11 @@ Function Get-ConnexionType {
     
     Switch ($TriggerLANNetwork) {
     
-        '1'        {$ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkLocal;Break}
+        '1'        {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
         
-        '0'        {$ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkRemote;Break}
+        '0'        {$ConnexionTypeChoice = $global:ValuesLANNetworkRemote;Break}
         
-        Default    {$ConnexionTypeChoice = $global:JSONSettingsProgramContent.Values.LANNetworkLocal;Break}
+        Default    {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
     }
     
     Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'How do you want to connect to the BBOX ?' -NotDisplay
@@ -1495,10 +1502,8 @@ Function Get-HostStatus {
     This the Root DNS/url to connect to the BBOX web interface
 
 .EXAMPLE
-    Get-HostStatus -UrlRoot "https://mabbox.bytel.fr"
-    Get-HostStatus -UrlRoot "https://mabbox.bytel.fr/api/v1"
-    Get-HostStatus -UrlRoot "https://www.exemple.com"
-    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1"
+    Get-HostStatus -UrlRoot "mabbox.bytel.fr"
+    Get-HostStatus -UrlRoot "exemple.com"
 
 .INPUTS
     $UrlRoot
@@ -1521,7 +1526,14 @@ Function Get-HostStatus {
     $BBoxDnsStatus = $null
     While ($null -eq $BBoxDnsStatus) {
         
-        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText 'Enter your external BBOX IP/DNS Address, Example : example.com' -OkButtonText 'OK' -CancelButtonText 'Cancel'
+        If ([string]::IsNullOrEmpty($global:SiteCurrentLocalUrl)) {
+            $DefaultValue = $global:SiteCurrentRemoteUrl
+        }
+        Else {
+            $DefaultValue = $global:DefaultLocalUrl
+        }
+        
+        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText 'Enter your external BBOX IP/DNS Address, Example : example.com' -OkButtonText 'OK' -CancelButtonText 'Cancel' -DefaultValue $DefaultValue
         Write-Log -Type INFONO -Name 'Program run - Check Host' -Message "Host `"$UrlRoot`" status : " -NotDisplay
         
         If ($global:TriggerDialogBox -eq 1) {
@@ -1540,8 +1552,8 @@ Function Get-HostStatus {
             If ($BBoxDnsStatus -eq $true) {
                 
                 Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'Online' -NotDisplay
-                $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = "$global:UrlPrefixe$($global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl)"
-                $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = "$global:UrlPrefixe$UrlRoot"
+                $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:SiteCurrentRemoteUrl
+                $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
                 $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
                 Return $UrlRoot
                 Break
@@ -1551,10 +1563,10 @@ Function Get-HostStatus {
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :"
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You are connected to internet"
                 Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You enter a valid DNS address or IP address"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))"
-                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
-                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- The `"DYNDNS`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlDynDns))`n- The `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))" -WarnIcon
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled ($global:BBoxUrlFirewall)"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BBoxUrlDynDns)"
+                Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($global:BBoxUrlRemote)"
+                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems not Online ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BBoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BBoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BBoxUrlRemote)" -WarnIcon
                 $BBoxDnsStatus = $null
                 $UrlRoot = $null
             }
@@ -1585,10 +1597,8 @@ Function Get-PortStatus {
     This the port to check if open or not
 
 .EXAMPLE
-    Get-HostStatus -UrlRoot "https://www.exemple.com" -Port "8560"
-    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1" -Port "8560"
-    Get-HostStatus -UrlRoot "https://www.exemple.com" -Port "80"
-    Get-HostStatus -UrlRoot "https://www.exemple.com/api/v1" -Port "80"
+    Get-HostStatus -UrlRoot "exemple.com" -Port "8560"
+    Get-HostStatus -UrlRoot "exemple.com" -Port "80"
 
 .INPUTS
     $UrlRoot
@@ -1614,7 +1624,7 @@ Function Get-PortStatus {
         
         If ($global:TriggerDialogBox -ne 1) {
             
-            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is 8560`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel'
+            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote BBOX port`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel' -DefaultValue $global:DefaultRemotePort
             Write-Log -Type INFONO -Name 'Program run - Check Port' -Message "Port `"$Port`" status : " -NotDisplay
         }
         Else {
@@ -1635,20 +1645,27 @@ Function Get-PortStatus {
                 If ($PortStatus.TcpTestSucceeded -eq $true) {
                     
                     Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'Opened' -NotDisplay
-                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
+                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:SiteCurrentRemotePort
                     $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
                     $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
                     Return $Port
                     Break
                 }
                 Else {
+                    
+                    If ([string]::IsNullOrEmpty($global:SiteOldRemotePort)) {
+                        $OldRemotePort = $global:SiteOldRemotePort
+                    }
+                    Else {
+                        $OldRemotePort = $global:DefaultRemotePort
+                    }
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'Closed' -NotDisplay
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :"
                     Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- You enter a valid port number"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))" 
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- For remember you use the port : $($global:JSONSettingsCurrentUserContent.Site.OldRemotePort) the last time"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number`n- None Firewall rule(s) block this port ($($global:JSONSettingsProgramContent.bbox.BBoxUrlFirewall))`n- `"Remote`" service is enabled and properly configured ($($global:JSONSettingsProgramContent.bbox.BBoxUrlRemote))`n- For remember you use the port : $($global:JSONSettingsCurrentUserContent.Site.OldRemotePort) the last time" -WarnIcon
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($global:BBoxUrlFirewall)"
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($global:BBoxUrlRemote)"
+                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- For remember you use the port : $OldRemotePort the last time"
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number`n- None Firewall rule(s) block this port ($global:BBoxUrlFirewall)`n- `"Remote`" service is enabled and properly configured ($global:BBoxUrlRemote)`n- For remember you use the port : $OldRemotePort the last time" -WarnIcon
                     $Port = $null
                     $PortStatus = $null
                 }
@@ -1764,19 +1781,19 @@ Function Connect-BBOX {
     
     # Open Web Site Home Page 
     $global:ChromeDriver.Navigate().GoToURL($UrlAuth)
-    Start-Sleep 2
+    Start-Sleep $global:SleepChromeDriverNavigation
     
     # Enter the password to connect (# Methods to find the input textbox for the password)
     $global:ChromeDriver.FindElementByName("password").SendKeys("$Password") 
-    Start-Sleep 1
+    Start-Sleep $global:SleepDefault
     
     # Tic checkBox "Stay Connect" (# Methods to find the input checkbox for stay connect)
     $global:ChromeDriver.FindElementByClassName('cb').Click()
-    Start-Sleep 1
+    Start-Sleep $global:SleepDefault
     
     # Click on the connect button
     $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
-    Start-Sleep 1
+    Start-Sleep $global:SleepDefault
 
     If ($global:ChromeDriver.Url -ne $UrlHome) {
         Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password'
@@ -2399,7 +2416,7 @@ Function Stop-Program {
         Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'End Stop Chrome Driver' -NotDisplay
     }
     
-    Start-Sleep 2
+    Start-Sleep $global:SleepChromeDriverNavigation
     $Current_Log_File = "$global:LogFolderPath\" + (Get-ChildItem -Path $global:LogFolderPath -Name "$global:LogFileName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
     Write-Log -Type INFONO -Name 'Stop Program' -Message 'Log file is available here : '
     Write-Log -Type VALUE -Name 'Stop Program' -Message $Current_Log_File
@@ -2488,7 +2505,7 @@ Function Start-ChromeDriver {
     #$env:PATH += ";$Temp"
 
     # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
-    Add-Type -Path "$ChromeDriverPath\$ChromeDriverVersion\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)"
+    Add-Type -Path "$ChromeDriverPath\$ChromeDriverVersion\$global:ChromeDriverDefaultWebDriverDLLFileName"
     
     # Create new Chrome Drive Service
     $ChromeDriverService = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService()
@@ -2617,34 +2634,30 @@ Function Update-ChromeDriver {
     
     Try {
         # Set Variables
-        $ChromeDriverDownloadHomeUrl = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadHomeUrl
-        $ChromeDriverDownloadPathUrl = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadPathUrl
         $ChromeDriverVersionShort = $($ChromeDriverVersion -split ".")[0]
-        
-        $FileName = $global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDownloadFileName
-        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder -Name $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
-        $SourceFile = "$UserDownloadFolderDefault\$FileName"
+        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName
+        $SourceFile = "$UserDownloadFolderDefault\$global:ChromeDriverDownloadFileName"
         
         # Navigate to the main Chrome Driver Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page : $ChromeDriverDownloadHomeUrl" -NotDisplay
-        $global:ChromeDriver.Navigate().GoToURL("$ChromeDriverDownloadHomeUrl")
-        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page : $global:ChromeDriverDownloadHomeUrl" -NotDisplay
+        $global:ChromeDriver.Navigate().GoToURL("$global:ChromeDriverDownloadHomeUrl")
+        Start-Sleep -Seconds $global:SleepDefault
         
         # Get Content Page
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get HTML code page' -NotDisplay
         $Html = $global:ChromeDriver.PageSource
-        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+        Start-Sleep -Seconds $global:SleepDefault
         
         # Convert-html to text
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Convert HTML code to txt' -NotDisplay
         $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+        Start-Sleep -Seconds $global:SleepDefault
         
         # Get Chrome Driver Version list available
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get last Chrome driver version available with Google Chrome installed version' -NotDisplay
         $Temp = $Plaintxt -split '---'
         $Version = $($Temp | Where-Object {$_ -notmatch 'Index of /NameLast modifiedSizeETag2.0' -and $_ -notmatch 'icons' -and $_ -notmatch 'LATEST_RELEASE' -and $_ -match "$ChromeDriverVersionShort"})[-1]
-        $url = "$ChromeDriverDownloadPathUrl$Version/"
+        $url = "$global:ChromeDriverDownloadPathUrl$Version/"
         $DestinationPath = "$ChromeDriverPath\$Version"
         
         If ((Test-Path -Path $DestinationPath) -eq $false) {
@@ -2652,19 +2665,19 @@ Function Update-ChromeDriver {
             # Navigate to Chrome Driver Version choosen
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page for version : $url" -NotDisplay
             $global:ChromeDriver.Navigate().GoToURL($url)
-            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+            Start-Sleep -Seconds $global:SleepDefault
             
             # Start setup file downloading
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
-            $global:ChromeDriver.FindElementByLinkText($FileName).click()
-            Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.DownloadChromeDriver
+            $global:ChromeDriver.FindElementByLinkText($global:ChromeDriverDownloadFileName).click()
+            Start-Sleep -Seconds $global:SleepChromeDriverDownload
             
             If ((Test-Path -Path $SourceFile) -eq $True) {
                 
                 # Create new directory to use chrome Driver update
                 Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
                 $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
-                Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+                Start-Sleep -Seconds $global:SleepDefault
                 
                 # Unzip new Chrome driver version to destination
                 If ((Test-Path -Path $DestinationPath) -eq $True) {
@@ -2673,7 +2686,7 @@ Function Update-ChromeDriver {
                     Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository status : " -NotDisplay
                     Try {
                         Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
-                        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.UnzipChromeDriver
+                        Start-Sleep -Seconds $global:SleepChromeDriverUnzip
                         Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "OK" -NotDisplay
                     }
                     Catch {
@@ -2686,8 +2699,8 @@ Function Update-ChromeDriver {
             If ((Test-Path -Path $SourceFile) -eq $True) {
                 
                 Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
-                Copy-Item -Path "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverDLLFileName)" -Destination $DestinationPath -Force
-                Copy-Item -Path "$ChromeDriverPath\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultFolderName)\$($global:JSONSettingsProgramContent.GoogleChrome.ChromeDriverDefaultWebDriverSupportFileName)" -Destination $DestinationPath -Force
+                Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverDLLFileName" -Destination $DestinationPath -Force
+                Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverSupportFileName" -Destination $DestinationPath -Force
             }
             
             # Remove the downloaded source
@@ -2708,6 +2721,8 @@ Function Update-ChromeDriver {
 }
 
 #endregion ChromeDriver
+
+#region Refresh WIRELESS Frequency Neighborhood Scan
 
 # Used only to Refresh WIRELESS Frequency Neighborhood Scan
 function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
@@ -2772,8 +2787,8 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message $(Format-Date1970 -Seconds $Lastscan) -NotDisplay
     }
     
-    $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("api/v1/$APIName",'diagnostic.html')))
-    Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+    $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("$global:APIVersion/$APIName",'diagnostic.html')))
+    Start-Sleep -Seconds $global:SleepDefault
     
     Switch ($APIName) {
         
@@ -2810,7 +2825,7 @@ function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
         }
         
         Write-Log -Type INFONO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Refresh WIRELESS Frequency Neighborhood scan : ' -NotDisplay
-        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.RefreshWIRELESSFrequencyNeighborhoodScan
+        Start-Sleep -Seconds $global:SleepRefreshWIRELESSFrequencyNeighborhoodScan
         Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Ended' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
@@ -2870,6 +2885,8 @@ Function Get-WIRELESSFrequencyNeighborhoodScan {
     Return $FormatedData
 }
 
+#endregion Refresh WIRELESS Frequency Neighborhood Scan
+
 #endregion GLOBAL
 
 #region Load user Json file configuration management
@@ -2916,9 +2933,14 @@ Function Get-JSONSettingsCurrentUserContent {
         $global:TriggerDisplayFormat    = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
         $global:TriggerOpenExportFolder = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder
-        $global:Target                  = $global:JSONSettingsCurrentUserContent.Credentials.Target
-        $global:UserName                = $global:JSONSettingsCurrentUserContent.Credentials.UserName
-        $global:Comment                 = $global:JSONSettingsCurrentUserContent.Credentials.Comment
+        $global:CredentialsTarget       = $global:JSONSettingsCurrentUserContent.Credentials.Target
+        $global:CredentialsUserName     = $global:JSONSettingsCurrentUserContent.Credentials.UserName
+        $global:CredentialsComment      = $global:JSONSettingsCurrentUserContent.Credentials.Comment
+        $global:SiteOldRemotePort       = $global:JSONSettingsCurrentUserContent.Site.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsCurrentUserContent.Site.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
         
         Write-Log -Type VALUE -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Success' -NotDisplay
     }
@@ -2971,9 +2993,14 @@ Function Get-JSONSettingsDefaultUserContent {
         $global:TriggerDisplayFormat    = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
         $global:TriggerOpenExportFolder = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFolder
-        $global:Target                  = $global:JSONSettingsDefaultUserContent.Credentials.Target
-        $global:UserName                = $global:JSONSettingsDefaultUserContent.Credentials.UserName
-        $global:Comment                 = $global:JSONSettingsDefaultUserContent.Credentials.Comment
+        $global:CredentialsTarget       = $global:JSONSettingsDefaultUserContent.Credentials.Target
+        $global:CredentialsUserName     = $global:JSONSettingsDefaultUserContent.Credentials.UserName
+        $global:CredentialsComment      = $global:JSONSettingsDefaultUserContent.Credentials.Comment
+        $global:SiteOldRemotePort       = $global:JSONSettingsDefaultUserContent.Site.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsDefaultUserContent.Site.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsDefaultUserContent.Site.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsDefaultUserContent.Site.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsDefaultUserContent.Site.CurrentRemotePort
         
         Write-Log -Type VALUE -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Success'
     }
@@ -3021,7 +3048,7 @@ Function Reset-CurrentUserProgramConfiguration {
     Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force
-        Start-Sleep -Seconds $global:JSONSettingsProgramContent.Sleep.Default
+        Start-Sleep -Seconds $global:SleepDefault
         Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Success' -NotDisplay
     }
     Catch {
@@ -3083,7 +3110,7 @@ Function Switch-OpenExportFolder {
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
     $global:OpenExportFolder = ""
     
-    While ($global:OpenExportFolder[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenExportFolder) {
+    While ($global:OpenExportFolder[0] -notmatch $global:ValuesOpenExportFolder) {
             
         #$Temp = Read-Host "Enter your choice"
         $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
@@ -3137,7 +3164,7 @@ Function Switch-DisplayFormat {
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
     $global:DisplayFormat = ''
     
-    While ($global:DisplayFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.DisplayFormat) {
+    While ($global:DisplayFormat[0] -notmatch $global:ValuesDisplayFormat) {
         
         #$Temp = Read-Host "Enter your choice"
         $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display Format' -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
@@ -3442,7 +3469,7 @@ Function Switch-ExportFormat {
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
     $global:ExportFormat = ''
 
-    While ($global:ExportFormat[0] -notmatch $global:JSONSettingsProgramContent.Values.ExportFormat) {
+    While ($global:ExportFormat[0] -notmatch $global:ValuesExportFormat) {
         
         #$Temp = Read-Host "Enter your choice"
         $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Export Result' -LabelMessageText "Please choose an export format (Can be changed later) :`n- (C) CSV`n- (J) JSON" -FirstOptionButtonText 'C' -SecondOptionButtonText 'J'
@@ -3567,7 +3594,7 @@ Function Switch-OpenHTMLReport {
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
     $global:OpenHTMLReport = ''
     
-    While ($global:OpenHTMLReport[0] -notmatch $global:JSONSettingsProgramContent.Values.OpenHTMLReport) {
+    While ($global:OpenHTMLReport[0] -notmatch $global:ValuesOpenHTMLReport) {
         
         $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Open HTML Report' -LabelMessageText "Do you want to open HTML Report at each time ? :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'        
         
@@ -4210,9 +4237,9 @@ Function Get-BBoxJournal {
     )
         
     # Loading Journal Home Page
-    $UrlToGo = $UrlToGo -replace $global:JSONSettingsProgramContent.bbox.APIVersion -replace ('//','/')
+    $UrlToGo = $UrlToGo -replace $global:APIVersion -replace ('//','/')
     $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-    Start-Sleep 5
+    Start-Sleep $global:SleepChromeDriverLoading
     
     # Download Journal file from BBOX
     Write-Log -Type INFO -Name 'Program run - Download Bbox Journal to export' -Message 'Start download Bbox Journal' -NotDisplay
@@ -4225,12 +4252,11 @@ Function Get-BBoxJournal {
     Write-Log -Type INFONO -Name 'Program run - Download Bbox Journal to export' -Message "Download Journal in progress ... : "
     
     # Waiting end of journal's download
-    Start-Sleep 8
+    Start-Sleep $global:SleepBboxJournalDownload
     
-    $JournalName = $global:JSONSettingsProgramContent.Path.JournalName
     Write-Log -Type INFONO -Name 'Program run - Download Bbox Journal to export' -Message 'User download folder : ' -NotDisplay
     Try {
-        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder -Name $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName -ErrorAction Stop
+        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program run - Download Bbox Journal to export' -Message $UserDownloadFolderDefault -NotDisplay
     }
     Catch {
@@ -4241,7 +4267,7 @@ Function Get-BBoxJournal {
         
         Write-Log -Type INFONO -Name 'Program run - Download Bbox Journal to export' -Message 'Journal download location : ' -NotDisplay
         Try {
-            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$JournalName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$global:JournalName*" | Select-Object PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
             $UserDownloadFileFullPath = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
             Write-Log -Type VALUE -Name 'Program run - Download Bbox Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
         }
@@ -5057,7 +5083,7 @@ Function Get-PhoneLineID {
 
 #>
 
-    While ($LineID -notmatch $global:JSONSettingsProgramContent.Values.LineNumber) {
+    While ($LineID -notmatch $global:ValuesLineNumber) {
         
         #$LineID = Read-Host "Enter value"
         $LineID = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Phone Line ID' -LabelMessageText "Which Phone line do you want to select ?`n(1) Main line`n(2) Second line" -FirstOptionButtonText '1' -SecondOptionButtonText '2'
@@ -5222,11 +5248,11 @@ Function Set-BBoxInformation {
     
     # Enter the password to connect (# Methods to find the input textbox for the password)
     $global:ChromeDriver.FindElementByName('password').SendKeys("$Password") 
-    Start-Sleep 1
+    Start-Sleep $global:SleepDefault
     
     # Click on the connect button
     $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
-    Start-Sleep 2
+    Start-Sleep $global:SleepChromeDriverNavigation
     
     Write-Log -Type VALUE -Name 'Program run - Set BBox Information' -Message  'OK'
     Write-Log -Type INFO -Name 'Program run - Set BBox Information' -Message  'Application des modifications souhaitées : '

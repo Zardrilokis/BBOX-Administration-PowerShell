@@ -1,263 +1,263 @@
-﻿Label,Function,Description,APIName,APIUrl,Action,LocalPermissions,RemotePermissions,Scope,Settings,Available,ReportType,ExportFile,BboxVersion
-STOP-Program,Stop-Program,Stop / Quit Program,Stop_Program,Stop_Program,Quit,Computer,Computer,Program,No,Yes,List,Stop_Program,22.3.22
-EXPORT-BBoxConfigTP,Export-BBoxConfigTestingProgram,Export Full BBox Configuration Testing Program,Full_Testing_Program,Full_Testing_Program,Export,Computer,Computer,Program,No,Yes,List,Full_Testing_Program,22.3.22
-EXPORT-BBoxConfig,Export-BBoxConfiguration,Export Full BBox Configuration,Full,Full,Export,Computer,Computer,Program,No,Yes,List,Full,22.3.22
-REMOVE-FCLogs,Remove-FolderContent,Remove All files in folder .\logs\*,logs,logs,Remove,Computer,Computer,Program,Yes,Yes,List,remove-logs,22.3.22
-REMOVE-FCExportCSV,Remove-FolderContent,Remove All files in folder .\Export\CSV\*,Export\CSV,Export\CSV,Remove,Computer,Computer,Program,Yes,Yes,List,remove-csv,22.3.22
-REMOVE-FCExportJSON,Remove-FolderContent,Remove All files in folder .\Export\JSON\*,Export\JSON,Export\JSON,Remove,Computer,Computer,Program,Yes,Yes,List,remove-Json,22.3.22
-REMOVE-FCJournal,Remove-FolderContent,Remove All files in folder .\Journal\*,Journal,Journal,Remove,Computer,Computer,Program,Yes,Yes,List,remove-Journal,22.3.22
-REMOVE-FCJBC,Remove-FolderContent,Remove All files in folder .\Json_Bbox_Config\*,Json_Bbox_Config,Json_Bbox_config,Remove,Computer,Computer,Program,Yes,Yes,List,remove-bbox-config,22.3.22
-REMOVE-FCReport,Remove-FolderContent,Remove All files in folder .\Report\*,Report,Report,Remove,Computer,Computer,Program,Yes,Yes,List,remove-report,22.3.22
-SWITCH-DF,Switch-DisplayFormat,Switch Display Format,Switch_Display,Switch_Display,Switch,Computer,Computer,Program,Yes,Yes,HTML/Table/Out-Gridview,html-table-outgridview,22.3.22
-SWITCH-EF,Switch-ExportFormat,Switch Export Format,Switch_Export,Switch_Export,Switch,Computer,Computer,Program,Yes,Yes,CSV/JSON,csv-json,22.3.22
-SWITCH-OEF,Switch-OpenExportFolder,Switch Open Export Folder,Switch_Open_Export_Folder,Switch_Open_Export_Folder,Switch,Computer,Computer,Program,Yes,Yes,List,open-folder,22.3.22
-SWITCH-OHR,Switch-OpenHTMLReport,Switch Open HTML Report,Switch_Open_HTML_Report,Switch_Open_HTML_Report,Switch,Computer,Computer,Program,Yes,Yes,HTML,html,22.3.22
-REMOVE-BBoxC,Remove-BBoxCredential,Remove BBox Credential stored in Windows Credential Manager,Remove_BBox_Credential,Remove_BBox_Credential,Remove,Computer,Computer,Program,Yes,Yes,List,remove-credential,22.3.22
-SHOW-BBoxC,Show-BBoxCredential,Show BBox Credential stored in Windows Credential Manager,Show_BBox_Credential,Show_BBox_Credential,Show,Computer,Computer,Program,Yes,Yes,List,show-credential,22.3.22
-ADD-BBoxC,Add-BBoxCredential,Add BBox Credential in Windows Credential Manager,Add_BBox_Credential,Add_BBox_Credential,Add,Computer,Computer,Program,Yes,Yes,List,add-credential,22.3.22
-Reset-CUPC,Reset-CurrentUserProgramConfiguration,Reset Current User Program Configuration,Reset_Current_User_Program_Configuration,Reset_Current_User_Program_Configuration,Reset,Computer,Computer,Program,Yes,Yes,List,reset-current-user-program-configuration,22.3.22
-GET-BBoxJournal,Get-BBoxJournal,Download BBox Journal (Available in bbox web interface),log.html,https://192.168.1.254/log.html,Download,Private,Private,device-read,No,Yes,Table,Journal,22.3.22
-GET-AIRTIESL,Get-AirtiesLANmode,Get AIRTIES LAN mode Information,airties/lanmode,https://192.168.1.254/api/v1/airties/lanmode,GET,public,Private,diag-read,No,Yes,List,airties-lanmode,22.3.22
-GET-AIRTIESZ,Get-AirtiesZerotouch,Get AIRTIES Zero Touch Information,airties/zerotouch,https://192.168.1.254/api/v1/airties/zerotouch,GET,public,Private,diag-read,No,No,list,airties-zerotouch,22.3.22
-GET-ANALYTICSJS,Get-ANALYTICSJS,Get Bouygues Telecom Remote Connexion Page information,analytics.js,https://192.168.1.254/api/v1/analytics.js,GET,public,Private,lan-read,No,No,$null,analytics,22.3.22
-GET-APIRM,Get-APIRessourcesMap,Get API Ressources List Map Information,map,https://192.168.1.254/api/v1/map,GET,private,Private,lan-read,No,Yes,Table,map,22.3.22
-GET-CONFIGSL,Get-BackupList,Get BACKUP List Information,configs,https://192.168.1.254/api/v1/configs,GET,public,Private,backup-read,No,Yes,Table,configs,22.3.22
-GET-CPL,Get-CPL,Get CPL Configuration Information,cpl,https://192.168.1.254/api/v1/cpl,GET,public,Private,cpl-read,No,Yes,List,cpl,22.3.22
-GET-CPLDL,Get-CPLDeviceList,Get CPL Devices List Information,cpl,https://192.168.1.254/api/v1/cpl,GET,public,Private,cpl-read,No,Yes,Table,cpl-devices-list,22.3.22
-GET-DEVICE,Get-Device,Get DEVICE Global Information,device,https://192.168.1.254/api/v1/device,GET,public,Private,device-read,No,Yes,List,device,22.3.22
-GET-DEVICEC,Get-DeviceCPU,Get DEVICE CPU Information,device/cpu,https://192.168.1.254/api/v1/device/cpu,GET,public,Private,device-read,No,Yes,List,device-cpu,22.3.22
-GET-DEVICELOG,Get-DeviceLog,Get DEVICE Log Information (Only Last 1000 Events),device/log,https://192.168.1.254/api/v1/device/log,GET,private,Private,device-read,No,Yes,Table,device-log1000,22.3.22
-GET-DEVICELOGID,Get-DeviceLogID,Get DEVICE Log Information by page,device/log,https://192.168.1.254/api/v1/device/log/{ID},GET,private,Private,device-read,No,No,Table,device-log-page,22.3.22
-GET-DEVICEFLOG,Get-DeviceFullLog,Get DEVICE Full Log Information (All Events),device/log,https://192.168.1.254/api/v1/device/log,GET,private,Private,device-read,No,Yes,Table,device-log-standard,22.3.22
-GET-DEVICEFTLOG,Get-DeviceFullTechnicalLog,Get DEVICE Full Log Technical Information (All Events),device/log,https://192.168.1.254/api/v1/device/log,GET,private,Private,device-read,No,Yes,Table,device-log-technic,22.3.22
-GET-DEVICECHLOG,Get-DeviceConnectionHistoryLog,Get DEVICE Full Log Devices Connection History,device/log,https://192.168.1.254/api/v1/device/log,GET,private,Private,device-read,No,Yes,Table,device-log-connexion,22.3.23
-GET-DEVICECHLOGID,Get-DeviceConnectionHistoryLogID,Get DEVICE Full Log Devices Connection History by ID,device/log,https://192.168.1.254/api/v1/device/log,GET,private,Private,device-read,No,Yes,Table,device-log-connexion-id,22.3.23
-GET-DEVICELED,Get-DeviceLED,Get DEVICE LED Information,device/led,https://192.168.1.254/api/v1/device/led,GET,public,Private,device-read,No,Yes,List,device-led,22.3.22
-GET-DEVICEM,Get-DeviceMemory,Get DEVICE Memory Information,device/mem,https://192.168.1.254/api/v1/device/mem,GET,public,Private,device-read,No,Yes,List,device-mem,22.3.22
-GET-DEVICES,Get-DeviceSummary,Get DEVICE Main Information,device/summary,https://192.168.1.254/api/v1/device/summary,GET,public,Private,device-read,No,Yes,List,device-summary,22.3.22
-GET-DEVICET,Get-DeviceToken,Get DEVICE Token Information,device/token,https://192.168.1.254/api/v1/device/token,GET,private,Private,any,No,Yes,List,device-token,22.3.22
-GET-DEVICEU,Get-DeviceUpgrade,Get DEVICE Upgrade Information,device/upgrade,https://192.168.1.254/api/v1/device/upgrade,GET,private,Private,bboxdebug,No,No,$null,device-upgrade,22.3.22
-GET-DEVICEUSBD,Get-DeviceUSBDevices,Get DEVICE USB Devices Information,device/usb,https://192.168.1.254/api/v1/device/usb,GET,public,Private,device-read,No,Yes,Table,device-usb,22.3.22
-GET-DEVICEUSBP,Get-DeviceUSBPrinter,Get DEVICE USB Printer Information,device/printer,https://192.168.1.254/api/v1/device/printer,GET,public,Private,device-read,No,Yes,Table,device-printer,22.3.22
-GET-DHCP,Get-DHCP,Get DHCP Configuration Information,dhcp,https://192.168.1.254/api/v1/dhcp,GET,public,Private,dhcp-read,No,Yes,List,dhcp,22.3.22
-GET-DHCPAO,Get-DHCPActiveOptions,Get DHCP Active Options Configuration Information,dhcp/options,https://192.168.1.254/api/v1/dhcp/options,GET,public,Private,dhcp-read,No,Yes,Table,dhcp-options-active,22.3.22
-GET-DHCPO,Get-DHCPOptions,Get DHCP Options Information,dhcp/options,https://192.168.1.254/api/v1/dhcp/options,GET,public,Private,dhcp-read,No,Yes,Table,dhcp-options,22.3.22
-GET-DHCPOID,Get-DHCPOptionsID,Get DHCP Options Information by ID,dhcp/options,https://192.168.1.254/api/v1/dhcp/options/{ID},GET,public,Private,dhcp-read,No,Yes,List,dhcp-options-id,22.3.22
-GET-DHCPC,Get-DHCPClients,Get DHCP Client Configuration Information,dhcp/clients,https://192.168.1.254/api/v1/dhcp/clients,GET,public,Private,dhcp-read,No,Yes,Table,dhcp-clients,22.3.22
-GET-DHCPCID,Get-DHCPClientsID,Get DHCP Clients Configuration Information by ID,dhcp/clients,https://192.168.1.254/api/v1/dhcp/clients/{ID},GET,public,Private,dhcp-read,No,Yes,List,dhcp-clients-id,22.3.22
-GET-DHCPSTBO,Get-DHCPSTBOptions,Get DHCP STB Options Information,dhcp/stb/options,https://192.168.1.254/api/v1/dhcp/stb/options,GET,private,Private,dhcp-read,No,Yes,Table,dhcp-stb-options,22.3.22
-GET-DHCPv6O,Get-DHCPv6Options,Get DHCP V6 Options Information,dhcp6/options,https://192.168.1.254/api/v1/dhcp6/options,GET,public,Private,dhcp-read,No,Yes,Table,dhcp6-options,22.3.22
-GET-DHCPv6PFD,Get-DHCPv6PrefixDelegation,Get-DHCP V6 Prefix Delegation Configuration Information,dhcp6/prefixdelegation,https://192.168.1.254/api/v1/dhcp6/prefixdelegation,GET,public,Private,dhcp-read,No,Yes,List,dhcp6-prefixdelegation,22.3.22
-GET-DNSS,Get-DNSStats,Get DNS Stats Information,dns/stats,https://192.168.1.254/api/v1/dns/stats,GET,public,Private,lan-read,No,Yes,List,dns-stats,22.3.22
-GET-DYNDNS,Get-DYNDNS,Get DYNDNS Configuration Information,dyndns,https://192.168.1.254/api/v1/dyndns,GET,private,Private,dyndns-read,No,Yes,List,dyndns-config,22.3.22
-GET-DYNDNSPL,Get-DYNDNSProviderList,Get DYNDNS Provider List Configuration Information,dyndns,https://192.168.1.254/api/v1/dyndns,GET,private,Private,dyndns-read,No,Yes,Table,dyndns-provider,22.3.22
-GET-DYNDNSC,Get-DYNDNSClient,Get DYNDNS Client list Configuration Information,dyndns,https://192.168.1.254/api/v1/dyndns,GET,private,Private,dyndns-read,No,Yes,Table,dyndns-client,22.3.22
-GET-DYNDNSCID,Get-DYNDNSClientID,Get DYNDNS Client Configuration Information by ID,dyndns,https://192.168.1.254/api/v1/dyndns/{id},GET,private,Private,dyndns-read,No,Yes,List,dyndns-client-id,22.3.22
-GET-ErrorCodeTest,Get-ErrorCodeTest,Error Code : Unauthorized,401,https://192.168.1.254/api/v1/401,GET,private,Private,host-read,No,Yes,List,error-401,22.3.22
-GET-ErrorCodeTest,Get-ErrorCodeTest,Error Code : Operation not found,404,https://192.168.1.254/api/v1/404,GET,private,Private,host-read,No,Yes,List,error-404,22.3.22
-GET-FIREWALL,Get-FIREWALL,Get FIREWALL Configuration Information,firewall,https://192.168.1.254/api/v1/firewall,GET,private,Private,firewall-read,No,Yes,List,firewall,22.3.22
-GET-FIREWALLGM,Get-FIREWALLGamerMode,Get FIREWALL Gamer Mode Information,firewall/gamermode,https://192.168.1.254/api/v1/firewall/gamermode,GET,private,Private,firewall-read,No,Yes,List,firewall-gamermode,22.3.22
-GET-FIREWALLPR,Get-FIREWALLPingResponder,Get FIREWALL Ping Responder Configuration Information,firewall/pingresponder,https://192.168.1.254/api/v1/firewall/pingresponder,GET,public,Private,firewall-read,No,Yes,List,firewall-pingresponder,22.3.22
-GET-FIREWALLR,Get-FIREWALLRules,Get FIREWALL Rules Information,firewall/rules,https://192.168.1.254/api/v1/firewall/rules,GET,private,Private,firewall-read,No,Yes,Table,firewall-rules,22.3.22
-GET-FIREWALLRID,Get-FIREWALLRulesID,Get FIREWALL Rules Information by ID,firewall/rules,https://192.168.1.254/api/v1/firewall/rules/{ID},GET,private,Private,firewall-read,No,Yes,List,firewall-rules-id,22.3.22
-GET-FIREWALLv6L,Get-FIREWALLv6Level,Get FIREWALL V6 Level,firewallv6/level,https://192.168.1.254/api/v1/firewallv6/level,GET,private,Private,firewall-read,No,Yes,List,firewallv6-level,22.3.22
-GET-FIREWALLv6R,Get-FIREWALLv6Rules,Get FIREWALL V6 Rules Information,firewallv6/rules,https://192.168.1.254/api/v1/firewallv6/rules,GET,private,Private,firewall-read,No,Yes,Table,firewallv6-rules,22.3.22
-GET-FIREWALLv6RID,Get-FIREWALLv6RulesID,Get FIREWALL V6 Rules Information by ID,firewallv6/rules,https://192.168.1.254/api/v1/firewallv6/rules/{id},GET,private,Private,firewall-read,No,Yes,List,firewallv6-rules-id,22.3.22
-GET-GRAPHSID,Get-GRAPHSID,Get GRAPHS Configuration Information by ID,graphs,https://192.168.1.254/api/v1/graphs/{ID},GET,public,Private,lan-read,No,No,List,graphs,22.3.22
-GET-HOSTS,Get-HOSTS,Get HOSTS List Information,hosts,https://192.168.1.254/api/v1/hosts,GET,public,Private,host-read,No,Yes,Table,hosts,22.3.22
-GET-HOSTSID,Get-HOSTID,Get HOSTS List Information by ID,hosts,https://192.168.1.254/api/v1/hosts/{ID},GET,public,Private,host-read,No,Yes,List,hosts-id,22.3.22
-GET-HOSTSL,Get-HOSTSLite,Get HOSTS Lite Information,hosts/lite,https://192.168.1.254/api/v1/hosts/lite,GET,public,Private,host-read,No,Yes,Table,hosts-lite,22.3.22
-GET-HOSTSME,Get-HOSTSMEE,Get MY HOST Information,hosts/me,https://192.168.1.254/api/v1/hosts/me,GET,public,Private,host-read,No,Yes,List,hosts-me,22.3.22
-GET-HOSTSP,Get-HOSTSPAUTH,Get HOSTS PAUTH Information,hosts/pauth,https://192.168.1.254/api/v1/hosts/pauth,GET,public,Private,host-read,No,Yes,Table,hosts-pauth,22.3.22
-GET-IPTV,Get-IPTV,Get IPTV Configuration Information,iptv,https://192.168.1.254/api/v1/iptv,GET,private,Private,diag-read,No,Yes,Table,iptv,22.3.22
-GET-IPTVD,Get-IPTVDiags,Get IPTV Diags Information,iptv/diags,https://192.168.1.254/api/v1/iptv/diags,GET,private,Private,diag-read,No,Yes,List,iptv-diags,22.3.22
-GET-LANA,Get-LANAlerts,Get LAN User Alerts Information,alerts,https://192.168.1.254/api/v1/alerts,GET,public,Private,alert-read,No,Yes,Table,alerts,22.3.22
-GET-LANIP,Get-LANIP,Get LAN IP Configuration Information,lan/ip,https://192.168.1.254/api/v1/lan/ip,GET,public,Private,lan-read,No,Yes,List,lan-ip,22.3.22
-GET-LANS,Get-LANIPStats,Get LAN Stats Information,lan/stats,https://192.168.1.254/api/v1/lan/stats,GET,public,Private,lan-read,No,Yes,List,lan-stats,22.3.22
-GET-LEGACYINFO,Get-LEGACYINFO,Get LEGACY Information,legacy/_info.xml,https://192.168.1.254/legacy/_info.xml,GET,public,Private,lan-read,No,No,$null,legacy-info,22.3.22
-GET-NATDMZ,Get-NATDMZ,Get NAT DMZ Configuration Information,nat/dmz,https://192.168.1.254/api/v1/nat/dmz,GET,public,Private,nat-read,No,Yes,List,nat-dmz,22.3.22
-GET-NAT,Get-NAT,Get NAT Configuration Information,nat/rules,https://192.168.1.254/api/v1/nat/rules,GET,public,Private,nat-read,No,Yes,List,nat-rules-config,22.3.22
-GET-NATR,Get-NATRules,Get NAT Rules Information,nat/rules,https://192.168.1.254/api/v1/nat/rules,GET,public,Private,nat-read,No,Yes,Table,nat-rules,22.3.22
-GET-NATRID,Get-NATRulesID,Get NAT Rules Information by ID,nat/rules,https://192.168.1.254/api/v1/nat/rules/{id},GET,public,Private,nat-read,No,Yes,List,nat-rules-id,22.3.22
-GET-NOTIFICATION,Get-NOTIFICATIONConfig,Get NOTIFICATION Configuration Information,notification,https://192.168.1.254/api/v1/notification,GET,private,Private,notif-read,No,Yes,List,notification-Config,22.3.22
-GET-NOTIFICATIONCA,Get-NOTIFICATIONAlerts,Get NOTIFICATION Configuration Alerts List Information,notification/alerts,https://192.168.1.254/api/v1/notification,GET,private,Private,notif-read,No,Yes,Table,notification-Config-alerts,22.3.22
-GET-NOTIFICATIONCC,Get-NOTIFICATIONContacts,Get NOTIFICATION Configuration Contacts List Information,notification/contacts,https://192.168.1.254/api/v1/notification,GET,private,Private,notif-read,No,Yes,Table,notification-Config-contacts,22.3.22
-GET-NOTIFICATIONCE,Get-NOTIFICATIONEvents,Get NOTIFICATION Configuration Events List Information,notification/events,https://192.168.1.254/api/v1/notification,GET,private,Private,notif-read,No,Yes,Table,notification-Config-events,22.3.22
-GET-NOTIFICATIONA,Get-NOTIFICATIONAlerts,Get NOTIFICATION Alerts List Information,notification/alerts,https://192.168.1.254/api/v1/notification/alerts,GET,private,Private,notif-read,No,Yes,Table,notification-alerts,22.3.22
-GET-NOTIFICATIONC,Get-NOTIFICATIONContacts,Get NOTIFICATION Contacts Information,notification/contacts,https://192.168.1.254/api/v1/notification/contacts,GET,private,Private,notif-read,No,Yes,Table,notification-contacts,22.3.22
-GET-NOTIFICATIONE,Get-NOTIFICATIONEvents,Get NOTIFICATION Events Information,notification/events,https://192.168.1.254/api/v1/notification/events,GET,private,Private,notif-read,No,Yes,Table,notification-events,22.3.22
-GET-OAUTHA,Get-OAUTHAuthorize,Get OAUTH Authorize Information,oauth/authorize,https://192.168.1.254/api/v1/oauth/authorize,GET,public,Private,any,No,No,List,oauth-authorize,22.3.22
-GET-OQCBUTTONID,Get-OQCBUTTONID,Get BBOX BUTTON Information,oqc/button,https://192.168.1.254/api/v1/oqc/button,GET,private,Private,device-read,No,No,$null,oqc-button,22.3.22
-GET-PARENTALCONTROL,Get-PARENTALCONTROL,Get PARENTAL CONTROL Configuration Information,parentalcontrol,https://192.168.1.254/api/v1/parentalcontrol,GET,private,Private,parental-read,No,Yes,List,parentalcontrol,22.3.22
-GET-PARENTALCONTROLS,Get-PARENTALCONTROLScheduler,Get PARENTAL CONTROL Scheduler Configuration Information,parentalcontrol/scheduler,https://192.168.1.254/api/v1/parentalcontrol/scheduler,GET,private,Private,parental-read,No,Yes,list,parentalcontrol-scheduler,22.3.22
-GET-PARENTALCONTROLSR,Get-PARENTALCONTROLSchedulerRules,Get PARENTAL CONTROL Scheduler Rules Configuration Information,parentalcontrol/scheduler,https://192.168.1.254/api/v1/parentalcontrol/scheduler,GET,private,Private,parental-read,No,Yes,Table,parentalcontrol-scheduler-rules,22.3.22
-GET-PASSRECOVERV,Get-PasswordRecoveryVerify,Get Password Recovery Verify Inofrmation,password-recovery/verify,https://192.168.1.254/api/v1/password-recovery/verify,GET,public,None,auth-write,No,Yes,List,password-recovery-verify,22.3.22
-GET-PROFILEC,Get-PROFILEConsumption,Get PROFIL Consumption Information,profile/consumption,https://192.168.1.254/api/v1/profile/consumption,GET,private,Private,profile-read,No,Yes,List,profile-consumption,22.3.22
-GET-REMOTEPWOL,Get-REMOTEProxyWOL,Get REMOTE Proxy WOL Information,remote/proxywol,https://192.168.1.254/api/v1/remote/proxywol,GET,private,Private,remote,No,Yes,List,remote-proxywol,22.3.22
-GET-SERVICES,Get-SERVICES,Get SERVICES Configuration Information,services,https://192.168.1.254/api/v1/services,GET,public,Private,lan-read,No,Yes,Table,services,22.3.22
-GET-SUMMARY,Get-SUMMARY,Get SUMMARY Configuration Information,summary,https://192.168.1.254/api/v1/summary,GET,public,Private,lan-read,No,Yes,List,summary,22.3.22
-GET-SPEEDTESTC,GET-SPEEDTESTContext,Get Speedtest Context Configuration Information,speedtest/context,https://192.168.1.254/api/v1/speedtest/context,GET,public,Private,device-read,No,No,List,SPEEDTEST-Context,22.3.22
-GET-UPNPIGD,Get-UPNPIGD,Get UPNP IGD Configuration Information,upnp/igd,https://192.168.1.254/api/v1/upnp/igd,GET,public,Private,igd-read,No,Yes,List,upnp-igd,22.3.22
-GET-UPNPIGDR,Get-UPNPIGDRules,Get UPNP IGD Rules Configuration Information,upnp/igd/rules,https://192.168.1.254/api/v1/upnp/igd/rules,GET,public,Private,igd-read,No,Yes,Table,upnp-igd-rules,22.3.22
-GET-USBS,Get-USBStorage,Get USB Storage Configuration Information,usb/storage,https://192.168.1.254/api/v1/usb/storage,GET,private,Private,usb-read,No,Yes,Table,usb-storage,22.3.22
-GET-USERSAVE,Get-USERSAVE,Get USER SAVE Configuration Information,usersave,https://192.168.1.254/api/v1/usersave,GET,public,Private,backup-read,No,Yes,List,usersave,22.3.22
-GET-VOIP,Get-VOIP,Get VOIP Configuration Information,voip,https://192.168.1.254/api/v1/voip,GET,private,Private,voip-read,No,Yes,List,voip,22.3.22
-GET-VOIPCL,Get-VOIPCallLogLineX,Get-VOIP Last 5 Calls Log Information by line,voip/calllog,https://192.168.1.254/api/v1/voip/calllog/{ID},GET,private,Private,voip-read,No,Yes,Table,voip-calllog,22.3.22
-GET-VOIPD,Get-VOIPDiags,Get-VOIP Diags Information,voip/diag,https://192.168.1.254/api/v1/voip/diag,GET,private,Private,voip-read,No,Yes,Table,voip-diag,22.3.22
-GET-VOIPDH,Get-VOIPDiagHost,Get-VOIP Diags Host Information,voip/diag,https://192.168.1.254/api/v1/voip/diag,GET,private,Private,voip-read,No,Yes,Table,voip-diag-host,22.3.22
-GET-VOIPDU,Get-VOIPDiagUSB,Get-VOIP Diags USB Information,voip/diag,https://192.168.1.254/api/v1/voip/diag,GET,private,Private,voip-read,No,Yes,Table,voip-diag-usb,22.3.22
-GET-VOIPFCL,Get-VOIPFullcalllogLineX,Get-VOIP Full Call Log Information by line,voip/fullcalllog,https://192.168.1.254/api/v1/voip/fullcalllog/{ID},GET,private,Private,voip-write,No,Yes,Table,voip-fullcalllog,22.3.22
-GET-VOIPS,Get-VOIPScheduler,Get VOIP Scheduler Configuration Information,voip/scheduler,https://192.168.1.254/api/v1/voip/scheduler,GET,private,Private,voip-read,No,Yes,Table,voip-scheduler,22.3.22
-GET-VOIPSR,Get-VOIPSchedulerRules,Get VOIP Scheduler Rules Configuration Information,voip/scheduler,https://192.168.1.254/api/v1/voip/scheduler,GET,private,Private,voip-read,No,Yes,Table,voip-scheduler-rules,22.3.22
-GET-VOIPALN,Get-VOIPAllowedListNumber,Get VOIP Scheduler Allowed List Number Configuration Information,voip/scheduler/number,https://192.168.1.254/api/v1/voip/scheduler/number,GET,private,Private,voip-read,No,Yes,Table,voip-scheduler-number,22.3.22
-GET-WANA,Get-WANAutowan,Get WAN Autowan Configuration Information,wan/autowan,https://192.168.1.254/api/v1/wan/autowan,GET,public,Private,wan-read,No,Yes,List,wan-autowan,22.3.22
-GET-WAND,Get-WANDiags,Get WAN Diags Information,wan/diags,https://192.168.1.254/api/v1/wan/diags,GET,public,Private,diag-read,No,Yes,List,wan-diags,22.3.22
-GET-WANDS,Get-WANDiagsSessions,Get WAN DIAGS Sessions Configuration Information,wan/diags/sessions,https://192.168.1.254/api/v1/wan/diags/sessions,GET,private,Private,diag-read,No,Yes,List,wan-diags-sessions-config,22.3.22
-GET-WANDSHAS,Get-WANDiagsSummaryHostsActiveSessions,Get WAN DIAGS Active Summary Hosts Sessions Information,wan/diags/sessions,https://192.168.1.254/api/v1/wan/diags/sessions,GET,private,Private,diag-read,No,Yes,Table,wan-diags-sessions-host,22.3.22
-GET-WANDSID,Get-WANDiagsSessionsID,Get WAN DIAGS Sessions Configuration Information by Page,wan/diags/sessions,https://192.168.1.254/api/v1/wan/diags/sessions/{ID},GET,private,Private,diag-read,No,No,Table,wan-diags-sessions-id-page,22.3.22
-GET-WANDAAS,Get-WANDiagsAllActiveSessions,Get WAN DIAGS All Active Sessions Information,wan/diags/sessions,https://192.168.1.254/api/v1/wan/diags/sessions,GET,private,Private,diag-read,No,Yes,Table,wan-diags-sessions,22.3.22
-GET-WANDAASH,Get-WANDiagsAllActiveSessionsHost,Get WAN DIAGS All Active Sessions Information by Host,wan/diags/sessions,https://192.168.1.254/api/v1/wan/diags/sessions/{ID},GET,private,Private,diag-read,No,Yes,Table,wan-diags-sessions-id,22.3.22
-GET-WANFS,Get-WANFStats,Get WAN FTTH STATS Information,wan/ftth/stats,https://192.168.1.254/api/v1/wan/ftth/stats,GET,public,Private,wan-read,No,Yes,List,wan-ftth-stats,22.3.22
-GET-WANIP,Get-WANIP,Get WAN IP Configuration Information,wan/ip,https://192.168.1.254/api/v1/wan/ip,GET,public,Private,wan-read,No,Yes,List,wan-ip,22.3.22
-GET-WANIPS,Get-WANIPStats,Get WAN IP Stats Information,wan/ip/stats,https://192.168.1.254/api/v1/wan/ip/stats,GET,public,Private,wan-read,No,Yes,List,wan-ip-stats,22.3.22
-GET-WANXDSL,Get-WANXDSL,Get WAN XDSL Configuration Information,wan/xdsl,https://192.168.1.254/api/v1/wan/xdsl,GET,public,Private,wan-read,No,Yes,List,wan-xdsl,22.3.22
-GET-WANXDSLS,Get-WANXDSLStats,Get WAN XDSL Stats Information,wan/xdsl/stats,https://192.168.1.254/api/v1/wan/xdsl/stats,GET,public,Private,wan-read,No,Yes,List,wan-xdsl-stats,22.3.22
-GET-WANSFF,Get-WANSFF,Get WAN SFF Configuration Information,wan/sff,https://192.168.1.254/api/v1/wan/sff,GET,public,Private,wan-read,No,Yes,List,wan-sff,22.3.22
-GET-WIRELESS,Get-WIRELESS,Get WIRELESS Configuration Information,wireless,https://192.168.1.254/api/v1/wireless,GET,private,Private,wifi-read,No,Yes,List,wireless,22.3.22
-Get-WIRELESSSTD,Get-WIRELESSSTANDARD,Get WIRELESS Standard Norme Information,wireless,https://192.168.1.254/api/v1/wireless,GET,private,Private,wifi-read,No,Yes,Table,wireless-standard,22.3.22
-GET-WIRELESS24,Get-WIRELESS24,Get WIRELESS 2.4Ghz Configuration Information,wireless/24,https://192.168.1.254/api/v1/wireless/24,GET,private,Private,wifi-read,No,Yes,List,wireless-24,22.3.22
-GET-WIRELESS24S,Get-WIRELESS24Stats,Get WIRELESS 2.4Ghz Stats Information,wireless/24/stats,https://192.168.1.254/api/v1/wireless/24/stats,GET,private,Private,wifi-read,No,Yes,List,wireless-24-stats,22.3.22
-GET-WIRELESS5,Get-WIRELESS5,Get WIRELESS 5.2Ghz Configuration Information,wireless/5,https://192.168.1.254/api/v1/wireless/5,GET,private,Private,wifi-read,No,Yes,List,wireless-5,22.3.22
-GET-WIRELESS5S,Get-WIRELESS5Stats,Get WIRELESS 5.2Ghz Stats Information,wireless/5/stats,https://192.168.1.254/api/v1/wireless/5/stats,GET,private,Private,wifi-read,No,Yes,List,wireless-5-stats,22.3.22
-GET-WIRELESSACL,Get-WIRELESSACL,Get WIRELESS ACL Configuration Information,wireless/acl,https://192.168.1.254/api/v1/wireless/acl,GET,private,Private,wifi-read,No,Yes,List,wireless-acl,22.3.22
-GET-WIRELESSACLR,Get-WIRELESSACLRules,Get WIRELESS ACL Rules Configuration Information,wireless/acl,https://192.168.1.254/api/v1/wireless/acl,GET,private,Private,wifi-read,No,Yes,Table,wireless-acl-rules,22.3.22
-GET-WIRELESSACLRID,Get-WIRELESSACLRulesID,Get WIRELESS ACL Rules Configuration Information by ID,wireless/acl,https://192.168.1.254/api/v1/wireless/acl/{ID},GET,private,Private,wifi-read,No,Yes,List,wireless-acl-rules-id,22.3.22
-GET-WIRELESSFSM,Get-WIRELESSFastScanMe,Get WIRELESS Fast scan for my device,wireless/fastscan/me,https://192.168.1.254/api/v1/wireless/fastscan/me,GET,public,Private,wifi-read,No,No,List,wireless-fastscan-me,22.3.22
-GET-WIRELESSFBNH,Get-WIRELESSFrequencyNeighborhoodScan,Get WIRELESS 2.4Ghz Frequency Neighborhood Scan Information,wireless/24/neighborhood,https://192.168.1.254/api/v1/wireless/24/neighborhood,GET,private,Private,wifi-read,No,Yes,Table,wireless-24-neighborhood,22.3.22
-GET-WIRELESSFBNH,Get-WIRELESSFrequencyNeighborhoodScan,Get WIRELESS 5.2Ghz Frequency Neighborhood Scan Information,wireless/5/neighborhood,https://192.168.1.254/api/v1/wireless/5/neighborhood,GET,private,Private,wifi-read,No,Yes,Table,wireless-5-neighborhood,22.3.22
-GET-WIRELESSR,Get-WIRELESSRepeater,Get WIRELESS Repeater Configuration Information,wireless/repeater,https://192.168.1.254/api/v1/wireless/repeater,GET,private,Private,wifi-read,No,Yes,List,wireless-repeater,22.3.22
-GET-WIRELESSS,Get-WIRELESSScheduler,Get WIRELESS Scheduler Configuration Information,wireless/scheduler,https://192.168.1.254/api/v1/wireless/scheduler,GET,private,Private,wifi-read,No,Yes,List,wireless-scheduler,22.3.22
-GET-WIRELESSSR,Get-WIRELESSSchedulerRules,Get WIRELESS Scheduler Rules Configuration Information,wireless/scheduler,https://192.168.1.254/api/v1/wireless/scheduler,GET,private,Private,wifi-read,No,Yes,Table,wireless-scheduler-rules,22.3.22
-GET-WIRELESSVBSTB,GET-WIRELESSVideoBridgeSetTopBoxes,Get WIRELESS Video Bridge Boxes Configuration Information,wireless/videobridge,https://192.168.1.254/api/v1/wireless/videobridge,GET,private,Private,wifi-read,No,Yes,Table,wireless-video-bridge-boxes,22.3.22
-GET-WIRELESSVBR,GET-WIRELESSVideoBridgeRepeaters,Get WIRELESS Video Bridge Repeaters Configuration Information,wireless/videobridge,https://192.168.1.254/api/v1/wireless/videobridge,GET,private,Private,wifi-read,No,Yes,Table,wireless-video-bridge-repeaters,22.3.22
-GET-WIRELESSWPS,Get-WIRELESSWPS,Get WIRELESS WPS Configuration Information,wireless/wps,https://192.168.1.254/api/v1/wireless/wps,GET,public,Private,wifi-read,No,Yes,List,wireless-wps,22.3.22
-,,,airties/upgrade,https://192.168.1.254/api/v1/airties/upgrade,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/remotemanager,https://192.168.1.254/api/v1/airties/remotemanager,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/meshsteering,https://192.168.1.254/api/v1/airties/meshsteering,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/bandsteering,https://192.168.1.254/api/v1/airties/bandsteering,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/agent,https://192.168.1.254/api/v1/airties/agent,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/cacs,https://192.168.1.254/api/v1/airties/cacs,PUT,public,Private,diag-write,Yes,No,,,
-,,,airties/liveview,https://192.168.1.254/api/v1/airties/liveview,PUT,public,Private,diag-write,Yes,No,,,
-,,,dhcp6/prefixdelegation,https://192.168.1.254/api/v1/dhcp6/prefixdelegation,POST,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp6/prefixdelegation,https://192.168.1.254/api/v1/dhcp6/prefixdelegation/{id},PUT,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp6/prefixdelegation,https://192.168.1.254/api/v1/dhcp6/prefixdelegation/{id},DELETE,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp6/options,https://192.168.1.254/api/v1/dhcp6/options,POST,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp6/options,https://192.168.1.254/api/v1/dhcp6/options/{id},PUT,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp6/options,https://192.168.1.254/api/v1/dhcp6/options/{id},DELETE,private,Private,dhcp-write,Yes,No,,,
-,,,firewallv6/rules,https://192.168.1.254/api/v1/firewallv6/rules,POST,private,Private,firewall-write,Yes,No,,,
-,,,firewallv6/rules/{id},https://192.168.1.254/api/v1/firewallv6/rules/{id},PUT,private,Private,firewall-write,Yes,No,,,
-,,,firewallv6/level,https://192.168.1.254/api/v1/firewallv6/level,PUT,private,Private,firewall-write,Yes,No,,,
-,,,hosts/{id},https://192.168.1.254/api/v1/hosts/{id},DELETE,private,Private,host-write,Yes,No,,,
-,,,dhcp/options/{id},https://192.168.1.254/api/v1/dhcp/options/{id},DELETE,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp/clients/{id},https://192.168.1.254/api/v1/dhcp/clients/{id},DELETE,private,Private,dhcp-write,Yes,No,,,
-,,,wireless/acl/rules/{id},https://192.168.1.254/api/v1/wireless/acl/rules/{id},DELETE,private,Private,wifi-write,Yes,No,,,
-,,,wireless,https://192.168.1.254/api/v1/wireless,DELETE,private,Private,wifi-write,Yes,No,,,
-,,,wireless/wps,https://192.168.1.254/api/v1/wireless/wps,DELETE,private,Private,wifi-write,Yes,No,,,
-,,,nat/rules/{id},https://192.168.1.254/api/v1/nat/rules/{id},DELETE,private,Private,nat-write,Yes,No,,,
-,,,firewall/rules/{id},https://192.168.1.254/api/v1/firewall/rules/{id},DELETE,private,Private,firewall-write,Yes,No,,,
-,,,voip/dial/{id},https://192.168.1.254/api/v1/voip/dial/{id},DELETE,private,None,voip-write,Yes,No,,,
-,,,voip/calllog/{id},https://192.168.1.254/api/v1/voip/calllog/{id},DELETE,private,Private,voip-write,Yes,No,,,
-,,,voip/ringtest/{id},https://192.168.1.254/api/v1/voip/ringtest/{id},DELETE,private,Private,voip-write,Yes,No,,,
-,,,voip/echotest/{id},https://192.168.1.254/api/v1/voip/echotest/{id},DELETE,private,Private,voip-write,Yes,No,,,
-,,,voip/scheduler/number/{id},https://192.168.1.254/api/v1/voip/scheduler/number/{id},DELETE,private,Private,voip-write,Yes,No,,,
-,,,dyndns/{id},https://192.168.1.254/api/v1/dyndns/{id},DELETE,private,Private,dyndns-write,Yes,No,,,
-,,,alerts/{id},https://192.168.1.254/api/v1/alerts/{id},DELETE,private,Private,alert-write,Yes,No,,,
-,,,parentalcontrol/unblock,https://192.168.1.254/api/v1/parentalcontrol/unblock,DELETE,private,Private,parental-write,Yes,No,,,
-,,,configs/{id},https://192.168.1.254/api/v1/configs/{id},DELETE,private,None,backup-write,Yes,No,,,
-,,,notification/contact/{id},https://192.168.1.254/api/v1/notification/contact/{id},DELETE,private,Private,notif-write,Yes,No,,,
-,,,notification/alert/{id},https://192.168.1.254/api/v1/notification/alert/{id},DELETE,private,Private,notif-write,Yes,No,,,
-,,,{id},https://192.168.1.254/api/v1/{id},OPTIONS,public,Private,lan-read,Yes,No,,,
-,,,hosts/{id},https://192.168.1.254/api/v1/hosts/{id},POST,private,Private,host-write,Yes,No,,,
-,,,dhcp/options,https://192.168.1.254/api/v1/dhcp/options,POST,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp/clients,https://192.168.1.254/api/v1/dhcp/clients,POST,private,Private,dhcp-write,Yes,No,,,
-,,,wireless/acl/rules,https://192.168.1.254/api/v1/wireless/acl/rules,POST,private,Private,wifi-write,Yes,No,,,
-,,,wireless/wps,https://192.168.1.254/api/v1/wireless/wps,POST,private,Private,wifi-write,Yes,No,,,
-,,,wireless/scheduler,https://192.168.1.254/api/v1/wireless/scheduler,POST,private,Private,wifi-write,Yes,No,,,
-,,,nat/rules,https://192.168.1.254/api/v1/nat/rules,POST,private,Private,nat-write,Yes,No,,,
-,,,firewall/rules,https://192.168.1.254/api/v1/firewall/rules,POST,private,Private,firewall-write,Yes,No,,,
-,,,voip/dial/{id},https://192.168.1.254/api/v1/voip/dial/{id},POST,private,None,voip-write,Yes,No,,,
-,,,voip/ringtest/{id},https://192.168.1.254/api/v1/voip/ringtest/{id},POST,private,Private,voip-write,Yes,No,,,
-,,,voip/echotest/{id},https://192.168.1.254/api/v1/voip/echotest/{id},POST,private,Private,voip-write,Yes,No,,,
-,,,voip/scheduler,https://192.168.1.254/api/v1/voip/scheduler,POST,private,Private,voip-write,Yes,No,,,
-,,,voip/scheduler/number,https://192.168.1.254/api/v1/voip/scheduler/number,POST,private,Private,voip-write,Yes,No,,,
-,,,dyndns,https://192.168.1.254/api/v1/dyndns,POST,private,Private,dyndns-write,Yes,No,,,
-,,,login,https://192.168.1.254/api/v1/login,POST,public,Private,any,Yes,No,,,
-,,,logout,https://192.168.1.254/api/v1/logout,POST,public,Private,any,Yes,No,,,
-,,,password-recovery,https://192.168.1.254/api/v1/password-recovery,POST,public,None,auth-write,Yes,No,,,
-,,,change-password,https://192.168.1.254/api/v1/change-password,POST,private,None,auth-write,Yes,No,,,
-,,,reset-password,https://192.168.1.254/api/v1/reset-password,POST,private,None,any,Yes,No,,,
-,,,oauth/authorize,https://192.168.1.254/api/v1/oauth/authorize,POST,public,Private,any,Yes,No,,,
-,,,oauth/token,https://192.168.1.254/api/v1/oauth/token,POST,public,Private,any,Yes,No,,,
-,,,wan/diags,https://192.168.1.254/api/v1/wan/diags,POST,private,Private,diag-write,Yes,No,,,
-,,,parentalcontrol/scheduler,https://192.168.1.254/api/v1/parentalcontrol/scheduler,POST,private,Private,parental-write,Yes,No,,,
-,,,parentalcontrol/unblock,https://192.168.1.254/api/v1/parentalcontrol/unblock,POST,private,Private,parental-write,Yes,No,,,
-,,,device/reboot,https://192.168.1.254/api/v1/device/reboot,POST,private,Private,reboot,Yes,No,,,
-,,,device/factory,https://192.168.1.254/api/v1/device/factory,POST,private,None,factory,Yes,No,,,
-,,,configs,https://192.168.1.254/api/v1/configs,POST,private,None,backup-write,Yes,No,,,
-,,,configs/{id},https://192.168.1.254/api/v1/configs/{id},POST,private,None,backup-write,Yes,No,,,
-,,,notification/contact,https://192.168.1.254/api/v1/notification/contact,POST,private,Private,notif-write,Yes,No,,,
-,,,notification/alert,https://192.168.1.254/api/v1/notification/alert,POST,private,Private,notif-write,Yes,No,,,
-,,,notification/test,https://192.168.1.254/api/v1/notification/test,POST,private,Private,notif-write,Yes,No,,,
-,,,usersave,https://192.168.1.254/api/v1/usersave,POST,private,Private,backup-read,Yes,No,,,
-,,,hosts/{id},https://192.168.1.254/api/v1/hosts/{id},PUT,private,Private,host-write,Yes,No,,,
-,,,cpl,https://192.168.1.254/api/v1/cpl,PUT,private,Private,cpl-write,Yes,No,,,
-,,,lan,https://192.168.1.254/api/v1/lan,PUT,private,Private,lan-write,Yes,No,,,
-,,,lan/ip6,https://192.168.1.254/api/v1/lan/ip6,PUT,private,Private,lan-write,Yes,No,,,
-,,,dhcp,https://192.168.1.254/api/v1/dhcp,PUT,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp/options/{id},https://192.168.1.254/api/v1/dhcp/options/{id},PUT,private,Private,dhcp-write,Yes,No,,,
-,,,dhcp/clients/{id},https://192.168.1.254/api/v1/dhcp/clients/{id},PUT,private,Private,dhcp-write,Yes,No,,,
-,,,wireless/acl,https://192.168.1.254/api/v1/wireless/acl,PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/acl/rules/{id},https://192.168.1.254/api/v1/wireless/acl/rules/{id},PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/24/neighborhood,https://192.168.1.254/api/v1/wireless/24/neighborhood,PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/5/neighborhood,https://192.168.1.254/api/v1/wireless/5/neighborhood,PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless,https://192.168.1.254/api/v1/wireless,PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/scheduler,https://192.168.1.254/api/v1/wireless/scheduler,PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/cert/{id},https://192.168.1.254/api/v1/wireless/cert/{id},PUT,private,Private,wifi-write,Yes,No,,,
-,,,wireless/{id},https://192.168.1.254/api/v1/wireless/{id},PUT,private,Private,wifi-write,Yes,No,,,
-,,,nat/rules,https://192.168.1.254/api/v1/nat/rules,PUT,private,Private,nat-write,Yes,No,,,
-,,,nat/rules/{id},https://192.168.1.254/api/v1/nat/rules/{id},PUT,private,Private,nat-write,Yes,No,,,
-,,,nat/dmz,https://192.168.1.254/api/v1/nat/dmz,PUT,private,Private,nat-write,Yes,No,,,
-,,,firewall/pingresponder,https://192.168.1.254/api/v1/firewall/pingresponder,PUT,private,Private,firewall-write,Yes,No,,,
-,,,firewall,https://192.168.1.254/api/v1/firewall,PUT,private,Private,firewall-write,Yes,No,,,
-,,,firewall/rules/{id},https://192.168.1.254/api/v1/firewall/rules/{id},PUT,private,Private,firewall-write,Yes,No,,,
-,,,firewall/gamermode,https://192.168.1.254/api/v1/firewall/gamermode,PUT,private,Private,firewall-write,Yes,No,,,
-,,,upnp/igd,https://192.168.1.254/api/v1/upnp/igd,PUT,private,Private,igd-write,Yes,No,,,
-,,,voip/features/acr/{id},https://192.168.1.254/api/v1/voip/features/acr/{id},PUT,private,Private,voip-write,Yes,No,,,
-,,,voip/blockanon/{id},https://192.168.1.254/api/v1/voip/blockanon/{id},PUT,private,Private,voip-write,Yes,No,,,
-,,,voip/dial,https://192.168.1.254/api/v1/voip/dial,PUT,private,None,voip-write,Yes,No,,,
-,,,voip/ringtest,https://192.168.1.254/api/v1/voip/ringtest,PUT,private,Private,voip-write,Yes,No,,,
-,,,voip/echotest,https://192.168.1.254/api/v1/voip/echotest,PUT,private,Private,voip-write,Yes,No,,,
-,,,voip/scheduler,https://192.168.1.254/api/v1/voip/scheduler,PUT,private,Private,voip-write,Yes,No,,,
-,,,profile/account,https://192.168.1.254/api/v1/profile/account,PUT,private,Private,profile-write,Yes,No,,,
-,,,dyndns,https://192.168.1.254/api/v1/dyndns,PUT,private,Private,dyndns-write,Yes,No,,,
-,,,dyndns/{id},https://192.168.1.254/api/v1/dyndns/{id},PUT,private,Private,dyndns-write,Yes,No,,,
-,,,login,https://192.168.1.254/api/v1/login,PUT,public,Private,any,Yes,No,,,
-,,,remote/proxywol,https://192.168.1.254/api/v1/remote/proxywol,PUT,private,Private,remote,Yes,No,,,
-,,,remote/admin,https://192.168.1.254/api/v1/remote/admin,PUT,private,Private,remote,Yes,No,,,
-,,,parentalcontrol,https://192.168.1.254/api/v1/parentalcontrol,PUT,private,Private,parental-write,Yes,No,,,
-,,,parentalcontrol/hosts,https://192.168.1.254/api/v1/parentalcontrol/hosts,PUT,private,Private,parental-write,Yes,No,,,
-,,,device/usb/dlna,https://192.168.1.254/api/v1/device/usb/dlna,PUT,private,Private,device-write,Yes,No,,,
-,,,device/usb/samba,https://192.168.1.254/api/v1/device/usb/samba,PUT,private,Private,device-write,Yes,No,,,
-,,,device/usb/printer,https://192.168.1.254/api/v1/device/usb/printer,PUT,private,Private,device-write,Yes,No,,,
-,,,device/usb/{id},https://192.168.1.254/api/v1/device/usb/{id},PUT,private,Private,device-write,Yes,No,,,
-,,,device/optimization,https://192.168.1.254/api/v1/device/optimization,PUT,private,Private,device-write,Yes,No,,,
-,,,device/support,https://192.168.1.254/api/v1/device/support,PUT,private,None,bboxdebug,Yes,No,,,
-,,,device/display,https://192.168.1.254/api/v1/device/display,PUT,private,Private,device-read,Yes,No,,,
-,,,iptv/diags,https://192.168.1.254/api/v1/iptv/diags,PUT,private,Private,diag-write,Yes,No,,,
-,,,configs/{id},https://192.168.1.254/api/v1/configs/{id},PUT,private,None,backup-write,Yes,No,,,
-,,,notification,https://192.168.1.254/api/v1/notification,PUT,private,Private,notif-write,Yes,No,,,
-,,,notification/contact/{id},https://192.168.1.254/api/v1/notification/contact/{id},PUT,private,Private,notif-write,Yes,No,,,
-,,,notification/alert/{id},https://192.168.1.254/api/v1/notification/alert/{id},PUT,private,Private,notif-write,Yes,No,,,
-,,,device/upgrade,https://192.168.1.254/api/v1/device/upgrade,PUT,private,Private,bboxdebug,Yes,No,,,
-,,,oqc/led/{id},https://192.168.1.254/api/v1/oqc/led/{id},PUT,private,Private,device-write,Yes,No,,,
-,,,oqc/button/testmode,https://192.168.1.254/api/v1/oqc/button/testmode,PUT,private,Private,device-write,Yes,No,,,
+Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile;BboxVersion
+STOP-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Computer;Computer;Program;No;Yes;List;Stop_Program;22.3.22
+EXPORT-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Computer;Computer;Program;No;Yes;List;Full_Testing_Program;22.3.22
+EXPORT-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Computer;Computer;Program;No;Yes;List;Full;22.3.22
+REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Computer;Computer;Program;Yes;Yes;List;remove-logs;22.3.22
+REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Computer;Computer;Program;Yes;Yes;List;remove-csv;22.3.22
+REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Json;22.3.22
+REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Journal;22.3.22
+REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Computer;Computer;Program;Yes;Yes;List;remove-bbox-config;22.3.22
+REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-report;22.3.22
+SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Computer;Computer;Program;Yes;Yes;HTML/Table/Out-Gridview;html-table-outgridview;22.3.22
+SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Computer;Computer;Program;Yes;Yes;CSV/JSON;csv-json;22.3.22
+SWITCH-OEF;Switch-OpenExportFolder;Switch Open Export Folder;Switch_Open_Export_Folder;Switch_Open_Export_Folder;Switch;Computer;Computer;Program;Yes;Yes;List;open-folder;22.3.22
+SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Computer;Computer;Program;Yes;Yes;HTML;html;22.3.22
+REMOVE-BBoxC;Remove-BBoxCredential;Remove BBox Credential stored in Windows Credential Manager;Remove_BBox_Credential;Remove_BBox_Credential;Remove;Computer;Computer;Program;Yes;Yes;List;remove-credential;22.3.22
+SHOW-BBoxC;Show-BBoxCredential;Show BBox Credential stored in Windows Credential Manager;Show_BBox_Credential;Show_BBox_Credential;Show;Computer;Computer;Program;Yes;Yes;List;show-credential;22.3.22
+ADD-BBoxC;Add-BBoxCredential;Add BBox Credential in Windows Credential Manager;Add_BBox_Credential;Add_BBox_Credential;Add;Computer;Computer;Program;Yes;Yes;List;add-credential;22.3.22
+Reset-CUPC;Reset-CurrentUserProgramConfiguration;Reset Current User Program Configuration;Reset_Current_User_Program_Configuration;Reset_Current_User_Program_Configuration;Reset;Computer;Computer;Program;Yes;Yes;List;reset-current-user-program-configuration;22.3.22
+GET-BBoxJournal;Get-BBoxJournal;Download BBox Journal (Available in bbox web interface);log.html;https://192.168.1.254/log.html;Download;Private;Private;device-read;No;Yes;Table;Journal;22.3.22
+GET-AIRTIESL;Get-AirtiesLANmode;Get AIRTIES LAN mode Information;airties/lanmode;https://192.168.1.254/api/v1/airties/lanmode;GET;public;Private;diag-read;No;Yes;List;airties-lanmode;22.3.22
+GET-AIRTIESZ;Get-AirtiesZerotouch;Get AIRTIES Zero Touch Information;airties/zerotouch;https://192.168.1.254/api/v1/airties/zerotouch;GET;public;Private;diag-read;No;No;list;airties-zerotouch;22.3.22
+GET-ANALYTICSJS;Get-ANALYTICSJS;Get Bouygues Telecom Remote Connexion Page information;analytics.js;https://192.168.1.254/api/v1/analytics.js;GET;public;Private;lan-read;No;No;$null;analytics;22.3.22
+GET-APIRM;Get-APIRessourcesMap;Get API Ressources List Map Information;map;https://192.168.1.254/api/v1/map;GET;private;Private;lan-read;No;Yes;Table;map;22.3.22
+GET-CONFIGSL;Get-BackupList;Get BACKUP List Information;configs;https://192.168.1.254/api/v1/configs;GET;public;Private;backup-read;No;Yes;Table;configs;22.3.22
+GET-CPL;Get-CPL;Get CPL Configuration Information;cpl;https://192.168.1.254/api/v1/cpl;GET;public;Private;cpl-read;No;Yes;List;cpl;22.3.22
+GET-CPLDL;Get-CPLDeviceList;Get CPL Devices List Information;cpl;https://192.168.1.254/api/v1/cpl;GET;public;Private;cpl-read;No;Yes;Table;cpl-devices-list;22.3.22
+GET-DEVICE;Get-Device;Get DEVICE Global Information;device;https://192.168.1.254/api/v1/device;GET;public;Private;device-read;No;Yes;List;device;22.3.22
+GET-DEVICEC;Get-DeviceCPU;Get DEVICE CPU Information;device/cpu;https://192.168.1.254/api/v1/device/cpu;GET;public;Private;device-read;No;Yes;List;device-cpu;22.3.22
+GET-DEVICELOG;Get-DeviceLog;Get DEVICE Log Information (Only Last 1000 Events);device/log;https://192.168.1.254/api/v1/device/log;GET;private;Private;device-read;No;Yes;Table;device-log1000;22.3.22
+GET-DEVICELOGID;Get-DeviceLogID;Get DEVICE Log Information by page;device/log;https://192.168.1.254/api/v1/device/log/{ID};GET;private;Private;device-read;No;No;Table;device-log-page;22.3.22
+GET-DEVICEFLOG;Get-DeviceFullLog;Get DEVICE Full Log Information (All Events);device/log;https://192.168.1.254/api/v1/device/log;GET;private;Private;device-read;No;Yes;Table;device-log-standard;22.3.22
+GET-DEVICEFTLOG;Get-DeviceFullTechnicalLog;Get DEVICE Full Log Technical Information (All Events);device/log;https://192.168.1.254/api/v1/device/log;GET;private;Private;device-read;No;Yes;Table;device-log-technic;22.3.22
+GET-DEVICECHLOG;Get-DeviceConnectionHistoryLog;Get DEVICE Full Log Devices Connection History;device/log;https://192.168.1.254/api/v1/device/log;GET;private;Private;device-read;No;Yes;Table;device-log-connexion;22.3.23
+GET-DEVICECHLOGID;Get-DeviceConnectionHistoryLogID;Get DEVICE Full Log Devices Connection History by ID;device/log;https://192.168.1.254/api/v1/device/log;GET;private;Private;device-read;No;Yes;Table;device-log-connexion-id;22.3.23
+GET-DEVICELED;Get-DeviceLED;Get DEVICE LED Information;device/led;https://192.168.1.254/api/v1/device/led;GET;public;Private;device-read;No;Yes;List;device-led;22.3.22
+GET-DEVICEM;Get-DeviceMemory;Get DEVICE Memory Information;device/mem;https://192.168.1.254/api/v1/device/mem;GET;public;Private;device-read;No;Yes;List;device-mem;22.3.22
+GET-DEVICES;Get-DeviceSummary;Get DEVICE Main Information;device/summary;https://192.168.1.254/api/v1/device/summary;GET;public;Private;device-read;No;Yes;List;device-summary;22.3.22
+GET-DEVICET;Get-DeviceToken;Get DEVICE Token Information;device/token;https://192.168.1.254/api/v1/device/token;GET;private;Private;any;No;Yes;List;device-token;22.3.22
+GET-DEVICEU;Get-DeviceUpgrade;Get DEVICE Upgrade Information;device/upgrade;https://192.168.1.254/api/v1/device/upgrade;GET;private;Private;bboxdebug;No;No;$null;device-upgrade;22.3.22
+GET-DEVICEUSBD;Get-DeviceUSBDevices;Get DEVICE USB Devices Information;device/usb;https://192.168.1.254/api/v1/device/usb;GET;public;Private;device-read;No;Yes;Table;device-usb;22.3.22
+GET-DEVICEUSBP;Get-DeviceUSBPrinter;Get DEVICE USB Printer Information;device/printer;https://192.168.1.254/api/v1/device/printer;GET;public;Private;device-read;No;Yes;Table;device-printer;22.3.22
+GET-DHCP;Get-DHCP;Get DHCP Configuration Information;dhcp;https://192.168.1.254/api/v1/dhcp;GET;public;Private;dhcp-read;No;Yes;List;dhcp;22.3.22
+GET-DHCPAO;Get-DHCPActiveOptions;Get DHCP Active Options Configuration Information;dhcp/options;https://192.168.1.254/api/v1/dhcp/options;GET;public;Private;dhcp-read;No;Yes;Table;dhcp-options-active;22.3.22
+GET-DHCPO;Get-DHCPOptions;Get DHCP Options Information;dhcp/options;https://192.168.1.254/api/v1/dhcp/options;GET;public;Private;dhcp-read;No;Yes;Table;dhcp-options;22.3.22
+GET-DHCPOID;Get-DHCPOptionsID;Get DHCP Options Information by ID;dhcp/options;https://192.168.1.254/api/v1/dhcp/options/{ID};GET;public;Private;dhcp-read;No;Yes;List;dhcp-options-id;22.3.22
+GET-DHCPC;Get-DHCPClients;Get DHCP Client Configuration Information;dhcp/clients;https://192.168.1.254/api/v1/dhcp/clients;GET;public;Private;dhcp-read;No;Yes;Table;dhcp-clients;22.3.22
+GET-DHCPCID;Get-DHCPClientsID;Get DHCP Clients Configuration Information by ID;dhcp/clients;https://192.168.1.254/api/v1/dhcp/clients/{ID};GET;public;Private;dhcp-read;No;Yes;List;dhcp-clients-id;22.3.22
+GET-DHCPSTBO;Get-DHCPSTBOptions;Get DHCP STB Options Information;dhcp/stb/options;https://192.168.1.254/api/v1/dhcp/stb/options;GET;private;Private;dhcp-read;No;Yes;Table;dhcp-stb-options;22.3.22
+GET-DHCPv6O;Get-DHCPv6Options;Get DHCP V6 Options Information;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options;GET;public;Private;dhcp-read;No;Yes;Table;dhcp6-options;22.3.22
+GET-DHCPv6PFD;Get-DHCPv6PrefixDelegation;Get-DHCP V6 Prefix Delegation Configuration Information;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation;GET;public;Private;dhcp-read;No;Yes;List;dhcp6-prefixdelegation;22.3.22
+GET-DNSS;Get-DNSStats;Get DNS Stats Information;dns/stats;https://192.168.1.254/api/v1/dns/stats;GET;public;Private;lan-read;No;Yes;List;dns-stats;22.3.22
+GET-DYNDNS;Get-DYNDNS;Get DYNDNS Configuration Information;dyndns;https://192.168.1.254/api/v1/dyndns;GET;private;Private;dyndns-read;No;Yes;List;dyndns-config;22.3.22
+GET-DYNDNSPL;Get-DYNDNSProviderList;Get DYNDNS Provider List Configuration Information;dyndns;https://192.168.1.254/api/v1/dyndns;GET;private;Private;dyndns-read;No;Yes;Table;dyndns-provider;22.3.22
+GET-DYNDNSC;Get-DYNDNSClient;Get DYNDNS Client list Configuration Information;dyndns;https://192.168.1.254/api/v1/dyndns;GET;private;Private;dyndns-read;No;Yes;Table;dyndns-client;22.3.22
+GET-DYNDNSCID;Get-DYNDNSClientID;Get DYNDNS Client Configuration Information by ID;dyndns;https://192.168.1.254/api/v1/dyndns/{id};GET;private;Private;dyndns-read;No;Yes;List;dyndns-client-id;22.3.22
+GET-ErrorCodeTest;Get-ErrorCodeTest;Error Code : Unauthorized;401;https://192.168.1.254/api/v1/401;GET;private;Private;host-read;No;Yes;List;error-401;22.3.22
+GET-ErrorCodeTest;Get-ErrorCodeTest;Error Code : Operation not found;404;https://192.168.1.254/api/v1/404;GET;private;Private;host-read;No;Yes;List;error-404;22.3.22
+GET-FIREWALL;Get-FIREWALL;Get FIREWALL Configuration Information;firewall;https://192.168.1.254/api/v1/firewall;GET;private;Private;firewall-read;No;Yes;List;firewall;22.3.22
+GET-FIREWALLGM;Get-FIREWALLGamerMode;Get FIREWALL Gamer Mode Information;firewall/gamermode;https://192.168.1.254/api/v1/firewall/gamermode;GET;private;Private;firewall-read;No;Yes;List;firewall-gamermode;22.3.22
+GET-FIREWALLPR;Get-FIREWALLPingResponder;Get FIREWALL Ping Responder Configuration Information;firewall/pingresponder;https://192.168.1.254/api/v1/firewall/pingresponder;GET;public;Private;firewall-read;No;Yes;List;firewall-pingresponder;22.3.22
+GET-FIREWALLR;Get-FIREWALLRules;Get FIREWALL Rules Information;firewall/rules;https://192.168.1.254/api/v1/firewall/rules;GET;private;Private;firewall-read;No;Yes;Table;firewall-rules;22.3.22
+GET-FIREWALLRID;Get-FIREWALLRulesID;Get FIREWALL Rules Information by ID;firewall/rules;https://192.168.1.254/api/v1/firewall/rules/{ID};GET;private;Private;firewall-read;No;Yes;List;firewall-rules-id;22.3.22
+GET-FIREWALLv6L;Get-FIREWALLv6Level;Get FIREWALL V6 Level;firewallv6/level;https://192.168.1.254/api/v1/firewallv6/level;GET;private;Private;firewall-read;No;Yes;List;firewallv6-level;22.3.22
+GET-FIREWALLv6R;Get-FIREWALLv6Rules;Get FIREWALL V6 Rules Information;firewallv6/rules;https://192.168.1.254/api/v1/firewallv6/rules;GET;private;Private;firewall-read;No;Yes;Table;firewallv6-rules;22.3.22
+GET-FIREWALLv6RID;Get-FIREWALLv6RulesID;Get FIREWALL V6 Rules Information by ID;firewallv6/rules;https://192.168.1.254/api/v1/firewallv6/rules/{id};GET;private;Private;firewall-read;No;Yes;List;firewallv6-rules-id;22.3.22
+GET-GRAPHSID;Get-GRAPHSID;Get GRAPHS Configuration Information by ID;graphs;https://192.168.1.254/api/v1/graphs/{ID};GET;public;Private;lan-read;No;No;List;graphs;22.3.22
+GET-HOSTS;Get-HOSTS;Get HOSTS List Information;hosts;https://192.168.1.254/api/v1/hosts;GET;public;Private;host-read;No;Yes;Table;hosts;22.3.22
+GET-HOSTSID;Get-HOSTID;Get HOSTS List Information by ID;hosts;https://192.168.1.254/api/v1/hosts/{ID};GET;public;Private;host-read;No;Yes;List;hosts-id;22.3.22
+GET-HOSTSL;Get-HOSTSLite;Get HOSTS Lite Information;hosts/lite;https://192.168.1.254/api/v1/hosts/lite;GET;public;Private;host-read;No;Yes;Table;hosts-lite;22.3.22
+GET-HOSTSME;Get-HOSTSMEE;Get MY HOST Information;hosts/me;https://192.168.1.254/api/v1/hosts/me;GET;public;Private;host-read;No;Yes;List;hosts-me;22.3.22
+GET-HOSTSP;Get-HOSTSPAUTH;Get HOSTS PAUTH Information;hosts/pauth;https://192.168.1.254/api/v1/hosts/pauth;GET;public;Private;host-read;No;Yes;Table;hosts-pauth;22.3.22
+GET-IPTV;Get-IPTV;Get IPTV Configuration Information;iptv;https://192.168.1.254/api/v1/iptv;GET;private;Private;diag-read;No;Yes;Table;iptv;22.3.22
+GET-IPTVD;Get-IPTVDiags;Get IPTV Diags Information;iptv/diags;https://192.168.1.254/api/v1/iptv/diags;GET;private;Private;diag-read;No;Yes;List;iptv-diags;22.3.22
+GET-LANA;Get-LANAlerts;Get LAN User Alerts Information;alerts;https://192.168.1.254/api/v1/alerts;GET;public;Private;alert-read;No;Yes;Table;alerts;22.3.22
+GET-LANIP;Get-LANIP;Get LAN IP Configuration Information;lan/ip;https://192.168.1.254/api/v1/lan/ip;GET;public;Private;lan-read;No;Yes;List;lan-ip;22.3.22
+GET-LANS;Get-LANIPStats;Get LAN Stats Information;lan/stats;https://192.168.1.254/api/v1/lan/stats;GET;public;Private;lan-read;No;Yes;List;lan-stats;22.3.22
+GET-LEGACYINFO;Get-LEGACYINFO;Get LEGACY Information;legacy/_info.xml;https://192.168.1.254/legacy/_info.xml;GET;public;Private;lan-read;No;No;$null;legacy-info;22.3.22
+GET-NATDMZ;Get-NATDMZ;Get NAT DMZ Configuration Information;nat/dmz;https://192.168.1.254/api/v1/nat/dmz;GET;public;Private;nat-read;No;Yes;List;nat-dmz;22.3.22
+GET-NAT;Get-NAT;Get NAT Configuration Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;List;nat-rules-config;22.3.22
+GET-NATR;Get-NATRules;Get NAT Rules Information;nat/rules;https://192.168.1.254/api/v1/nat/rules;GET;public;Private;nat-read;No;Yes;Table;nat-rules;22.3.22
+GET-NATRID;Get-NATRulesID;Get NAT Rules Information by ID;nat/rules;https://192.168.1.254/api/v1/nat/rules/{id};GET;public;Private;nat-read;No;Yes;List;nat-rules-id;22.3.22
+GET-NOTIFICATION;Get-NOTIFICATIONConfig;Get NOTIFICATION Configuration Information;notification;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;List;notification-Config;22.3.22
+GET-NOTIFICATIONCA;Get-NOTIFICATIONAlerts;Get NOTIFICATION Configuration Alerts List Information;notification/alerts;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-alerts;22.3.22
+GET-NOTIFICATIONCC;Get-NOTIFICATIONContacts;Get NOTIFICATION Configuration Contacts List Information;notification/contacts;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-contacts;22.3.22
+GET-NOTIFICATIONCE;Get-NOTIFICATIONEvents;Get NOTIFICATION Configuration Events List Information;notification/events;https://192.168.1.254/api/v1/notification;GET;private;Private;notif-read;No;Yes;Table;notification-Config-events;22.3.22
+GET-NOTIFICATIONA;Get-NOTIFICATIONAlerts;Get NOTIFICATION Alerts List Information;notification/alerts;https://192.168.1.254/api/v1/notification/alerts;GET;private;Private;notif-read;No;Yes;Table;notification-alerts;22.3.22
+GET-NOTIFICATIONC;Get-NOTIFICATIONContacts;Get NOTIFICATION Contacts Information;notification/contacts;https://192.168.1.254/api/v1/notification/contacts;GET;private;Private;notif-read;No;Yes;Table;notification-contacts;22.3.22
+GET-NOTIFICATIONE;Get-NOTIFICATIONEvents;Get NOTIFICATION Events Information;notification/events;https://192.168.1.254/api/v1/notification/events;GET;private;Private;notif-read;No;Yes;Table;notification-events;22.3.22
+GET-OAUTHA;Get-OAUTHAuthorize;Get OAUTH Authorize Information;oauth/authorize;https://192.168.1.254/api/v1/oauth/authorize;GET;public;Private;any;No;No;List;oauth-authorize;22.3.22
+GET-OQCBUTTONID;Get-OQCBUTTONID;Get BBOX BUTTON Information;oqc/button;https://192.168.1.254/api/v1/oqc/button;GET;private;Private;device-read;No;No;$null;oqc-button;22.3.22
+GET-PARENTALCONTROL;Get-PARENTALCONTROL;Get PARENTAL CONTROL Configuration Information;parentalcontrol;https://192.168.1.254/api/v1/parentalcontrol;GET;private;Private;parental-read;No;Yes;List;parentalcontrol;22.3.22
+GET-PARENTALCONTROLS;Get-PARENTALCONTROLScheduler;Get PARENTAL CONTROL Scheduler Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;list;parentalcontrol-scheduler;22.3.22
+GET-PARENTALCONTROLSR;Get-PARENTALCONTROLSchedulerRules;Get PARENTAL CONTROL Scheduler Rules Configuration Information;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;GET;private;Private;parental-read;No;Yes;Table;parentalcontrol-scheduler-rules;22.3.22
+GET-PASSRECOVERV;Get-PasswordRecoveryVerify;Get Password Recovery Verify Inofrmation;password-recovery/verify;https://192.168.1.254/api/v1/password-recovery/verify;GET;public;None;auth-write;No;Yes;List;password-recovery-verify;22.3.22
+GET-PROFILEC;Get-PROFILEConsumption;Get PROFIL Consumption Information;profile/consumption;https://192.168.1.254/api/v1/profile/consumption;GET;private;Private;profile-read;No;Yes;List;profile-consumption;22.3.22
+GET-REMOTEPWOL;Get-REMOTEProxyWOL;Get REMOTE Proxy WOL Information;remote/proxywol;https://192.168.1.254/api/v1/remote/proxywol;GET;private;Private;remote;No;Yes;List;remote-proxywol;22.3.22
+GET-SERVICES;Get-SERVICES;Get SERVICES Configuration Information;services;https://192.168.1.254/api/v1/services;GET;public;Private;lan-read;No;Yes;Table;services;22.3.22
+GET-SUMMARY;Get-SUMMARY;Get SUMMARY Configuration Information;summary;https://192.168.1.254/api/v1/summary;GET;public;Private;lan-read;No;Yes;List;summary;22.3.22
+GET-SPEEDTESTC;GET-SPEEDTESTContext;Get Speedtest Context Configuration Information;speedtest/context;https://192.168.1.254/api/v1/speedtest/context;GET;public;Private;device-read;No;No;List;SPEEDTEST-Context;22.3.22
+GET-UPNPIGD;Get-UPNPIGD;Get UPNP IGD Configuration Information;upnp/igd;https://192.168.1.254/api/v1/upnp/igd;GET;public;Private;igd-read;No;Yes;List;upnp-igd;22.3.22
+GET-UPNPIGDR;Get-UPNPIGDRules;Get UPNP IGD Rules Configuration Information;upnp/igd/rules;https://192.168.1.254/api/v1/upnp/igd/rules;GET;public;Private;igd-read;No;Yes;Table;upnp-igd-rules;22.3.22
+GET-USBS;Get-USBStorage;Get USB Storage Configuration Information;usb/storage;https://192.168.1.254/api/v1/usb/storage;GET;private;Private;usb-read;No;Yes;Table;usb-storage;22.3.22
+GET-USERSAVE;Get-USERSAVE;Get USER SAVE Configuration Information;usersave;https://192.168.1.254/api/v1/usersave;GET;public;Private;backup-read;No;Yes;List;usersave;22.3.22
+GET-VOIP;Get-VOIP;Get VOIP Configuration Information;voip;https://192.168.1.254/api/v1/voip;GET;private;Private;voip-read;No;Yes;List;voip;22.3.22
+GET-VOIPCL;Get-VOIPCallLogLineX;Get-VOIP Last 5 Calls Log Information by line;voip/calllog;https://192.168.1.254/api/v1/voip/calllog/{ID};GET;private;Private;voip-read;No;Yes;Table;voip-calllog;22.3.22
+GET-VOIPD;Get-VOIPDiags;Get-VOIP Diags Information;voip/diag;https://192.168.1.254/api/v1/voip/diag;GET;private;Private;voip-read;No;Yes;Table;voip-diag;22.3.22
+GET-VOIPDH;Get-VOIPDiagHost;Get-VOIP Diags Host Information;voip/diag;https://192.168.1.254/api/v1/voip/diag;GET;private;Private;voip-read;No;Yes;Table;voip-diag-host;22.3.22
+GET-VOIPDU;Get-VOIPDiagUSB;Get-VOIP Diags USB Information;voip/diag;https://192.168.1.254/api/v1/voip/diag;GET;private;Private;voip-read;No;Yes;Table;voip-diag-usb;22.3.22
+GET-VOIPFCL;Get-VOIPFullcalllogLineX;Get-VOIP Full Call Log Information by line;voip/fullcalllog;https://192.168.1.254/api/v1/voip/fullcalllog/{ID};GET;private;Private;voip-write;No;Yes;Table;voip-fullcalllog;22.3.22
+GET-VOIPS;Get-VOIPScheduler;Get VOIP Scheduler Configuration Information;voip/scheduler;https://192.168.1.254/api/v1/voip/scheduler;GET;private;Private;voip-read;No;Yes;Table;voip-scheduler;22.3.22
+GET-VOIPSR;Get-VOIPSchedulerRules;Get VOIP Scheduler Rules Configuration Information;voip/scheduler;https://192.168.1.254/api/v1/voip/scheduler;GET;private;Private;voip-read;No;Yes;Table;voip-scheduler-rules;22.3.22
+GET-VOIPALN;Get-VOIPAllowedListNumber;Get VOIP Scheduler Allowed List Number Configuration Information;voip/scheduler/number;https://192.168.1.254/api/v1/voip/scheduler/number;GET;private;Private;voip-read;No;Yes;Table;voip-scheduler-number;22.3.22
+GET-WANA;Get-WANAutowan;Get WAN Autowan Configuration Information;wan/autowan;https://192.168.1.254/api/v1/wan/autowan;GET;public;Private;wan-read;No;Yes;List;wan-autowan;22.3.22
+GET-WAND;Get-WANDiags;Get WAN Diags Information;wan/diags;https://192.168.1.254/api/v1/wan/diags;GET;public;Private;diag-read;No;Yes;List;wan-diags;22.3.22
+GET-WANDS;Get-WANDiagsSessions;Get WAN DIAGS Sessions Configuration Information;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;List;wan-diags-sessions-config;22.3.22
+GET-WANDSHAS;Get-WANDiagsSummaryHostsActiveSessions;Get WAN DIAGS Active Summary Hosts Sessions Information;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions-host;22.3.22
+GET-WANDSID;Get-WANDiagsSessionsID;Get WAN DIAGS Sessions Configuration Information by Page;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions/{ID};GET;private;Private;diag-read;No;No;Table;wan-diags-sessions-id-page;22.3.22
+GET-WANDAAS;Get-WANDiagsAllActiveSessions;Get WAN DIAGS All Active Sessions Information;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions;GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions;22.3.22
+GET-WANDAASH;Get-WANDiagsAllActiveSessionsHost;Get WAN DIAGS All Active Sessions Information by Host;wan/diags/sessions;https://192.168.1.254/api/v1/wan/diags/sessions/{ID};GET;private;Private;diag-read;No;Yes;Table;wan-diags-sessions-id;22.3.22
+GET-WANFS;Get-WANFStats;Get WAN FTTH STATS Information;wan/ftth/stats;https://192.168.1.254/api/v1/wan/ftth/stats;GET;public;Private;wan-read;No;Yes;List;wan-ftth-stats;22.3.22
+GET-WANIP;Get-WANIP;Get WAN IP Configuration Information;wan/ip;https://192.168.1.254/api/v1/wan/ip;GET;public;Private;wan-read;No;Yes;List;wan-ip;22.3.22
+GET-WANIPS;Get-WANIPStats;Get WAN IP Stats Information;wan/ip/stats;https://192.168.1.254/api/v1/wan/ip/stats;GET;public;Private;wan-read;No;Yes;List;wan-ip-stats;22.3.22
+GET-WANXDSL;Get-WANXDSL;Get WAN XDSL Configuration Information;wan/xdsl;https://192.168.1.254/api/v1/wan/xdsl;GET;public;Private;wan-read;No;Yes;List;wan-xdsl;22.3.22
+GET-WANXDSLS;Get-WANXDSLStats;Get WAN XDSL Stats Information;wan/xdsl/stats;https://192.168.1.254/api/v1/wan/xdsl/stats;GET;public;Private;wan-read;No;Yes;List;wan-xdsl-stats;22.3.22
+GET-WANSFF;Get-WANSFF;Get WAN SFF Configuration Information;wan/sff;https://192.168.1.254/api/v1/wan/sff;GET;public;Private;wan-read;No;Yes;List;wan-sff;22.3.22
+GET-WIRELESS;Get-WIRELESS;Get WIRELESS Configuration Information;wireless;https://192.168.1.254/api/v1/wireless;GET;private;Private;wifi-read;No;Yes;List;wireless;22.3.22
+Get-WIRELESSSTD;Get-WIRELESSSTANDARD;Get WIRELESS Standard Norme Information;wireless;https://192.168.1.254/api/v1/wireless;GET;private;Private;wifi-read;No;Yes;Table;wireless-standard;22.3.22
+GET-WIRELESS24;Get-WIRELESS24;Get WIRELESS 2.4Ghz Configuration Information;wireless/24;https://192.168.1.254/api/v1/wireless/24;GET;private;Private;wifi-read;No;Yes;List;wireless-24;22.3.22
+GET-WIRELESS24S;Get-WIRELESS24Stats;Get WIRELESS 2.4Ghz Stats Information;wireless/24/stats;https://192.168.1.254/api/v1/wireless/24/stats;GET;private;Private;wifi-read;No;Yes;List;wireless-24-stats;22.3.22
+GET-WIRELESS5;Get-WIRELESS5;Get WIRELESS 5.2Ghz Configuration Information;wireless/5;https://192.168.1.254/api/v1/wireless/5;GET;private;Private;wifi-read;No;Yes;List;wireless-5;22.3.22
+GET-WIRELESS5S;Get-WIRELESS5Stats;Get WIRELESS 5.2Ghz Stats Information;wireless/5/stats;https://192.168.1.254/api/v1/wireless/5/stats;GET;private;Private;wifi-read;No;Yes;List;wireless-5-stats;22.3.22
+GET-WIRELESSACL;Get-WIRELESSACL;Get WIRELESS ACL Configuration Information;wireless/acl;https://192.168.1.254/api/v1/wireless/acl;GET;private;Private;wifi-read;No;Yes;List;wireless-acl;22.3.22
+GET-WIRELESSACLR;Get-WIRELESSACLRules;Get WIRELESS ACL Rules Configuration Information;wireless/acl;https://192.168.1.254/api/v1/wireless/acl;GET;private;Private;wifi-read;No;Yes;Table;wireless-acl-rules;22.3.22
+GET-WIRELESSACLRID;Get-WIRELESSACLRulesID;Get WIRELESS ACL Rules Configuration Information by ID;wireless/acl;https://192.168.1.254/api/v1/wireless/acl/{ID};GET;private;Private;wifi-read;No;Yes;List;wireless-acl-rules-id;22.3.22
+GET-WIRELESSFSM;Get-WIRELESSFastScanMe;Get WIRELESS Fast scan for my device;wireless/fastscan/me;https://192.168.1.254/api/v1/wireless/fastscan/me;GET;public;Private;wifi-read;No;No;List;wireless-fastscan-me;22.3.22
+GET-WIRELESSFBNH;Get-WIRELESSFrequencyNeighborhoodScan;Get WIRELESS 2.4Ghz Frequency Neighborhood Scan Information;wireless/24/neighborhood;https://192.168.1.254/api/v1/wireless/24/neighborhood;GET;private;Private;wifi-read;No;Yes;Table;wireless-24-neighborhood;22.3.22
+GET-WIRELESSFBNH;Get-WIRELESSFrequencyNeighborhoodScan;Get WIRELESS 5.2Ghz Frequency Neighborhood Scan Information;wireless/5/neighborhood;https://192.168.1.254/api/v1/wireless/5/neighborhood;GET;private;Private;wifi-read;No;Yes;Table;wireless-5-neighborhood;22.3.22
+GET-WIRELESSR;Get-WIRELESSRepeater;Get WIRELESS Repeater Configuration Information;wireless/repeater;https://192.168.1.254/api/v1/wireless/repeater;GET;private;Private;wifi-read;No;Yes;List;wireless-repeater;22.3.22
+GET-WIRELESSS;Get-WIRELESSScheduler;Get WIRELESS Scheduler Configuration Information;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;GET;private;Private;wifi-read;No;Yes;List;wireless-scheduler;22.3.22
+GET-WIRELESSSR;Get-WIRELESSSchedulerRules;Get WIRELESS Scheduler Rules Configuration Information;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;GET;private;Private;wifi-read;No;Yes;Table;wireless-scheduler-rules;22.3.22
+GET-WIRELESSVBSTB;GET-WIRELESSVideoBridgeSetTopBoxes;Get WIRELESS Video Bridge Boxes Configuration Information;wireless/videobridge;https://192.168.1.254/api/v1/wireless/videobridge;GET;private;Private;wifi-read;No;Yes;Table;wireless-video-bridge-boxes;22.3.22
+GET-WIRELESSVBR;GET-WIRELESSVideoBridgeRepeaters;Get WIRELESS Video Bridge Repeaters Configuration Information;wireless/videobridge;https://192.168.1.254/api/v1/wireless/videobridge;GET;private;Private;wifi-read;No;Yes;Table;wireless-video-bridge-repeaters;22.3.22
+GET-WIRELESSWPS;Get-WIRELESSWPS;Get WIRELESS WPS Configuration Information;wireless/wps;https://192.168.1.254/api/v1/wireless/wps;GET;public;Private;wifi-read;No;Yes;List;wireless-wps;22.3.22
+;;;airties/upgrade;https://192.168.1.254/api/v1/airties/upgrade;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/remotemanager;https://192.168.1.254/api/v1/airties/remotemanager;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/meshsteering;https://192.168.1.254/api/v1/airties/meshsteering;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/bandsteering;https://192.168.1.254/api/v1/airties/bandsteering;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/agent;https://192.168.1.254/api/v1/airties/agent;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/cacs;https://192.168.1.254/api/v1/airties/cacs;PUT;public;Private;diag-write;Yes;No;;;
+;;;airties/liveview;https://192.168.1.254/api/v1/airties/liveview;PUT;public;Private;diag-write;Yes;No;;;
+;;;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation;POST;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation/{id};PUT;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp6/prefixdelegation;https://192.168.1.254/api/v1/dhcp6/prefixdelegation/{id};DELETE;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options;POST;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options/{id};PUT;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp6/options;https://192.168.1.254/api/v1/dhcp6/options/{id};DELETE;private;Private;dhcp-write;Yes;No;;;
+;;;firewallv6/rules;https://192.168.1.254/api/v1/firewallv6/rules;POST;private;Private;firewall-write;Yes;No;;;
+;;;firewallv6/rules/{id};https://192.168.1.254/api/v1/firewallv6/rules/{id};PUT;private;Private;firewall-write;Yes;No;;;
+;;;firewallv6/level;https://192.168.1.254/api/v1/firewallv6/level;PUT;private;Private;firewall-write;Yes;No;;;
+;;;hosts/{id};https://192.168.1.254/api/v1/hosts/{id};DELETE;private;Private;host-write;Yes;No;;;
+;;;dhcp/options/{id};https://192.168.1.254/api/v1/dhcp/options/{id};DELETE;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp/clients/{id};https://192.168.1.254/api/v1/dhcp/clients/{id};DELETE;private;Private;dhcp-write;Yes;No;;;
+;;;wireless/acl/rules/{id};https://192.168.1.254/api/v1/wireless/acl/rules/{id};DELETE;private;Private;wifi-write;Yes;No;;;
+;;;wireless;https://192.168.1.254/api/v1/wireless;DELETE;private;Private;wifi-write;Yes;No;;;
+;;;wireless/wps;https://192.168.1.254/api/v1/wireless/wps;DELETE;private;Private;wifi-write;Yes;No;;;
+;;;nat/rules/{id};https://192.168.1.254/api/v1/nat/rules/{id};DELETE;private;Private;nat-write;Yes;No;;;
+;;;firewall/rules/{id};https://192.168.1.254/api/v1/firewall/rules/{id};DELETE;private;Private;firewall-write;Yes;No;;;
+;;;voip/dial/{id};https://192.168.1.254/api/v1/voip/dial/{id};DELETE;private;None;voip-write;Yes;No;;;
+;;;voip/calllog/{id};https://192.168.1.254/api/v1/voip/calllog/{id};DELETE;private;Private;voip-write;Yes;No;;;
+;;;voip/ringtest/{id};https://192.168.1.254/api/v1/voip/ringtest/{id};DELETE;private;Private;voip-write;Yes;No;;;
+;;;voip/echotest/{id};https://192.168.1.254/api/v1/voip/echotest/{id};DELETE;private;Private;voip-write;Yes;No;;;
+;;;voip/scheduler/number/{id};https://192.168.1.254/api/v1/voip/scheduler/number/{id};DELETE;private;Private;voip-write;Yes;No;;;
+;;;dyndns/{id};https://192.168.1.254/api/v1/dyndns/{id};DELETE;private;Private;dyndns-write;Yes;No;;;
+;;;alerts/{id};https://192.168.1.254/api/v1/alerts/{id};DELETE;private;Private;alert-write;Yes;No;;;
+;;;parentalcontrol/unblock;https://192.168.1.254/api/v1/parentalcontrol/unblock;DELETE;private;Private;parental-write;Yes;No;;;
+;;;configs/{id};https://192.168.1.254/api/v1/configs/{id};DELETE;private;None;backup-write;Yes;No;;;
+;;;notification/contact/{id};https://192.168.1.254/api/v1/notification/contact/{id};DELETE;private;Private;notif-write;Yes;No;;;
+;;;notification/alert/{id};https://192.168.1.254/api/v1/notification/alert/{id};DELETE;private;Private;notif-write;Yes;No;;;
+;;;{id};https://192.168.1.254/api/v1/{id};OPTIONS;public;Private;lan-read;Yes;No;;;
+;;;hosts/{id};https://192.168.1.254/api/v1/hosts/{id};POST;private;Private;host-write;Yes;No;;;
+;;;dhcp/options;https://192.168.1.254/api/v1/dhcp/options;POST;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp/clients;https://192.168.1.254/api/v1/dhcp/clients;POST;private;Private;dhcp-write;Yes;No;;;
+;;;wireless/acl/rules;https://192.168.1.254/api/v1/wireless/acl/rules;POST;private;Private;wifi-write;Yes;No;;;
+;;;wireless/wps;https://192.168.1.254/api/v1/wireless/wps;POST;private;Private;wifi-write;Yes;No;;;
+;;;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;POST;private;Private;wifi-write;Yes;No;;;
+;;;nat/rules;https://192.168.1.254/api/v1/nat/rules;POST;private;Private;nat-write;Yes;No;;;
+;;;firewall/rules;https://192.168.1.254/api/v1/firewall/rules;POST;private;Private;firewall-write;Yes;No;;;
+;;;voip/dial/{id};https://192.168.1.254/api/v1/voip/dial/{id};POST;private;None;voip-write;Yes;No;;;
+;;;voip/ringtest/{id};https://192.168.1.254/api/v1/voip/ringtest/{id};POST;private;Private;voip-write;Yes;No;;;
+;;;voip/echotest/{id};https://192.168.1.254/api/v1/voip/echotest/{id};POST;private;Private;voip-write;Yes;No;;;
+;;;voip/scheduler;https://192.168.1.254/api/v1/voip/scheduler;POST;private;Private;voip-write;Yes;No;;;
+;;;voip/scheduler/number;https://192.168.1.254/api/v1/voip/scheduler/number;POST;private;Private;voip-write;Yes;No;;;
+;;;dyndns;https://192.168.1.254/api/v1/dyndns;POST;private;Private;dyndns-write;Yes;No;;;
+;;;login;https://192.168.1.254/api/v1/login;POST;public;Private;any;Yes;No;;;
+;;;logout;https://192.168.1.254/api/v1/logout;POST;public;Private;any;Yes;No;;;
+;;;password-recovery;https://192.168.1.254/api/v1/password-recovery;POST;public;None;auth-write;Yes;No;;;
+;;;change-password;https://192.168.1.254/api/v1/change-password;POST;private;None;auth-write;Yes;No;;;
+;;;reset-password;https://192.168.1.254/api/v1/reset-password;POST;private;None;any;Yes;No;;;
+;;;oauth/authorize;https://192.168.1.254/api/v1/oauth/authorize;POST;public;Private;any;Yes;No;;;
+;;;oauth/token;https://192.168.1.254/api/v1/oauth/token;POST;public;Private;any;Yes;No;;;
+;;;wan/diags;https://192.168.1.254/api/v1/wan/diags;POST;private;Private;diag-write;Yes;No;;;
+;;;parentalcontrol/scheduler;https://192.168.1.254/api/v1/parentalcontrol/scheduler;POST;private;Private;parental-write;Yes;No;;;
+;;;parentalcontrol/unblock;https://192.168.1.254/api/v1/parentalcontrol/unblock;POST;private;Private;parental-write;Yes;No;;;
+;;;device/reboot;https://192.168.1.254/api/v1/device/reboot;POST;private;Private;reboot;Yes;No;;;
+;;;device/factory;https://192.168.1.254/api/v1/device/factory;POST;private;None;factory;Yes;No;;;
+;;;configs;https://192.168.1.254/api/v1/configs;POST;private;None;backup-write;Yes;No;;;
+;;;configs/{id};https://192.168.1.254/api/v1/configs/{id};POST;private;None;backup-write;Yes;No;;;
+;;;notification/contact;https://192.168.1.254/api/v1/notification/contact;POST;private;Private;notif-write;Yes;No;;;
+;;;notification/alert;https://192.168.1.254/api/v1/notification/alert;POST;private;Private;notif-write;Yes;No;;;
+;;;notification/test;https://192.168.1.254/api/v1/notification/test;POST;private;Private;notif-write;Yes;No;;;
+;;;usersave;https://192.168.1.254/api/v1/usersave;POST;private;Private;backup-read;Yes;No;;;
+;;;hosts/{id};https://192.168.1.254/api/v1/hosts/{id};PUT;private;Private;host-write;Yes;No;;;
+;;;cpl;https://192.168.1.254/api/v1/cpl;PUT;private;Private;cpl-write;Yes;No;;;
+;;;lan;https://192.168.1.254/api/v1/lan;PUT;private;Private;lan-write;Yes;No;;;
+;;;lan/ip6;https://192.168.1.254/api/v1/lan/ip6;PUT;private;Private;lan-write;Yes;No;;;
+;;;dhcp;https://192.168.1.254/api/v1/dhcp;PUT;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp/options/{id};https://192.168.1.254/api/v1/dhcp/options/{id};PUT;private;Private;dhcp-write;Yes;No;;;
+;;;dhcp/clients/{id};https://192.168.1.254/api/v1/dhcp/clients/{id};PUT;private;Private;dhcp-write;Yes;No;;;
+;;;wireless/acl;https://192.168.1.254/api/v1/wireless/acl;PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/acl/rules/{id};https://192.168.1.254/api/v1/wireless/acl/rules/{id};PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/24/neighborhood;https://192.168.1.254/api/v1/wireless/24/neighborhood;PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/5/neighborhood;https://192.168.1.254/api/v1/wireless/5/neighborhood;PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless;https://192.168.1.254/api/v1/wireless;PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/scheduler;https://192.168.1.254/api/v1/wireless/scheduler;PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/cert/{id};https://192.168.1.254/api/v1/wireless/cert/{id};PUT;private;Private;wifi-write;Yes;No;;;
+;;;wireless/{id};https://192.168.1.254/api/v1/wireless/{id};PUT;private;Private;wifi-write;Yes;No;;;
+;;;nat/rules;https://192.168.1.254/api/v1/nat/rules;PUT;private;Private;nat-write;Yes;No;;;
+;;;nat/rules/{id};https://192.168.1.254/api/v1/nat/rules/{id};PUT;private;Private;nat-write;Yes;No;;;
+;;;nat/dmz;https://192.168.1.254/api/v1/nat/dmz;PUT;private;Private;nat-write;Yes;No;;;
+;;;firewall/pingresponder;https://192.168.1.254/api/v1/firewall/pingresponder;PUT;private;Private;firewall-write;Yes;No;;;
+;;;firewall;https://192.168.1.254/api/v1/firewall;PUT;private;Private;firewall-write;Yes;No;;;
+;;;firewall/rules/{id};https://192.168.1.254/api/v1/firewall/rules/{id};PUT;private;Private;firewall-write;Yes;No;;;
+;;;firewall/gamermode;https://192.168.1.254/api/v1/firewall/gamermode;PUT;private;Private;firewall-write;Yes;No;;;
+;;;upnp/igd;https://192.168.1.254/api/v1/upnp/igd;PUT;private;Private;igd-write;Yes;No;;;
+;;;voip/features/acr/{id};https://192.168.1.254/api/v1/voip/features/acr/{id};PUT;private;Private;voip-write;Yes;No;;;
+;;;voip/blockanon/{id};https://192.168.1.254/api/v1/voip/blockanon/{id};PUT;private;Private;voip-write;Yes;No;;;
+;;;voip/dial;https://192.168.1.254/api/v1/voip/dial;PUT;private;None;voip-write;Yes;No;;;
+;;;voip/ringtest;https://192.168.1.254/api/v1/voip/ringtest;PUT;private;Private;voip-write;Yes;No;;;
+;;;voip/echotest;https://192.168.1.254/api/v1/voip/echotest;PUT;private;Private;voip-write;Yes;No;;;
+;;;voip/scheduler;https://192.168.1.254/api/v1/voip/scheduler;PUT;private;Private;voip-write;Yes;No;;;
+;;;profile/account;https://192.168.1.254/api/v1/profile/account;PUT;private;Private;profile-write;Yes;No;;;
+;;;dyndns;https://192.168.1.254/api/v1/dyndns;PUT;private;Private;dyndns-write;Yes;No;;;
+;;;dyndns/{id};https://192.168.1.254/api/v1/dyndns/{id};PUT;private;Private;dyndns-write;Yes;No;;;
+;;;login;https://192.168.1.254/api/v1/login;PUT;public;Private;any;Yes;No;;;
+;;;remote/proxywol;https://192.168.1.254/api/v1/remote/proxywol;PUT;private;Private;remote;Yes;No;;;
+;;;remote/admin;https://192.168.1.254/api/v1/remote/admin;PUT;private;Private;remote;Yes;No;;;
+;;;parentalcontrol;https://192.168.1.254/api/v1/parentalcontrol;PUT;private;Private;parental-write;Yes;No;;;
+;;;parentalcontrol/hosts;https://192.168.1.254/api/v1/parentalcontrol/hosts;PUT;private;Private;parental-write;Yes;No;;;
+;;;device/usb/dlna;https://192.168.1.254/api/v1/device/usb/dlna;PUT;private;Private;device-write;Yes;No;;;
+;;;device/usb/samba;https://192.168.1.254/api/v1/device/usb/samba;PUT;private;Private;device-write;Yes;No;;;
+;;;device/usb/printer;https://192.168.1.254/api/v1/device/usb/printer;PUT;private;Private;device-write;Yes;No;;;
+;;;device/usb/{id};https://192.168.1.254/api/v1/device/usb/{id};PUT;private;Private;device-write;Yes;No;;;
+;;;device/optimization;https://192.168.1.254/api/v1/device/optimization;PUT;private;Private;device-write;Yes;No;;;
+;;;device/support;https://192.168.1.254/api/v1/device/support;PUT;private;None;bboxdebug;Yes;No;;;
+;;;device/display;https://192.168.1.254/api/v1/device/display;PUT;private;Private;device-read;Yes;No;;;
+;;;iptv/diags;https://192.168.1.254/api/v1/iptv/diags;PUT;private;Private;diag-write;Yes;No;;;
+;;;configs/{id};https://192.168.1.254/api/v1/configs/{id};PUT;private;None;backup-write;Yes;No;;;
+;;;notification;https://192.168.1.254/api/v1/notification;PUT;private;Private;notif-write;Yes;No;;;
+;;;notification/contact/{id};https://192.168.1.254/api/v1/notification/contact/{id};PUT;private;Private;notif-write;Yes;No;;;
+;;;notification/alert/{id};https://192.168.1.254/api/v1/notification/alert/{id};PUT;private;Private;notif-write;Yes;No;;;
+;;;device/upgrade;https://192.168.1.254/api/v1/device/upgrade;PUT;private;Private;bboxdebug;Yes;No;;;
+;;;oqc/led/{id};https://192.168.1.254/api/v1/oqc/led/{id};PUT;private;Private;device-write;Yes;No;;;
+;;;oqc/button/testmode;https://192.168.1.254/api/v1/oqc/button/testmode;PUT;private;Private;device-write;Yes;No;;;
