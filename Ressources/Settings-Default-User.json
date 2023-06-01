@@ -7,8 +7,6 @@
   "Site": {
 	"OldRemotePort": "",
     "OldRemoteUrl": "",
-    "DefaultLocalUrl": "https://mabbox.bytel.fr",
-    "DefaultRemotePort": "8560",
     "CurrentLocalUrl": "",
     "CurrentRemoteUrl": "",
     "CurrentRemotePort": ""
