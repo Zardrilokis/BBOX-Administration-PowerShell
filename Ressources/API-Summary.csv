@@ -2,12 +2,12 @@ Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissi
 STOP-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Computer;Computer;Program;No;Yes;List;Stop_Program;22.3.22
 EXPORT-BBoxConfigTP;Export-BBoxConfigTestingProgram;Export Full BBox Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Computer;Computer;Program;No;Yes;List;Full_Testing_Program;22.3.22
 EXPORT-BBoxConfig;Export-BBoxConfiguration;Export Full BBox Configuration;Full;Full;Export;Computer;Computer;Program;No;Yes;List;Full;22.3.22
-REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder .\logs\*;logs;logs;Remove;Computer;Computer;Program;Yes;Yes;List;remove-logs;22.3.22
-REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Computer;Computer;Program;Yes;Yes;List;remove-csv;22.3.22
-REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Json;22.3.22
-REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder .\Journal\*;Journal;Journal;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Journal;22.3.22
-REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Computer;Computer;Program;Yes;Yes;List;remove-bbox-config;22.3.22
-REMOVE-FCReport;Remove-FolderContent;Remove All files in folder .\Report\*;Report;Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-report;22.3.22
+REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder : .\logs\*;logs;logs;Remove;Computer;Computer;Program;Yes;Yes;List;remove-logs;22.3.22
+REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder : .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Computer;Computer;Program;Yes;Yes;List;remove-csv;22.3.22
+REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder : .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Json;22.3.22
+REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder : .\Journal\*;Journal;Journal;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Journal;22.3.22
+REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder : .\Json_Bbox_Config\*;Json_Bbox_Config;Json_Bbox_config;Remove;Computer;Computer;Program;Yes;Yes;List;remove-bbox-config;22.3.22
+REMOVE-FCReport;Remove-FolderContent;Remove All files in folder : .\Report\*;Report;Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-report;22.3.22
 SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Computer;Computer;Program;Yes;Yes;HTML/Table/Out-Gridview;html-table-outgridview;22.3.22
 SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Computer;Computer;Program;Yes;Yes;CSV/JSON;csv-json;22.3.22
 SWITCH-OEF;Switch-OpenExportFolder;Switch Open Export Folder;Switch_Open_Export_Folder;Switch_Open_Export_Folder;Switch;Computer;Computer;Program;Yes;Yes;List;open-folder;22.3.22

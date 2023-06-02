@@ -4,7 +4,7 @@
 # - $global:JSONSettingsCurrentUserContent
 # - $global:JSONSettingsDefaultUserContent
 
-#region GLOBAL (All functions below are used only on powershell script : ".\BBOX-Administration.ps1")
+#region GLOBAL (All functions below are used only on powershell script : '.\BBOX-Administration.ps1')
 
 #region Add AssemblyName Classies
 
@@ -243,8 +243,7 @@ Function Remove-BBoxCredential {
         Write-Log -Type WARNING -Name 'Program run - Remove BBox Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
     
-    Write-Log -Type INFO -Name 'Program run - Remove BBox Credential' -Message 'Start Remove BBox Credential' -NotDisplay
-    Return 'Program'
+    Write-Log -Type INFO -Name 'Program run - Remove BBox Credential' -Message 'End Remove BBox Credential' -NotDisplay
 }
 
 # Show BBox Credential stored in Windows Credential Manager
@@ -1073,6 +1072,8 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
 
 #endregion Windows Form Dialog Box
 
+#region Main functions use as part of '.\BBOX-Administration.ps1' script and 'BBox-Module.psm1' module
+
 # Clean folder content
 Function Remove-FolderContent {
 
@@ -1367,7 +1368,7 @@ Function Get-ChromeDriverVersion {
     This is the full folder path where are stored the different google chrome driver available
 
 .EXAMPLE
-    Get-ChromeDriverVersionBeforeUpdate -ChromeVersion "113.0.5672.127" -ChromeDriverPath "C:\Program\GoogleChromeDriverVersion"
+    Get-ChromeDriverVersion -ChromeVersion "113.0.5672.127" -ChromeDriverPath "C:\Program\GoogleChromeDriverVersion"
 
 .INPUTS
     $ChromeVersion
@@ -1519,8 +1520,7 @@ Function Get-HostStatus {
 #>
 
     Param (
-        [Parameter(Mandatory=$false)]
-        [String]$UrlRoot
+
     )
     
     $BBoxDnsStatus = $null
@@ -1796,7 +1796,7 @@ Function Connect-BBOX {
     Start-Sleep $global:SleepDefault
 
     If ($global:ChromeDriver.Url -ne $UrlHome) {
-        Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password'
+        Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password or connection timeout'
         Stop-Program -ErrorAction Stop
     }
 }
@@ -2427,6 +2427,8 @@ Function Stop-Program {
     Exit
 }
 
+#endregion Main functions use as part of '.\BBOX-Administration.ps1' script and 'BBox-Module.psm1' module
+
 #region ChromeDriver 
 
 # Used only to Start ChromeDriver
@@ -2637,6 +2639,7 @@ Function Update-ChromeDriver {
         $ChromeDriverVersionShort = $($ChromeDriverVersion -split ".")[0]
         $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName
         $SourceFile = "$UserDownloadFolderDefault\$global:ChromeDriverDownloadFileName"
+        $DownloadExtention = "*.crdownload"
         
         # Navigate to the main Chrome Driver Page
         Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page : $global:ChromeDriverDownloadHomeUrl" -NotDisplay
@@ -2670,42 +2673,51 @@ Function Update-ChromeDriver {
             # Start setup file downloading
             Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to download chrome Driver version : $Version" -NotDisplay
             $global:ChromeDriver.FindElementByLinkText($global:ChromeDriverDownloadFileName).click()
-            Start-Sleep -Seconds $global:SleepChromeDriverDownload
             
-            If ((Test-Path -Path $SourceFile) -eq $True) {
+            Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Download chrome Driver Status : " -NotDisplay
+            
+            $TimeOut = 5
+            While ((Test-Path -Path $SourceFile) -ne $True) {
+                Start-Sleep -Seconds $global:SleepChromeDriverDownload
+                If ($TimeOut -eq 0) {
+                    Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Failed, due to download TimeOut" -NotDisplay
+                    Stop-Program
+                    Remove-Item -Path $UserDownloadFolderDefault -Filter $DownloadExtention -Force -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+                }
+                $TimeOut --
+            }
+
+            Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "Success" -NotDisplay
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "End to download chrome Driver version : $Version" -NotDisplay
                 
-                # Create new directory to use chrome Driver update
-                Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
-                $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
-                Start-Sleep -Seconds $global:SleepDefault
+            # Create new directory to use chrome Driver update
+            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Create chrome Driver repository for version : $Version" -NotDisplay
+            $null = New-Item -Path $ChromeDriverPath -Name $Version -ItemType Directory -ErrorAction Stop
+            Start-Sleep -Seconds $global:SleepDefault
+            
+            # Unzip new Chrome driver version to destination
+            If ((Test-Path -Path $DestinationPath) -eq $True) {
                 
-                # Unzip new Chrome driver version to destination
-                If ((Test-Path -Path $DestinationPath) -eq $True) {
+                Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
+                Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository status : " -NotDisplay
+                Try {
+                    Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
+                    Start-Sleep -Seconds $global:SleepChromeDriverUnzip
+                    Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "OK" -NotDisplay
                     
-                    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository for version : $Version" -NotDisplay
-                    Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to chrome Driver repository status : " -NotDisplay
-                    Try {
-                        Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
-                        Start-Sleep -Seconds $global:SleepChromeDriverUnzip
-                        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "OK" -NotDisplay
-                    }
-                    Catch {
-                        Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Failed, due to : $($_.tostring())" -NotDisplay
-                    }
+                    # Copy DLL System
+                    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
+                    Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverDLLFileName" -Destination $DestinationPath -Force
+                    Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverSupportFileName" -Destination $DestinationPath -Force
+
+                    # Remove the downloaded source
+                    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
+                    Remove-Item -Path $SourceFile -Force -ErrorAction Stop
+                }
+                Catch {
+                    Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Failed, due to : $($_.tostring())" -NotDisplay
                 }
             }
-            
-            # Copy DLL System
-            If ((Test-Path -Path $SourceFile) -eq $True) {
-                
-                Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Copy DLLs to : $DestinationPath" -NotDisplay
-                Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverDLLFileName" -Destination $DestinationPath -Force
-                Copy-Item -Path "$ChromeDriverPath\$global:ChromeDriverDefaultFolderName\$global:ChromeDriverDefaultWebDriverSupportFileName" -Destination $DestinationPath -Force
-            }
-            
-            # Remove the downloaded source
-            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
-            Remove-Item -Path $SourceFile -Force -ErrorAction Stop
         }
         
         # Stop chrome Driver
@@ -3126,7 +3138,6 @@ Function Switch-OpenExportFolder {
     $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     Write-Log -Type VALUE -Name 'Program run - Choose Open Export Folder' -Message "Value Choosen : $global:OpenExportFolder" -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'End switch Open Export Folder' -NotDisplay
-    Return 'Program'
 }
 
 # Used only to change Display Format
@@ -3180,7 +3191,6 @@ Function Switch-DisplayFormat {
     $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     Write-Log -Type VALUE -Name 'Program run - Choose Display Format' -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'End data display format' -NotDisplay
-    Return 'Program'
 }
 
 # Used only to format display result function user choice
@@ -3485,7 +3495,6 @@ Function Switch-ExportFormat {
     $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'End data export format' -NotDisplay
-    Return 'Program'
 }
 
 # Used only to format export result function user choice
@@ -3609,7 +3618,6 @@ Function Switch-OpenHTMLReport {
     $global:JSONSettingsCurrentUserContent | ConvertTo-Json | Out-File -FilePath $global:JSONSettingsCurrentUserFilePath -Encoding utf8 -Force
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
     Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'End Switch Open HTML Report' -NotDisplay
-    Return 'Program'
 }
 
 # Used only to open HTML Report
@@ -4066,7 +4074,6 @@ function Export-BboxConfiguration {
         Write-Log -Type VALUE -Name 'Program run - Export Bbox Configuration To CSV' -Message "$CSVFolder"
         Invoke-Item -Path $CSVFolder
     }
-    Return 'Program'
 }
 
 # Used only to export Full BBOX Configuration to JSON files to test the program
@@ -4192,7 +4199,6 @@ function Export-BBoxConfigTestingProgram {
     }
     
     Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'End Testing Program'
-    Return 'Program'
 }
 
 # Used only to export BBOX Journal
@@ -4320,7 +4326,6 @@ Function Get-BBoxJournal {
         Write-Log -Type WARNING -Name 'Program run - Download Bbox Journal to export' -Message 'Failed, due to time out'
         Write-Log -Type WARNING -Name 'Program run - Download Bbox Journal to export' -Message 'Failed to download Journal' -NotDisplay
         Write-Log -Type INFO -Name 'Program run - Download Bbox Journal to export' -Message 'End download Bbox Journal' -NotDisplay
-        Return 'Program'
     }
 }
 
