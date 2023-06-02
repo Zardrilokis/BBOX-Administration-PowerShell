@@ -323,6 +323,9 @@
     Update       : Correct some minor bugs
     Update       : Harmonize function : 'Start-sleep'
     Update       : Optimise and convert variables from 'Local:' to 'Global:' (Reduce repetition and single usage text value to centralise management to JSON files configuration)
+    Update       : Correct some minor bugs link to chromeDriver TimeOut
+    Update       : Update function : 'Update-ChromeDriver' - Correct issue with chromedriver download not completed
+    Update       : Update defaut chrome driver to version : 114.0.5735.91
     
 .LINKS
     
@@ -437,9 +440,9 @@ $global:TranscriptFileName = "BBox-Administration-Transcript-Log-$Date.log"
 $TranscriptFilePath = "$global:LogFolderPath\$global:TranscriptFileName"
 
 # System Json Configuration files
-$ProgramConfigurationFileSettings   = 'Settings-Program.json'
 $RessourcesFolderName               = 'Ressources'
 $RessourcesPath                     = "$ScriptRootFolder\$RessourcesFolderName"
+$ProgramConfigurationFileSettings   = 'Settings-Program.json'
 $global:JSONSettingsProgramFilePath = "$RessourcesPath\$ProgramConfigurationFileSettings"
 
 # Main Trigger
