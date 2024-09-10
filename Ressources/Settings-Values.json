@@ -1,0 +1,1131 @@
+{
+	"Download": {
+		"Type": {
+			"bt": "Bittorrent download",
+			"ftp": "FTP download",
+			"http": "HTTP download",
+			"nzb": "Newsgroup download"
+		},
+		"Status" : {
+			"stopped": "task is stopped, can be resumed by setting the status to downloading",
+			"queued": "task will start when a new download slot is available the queue position is stored in queue_pos attribute",
+			"starting": "task is preparing to start download",
+			"downloading": "task is downloading",
+			"stopping": "task is gracefully stopping",
+			"error": "there was a problem with the download, you can get an error code in the error field",
+			"done": "the download is over. For bt you can resume seeding setting the status to seeding if the ratio is not reached yet",
+			"retry": "You can set a task status to ‘retry’ to restart the download task."
+			"nzb" : {
+				"checking": "(only valid for nzb) download is over, the downloaded files are being checked using par2",
+				"repairing": "(only valid for nzb) download is over, the downloaded files are being repaired using par2",
+				"extracting": "(only valid for nzb) download is over, the downloaded files are being extracted",
+				"seeding": "(only valid for bt) download is over, the content is Change to being shared to other users. The task will automatically stop once the seed ratio has been reached"
+			}
+		},
+		"Priority" : {
+			"low": "low",
+			"normal": "normal",
+			"high": "high"
+		},
+		"Error" : {
+			"task_not_found": "No task was found with the given id",
+			"invalid_operation": "Attempt to perform an invalid operation",
+			"invalid_file": "Error with the download file (invalid format ?)",
+			"invalid_url": "URL is invalid",
+			"not_implemented": "Method not implemented",
+			"out_of_memory": "No more memory available to perform the requested action",
+			"invalid_task_type": "The task type is invalid",
+			"hibernating": "The downloader is hibernating",
+			"need_bt_stopped_done": "This action is only valid for Bittorrent task in stopped or done state",
+			"bt_tracker_not_found": "Attempt to access an invalid tracker object",
+			"too_many_tasks": "Too many tasks",
+			"invalid_address": "Invalid peer address",
+			"port_conflict": "Port conflict when setting config",
+			"invalid_priority": "Invalid priority",
+			"internal_error": "Internal error",
+			"ctx_file_error": "Failed to initialize task context file (need to check disk)",
+			"exists": "Same task already exists",
+			"port_outside_range": "	Incoming port is not available for this customer (see ConnectionStatus ipv4_port_range)"
+		},
+		"Task_TaskFile" : {
+			"Error" : {
+				"none": "No error",
+				"internal": "Internal error",
+				"disk_full": "The disk is full",
+				"unknown": "Unknown error",
+				"parse_error": "Parse error",
+				"http_301": "HTTP 301 error",
+				"http_400": "HTTP 400 error",
+				"http_401": "",
+				"http_402": "",
+				"http_403": "",
+				"http_404": "",
+				"http_405": "",
+				"http_406": "",
+				"http_407": "",
+				"http_408": "",
+				"http_409": "",
+				"http_410": "",
+				"http_411": "",
+				"http_412": "[ ... ]",
+				"http_413": "",
+				"http_414": "",
+				"http_415": "",
+				"http_416": "",
+				"http_417": "",
+				"http_422": "",
+				"http_423": "",
+				"http_424": "",
+				"http_425": "",
+				"http_426": "",
+				"http_427": "",
+				"http_428": "",
+				"http_429": "",
+				"http_430": "",
+				"http_431": "",
+				"http_4xx": "Other 4xx HTTP errors",
+				"http_500": "HTTP 500 error",
+				"http_501": "",
+				"http_502": "",
+				"http_503": "",
+				"http_504": "",
+				"http_505": "",
+				"http_506": "[ ... ]",
+				"http_507": "",
+				"http_508": "",
+				"http_509": "",
+				"http_510": "",
+				"http_511": "",
+				"http_5xx": "Other 5xx HTTP errors",
+				"http_redirections_exceeded": "Too many HTTP redirections",
+				"nzb_no_group": "Cannot find the requested group on server",
+				"nzb_not_found": "Article not fount on the server",
+				"nzb_invalid_crc": "Invalid article CRC",
+				"nzb_invalid_size": "Invalid article size",
+				"nzb_invalid_filename": "Invalid filename",
+				"nzb_open_failed": "Error opening",
+				"nzb_write_failed": "Error writing",
+				"nzb_missing_size": "Missing article size",
+				"nzb_decode_error": "Article decoding error",
+				"nzb_missing_segments": "Missing article segments",
+				"nzb_error": "Other nzb error",
+				"unknown_host": "Unknown host",
+				"timeout": "Timeout",
+				"bad_authentication": "Invalid credentials",
+				"connection_refused": "Remote host refused connection",
+				"nzb_authentication_required": "Nzb server need authentication",
+				"bt_tracker_error": "Unable to announce on tracker",
+				"bt_missing_files": "Missing torrent files",
+				"bt_file_error": "Error accessing torrent files",
+				"missing_ctx_file": "Error accessing task context file"
+			}
+		},
+		"NzbConfigStatus": {
+			"status": {
+				"not_checked": "config has not been checked yet",
+				"checking": "test in progress",
+				"error": "config is invalid, see error",
+				"ok": "config is ok"
+			},
+			"Error": {
+				"none": "test is ok",
+				"nzb_authentication_required": "authentication is required",
+				"bad_authentication": "incorrect credentials",
+				"connection_refused": "unable to connect to NNTP server",
+			}
+		},
+		"Files": {
+			"status": {
+				"queued": "file is queued for download",
+				"error": "there was a problem with this file, see error to get the error code",
+				"done": "file download is completed"
+			},
+			"Priority": {
+				"no_dl": "file is queued for download",
+				"low": "low",
+				"normal": "normal",
+				"high": "high"
+			}
+		},
+		"Tracker": {
+			"Status": {
+				"unannounced": "not announced",
+				"announcing": "announcing",
+				"announce_failed": "an error occurred while trying to announce",
+				"announced": "announced"
+			}
+		},
+		"Pieces": {
+			"Status": {
+				"X": "piece is complete",
+				"": "piece is currently downloading",
+				".": "piece is wanted but not downloading yet",
+				"": "piece is not wanted and will not be downloaded",
+				"/": "piece is downloading with high priority as it is needed for file preview",
+				"U": "piece is scheduled with high priority as it is needed for file preview"
+			}
+		},
+		"Peers": {
+			"State": {
+				"disconnected": "not connected",
+				"connecting": "trying to connect to the peer",
+				"handshaking": "connected to the peer, negotiating capabilities",
+				"ready": "ready to exchange data"
+			},
+			"Origin": {
+				"tracker": "got the peer from the tracker",
+				"incoming": "incoming peer",
+				"dht": "got the peer from DHT",
+				"pex": "got the peer from Peer exchange protocol",
+				"user": "manually added peer"
+			},
+			"Protocol": {
+				"tcp": "TCP",
+				"tcp_obfuscated": "Obfuscated TCP",
+				"udp": "UDP"
+			}
+		},
+		"BlacklistEntry": {
+			"Reason": {
+				"disconnected": "not connected",
+				"connecting": "trying to connect to the peer",
+				"handshaking": "connected to the peer, negotiating capabilities",
+				"ready": "ready to exchange data"
+			}
+		},
+		"ThrottlingConfig": {
+			"Schedule": {
+				"normal": "downloads will use normal DlRate config for this timeslot",
+				"slow": "downloads will use slow DlRate config for this timeslot",
+				"hibernate": "downloads will be paused for this timeslot"
+			},
+			"Mode": {
+				"normal": "force use of normal rate limits (not using the scheduler)",
+				"slow": "force use of slow rate limits (not using the scheduler)",
+				"hibernate": "force hibernate (not using the scheduler)",
+				"schedule": "use scheduded rate limit"
+			}
+		},
+		"BtConfig": {
+			"crypto_support": {
+				"unsupported": "will never use bittorrent crypto",
+				"allowed": "will select plain during handshake",
+				"preferred": "will select crypto during handshake",
+				"required": "will allow plain bittorrent"
+			}
+		},
+		"Feeds": {
+			"status": {
+				"ready": "feed is up to date",
+				"fetching": "feed is updating",
+				"error": "there was an error trying to refresh this feed, see error"
+			},
+			"Error": {
+				"feed_not_found": "No feed was found with the given id",
+				"item_not_found": "No feed item was found with the given id",
+				"feed_is_recent": "You are trying to update a feed that is already up to date",
+				"internal_error": "Internal error"
+			}
+		}
+	},
+	"File" :{
+		"System": {
+			"Errors": {
+				"invalid_id": "Invalid object id",
+				"path_not_found": "File or folder not found",
+				"internal_error": "Internal error",
+				"disk_unavailable": "The disk is not mounted",
+				"invalid_request": "Invalid request",
+				"invalid_conflict_mode": "The conflict mode specified is invalid (see below)",
+				"exec_failed": "Internal error",
+				"out_of_memory": "Out of memory",
+				"task_not_found": "Invalid task id",
+				"invalid_state": "You tried to set an invalid state",
+				"invalid_task_type": "This operation cannot be performed on this task",
+				"destination_conflict": "The destination file/folder already exists",
+				"access_denied": "Access to this file is denied",
+				"disk_full": "The destination disk is full"
+			},
+			"Task": {
+				"Type": {
+					"cat": "Concatenate multiple files",
+					"cp": "Copy files",
+					"mv": "Move files",
+					"rm": "Remove files",
+					"archive": "Creates an archive",
+					"extract": "Extract an archive",
+					"repair": "Check and repair files"
+				},
+				"State": {
+					"queued": "Queued (only one task is active at a given time)",
+					"running": "Running",
+					"paused": "Paused (user suspended)",
+					"done": "Done",
+					"failed": "Failed (see error)"
+				},
+				"Error": {
+					"none": "No error",
+					"archive_read_failed": "Error reading archive",
+					"archive_open_failed": "Error opening archive",
+					"archive_write_failed": "Error writing archive",
+					"chdir_failed": "Error changing directory",
+					"dest_is_not_dir": "The destination is not a directory",
+					"file_exists": "File already exists",
+					"file_not_found": "File not found",
+					"mkdir_failed": "Unable to create directory",
+					"open_input_failed": "Error opening input file",
+					"open_output_failed": "Error opening output file",
+					"opendir_failed": "Error opening directory",
+					"overwrite_failed": "Error overwriting file",
+					"path_too_big": "Path is too long",
+					"repair_failed": "Failed to repair corrupted files",
+					"rmdir_failed": "Error removing directory",
+					"same_file": "Source and Destination are the same file",
+					"unlink_failed": "Error removing file",
+					"unsupported_file_type": "This file type is not supported",
+					"write_failed": "Error writing file",
+					"disk_full": "Disk is full",
+					"internal": "Internal error",
+					"invalid_format": "Invalid file format (corrupted ?)",
+					"incorrect_password": "Invalid or missing password for extraction",
+					"permission_denied": "Permission denied",
+					"readlink_failed": "Failed to read the target of a symbolic link",
+					"symlink_failed": "Failed to create a symbolic link"
+				}
+			},
+			"FileInfo": {
+				"Type": {
+					"dir": "Directory",
+					"file": "Regular file"
+				}
+			}
+		},
+		"SharingLink": {
+			"Errors": {
+				"invalid_id": "Invalid object id",
+				"path_not_found": "File or folder not found",
+				"internal_error": "Internal error"
+			}
+		},
+		"Upload": {
+			"Status": {
+				"authorized": "Upload authorization is valid, upload has not started yet",
+				"in_progress": "Upload in progress",
+				"done": "Upload done",
+				"failed": "Upload failed",
+				"conflict": "Destination file conflict",
+				"timeout": "Upload authorization is no longer valid",
+				"cancelled": "Upload cancelled by user"
+			}
+			"Errors": {
+				"invalid_request": "Invalid request",
+				"path_not_found": "File or folder not found",
+				"access_denied": "Write permission denied in the destination folder",
+				"destination_conflict": "A file with same name already exists",
+				"invalid_id": "Invalid file upload id",
+				"cancelled": "Someone on a side channel as cancelled the upload"
+			},
+			"StartAction": {
+				"Force": {
+					"missing": "The response to the FileUploadStartAction will be an error with ‘destination_conflict’ if the destination file already exists. The response will also contain a file_size attribute containing the existing file length (useful for resuming upload)",
+					"overwrite": "If the target file already exists it will be overridden",
+					"resume": "The upload will resume, all sent chunks will then be appended to the existing file."
+				}
+			}
+		}
+	},
+	"AirMedia": {
+		"Errors": {
+			"unknown_target": "No airmedia device with this name in range",
+			"no_client": "No airmedia client connected",
+			"set_pass": "Unable to update password",
+			"set_onscreen_code": "Unable to activate onscreen code",
+			"no_ctrl": "Remote control is unavailable",
+			"http": "Internal HTTP error",
+			"bad_session": "No stream session found",
+			"bad_name": "Invalid airmedia name",
+			"bad_device_id": "No device with this id",
+			"bad_remote_id": "No remote control with this id",
+			"req_in_progress": "You should try again, another request is still processing",
+			"fetch": "Unable to get slideshow information",
+			"no_display": "No screen available",
+			"playback_state": "Invalid playback state",
+			"no_slideshow_srv": "Slideshow is not supported",
+			"no_mem": "Internal error",
+			"inout_file": "Unable to read input file",
+			"no_volume_control": "Volume control is not available",
+			"connect": "Error connecting to the airmedia device",
+			"unauthorized": "This device requests a password",
+			"unsupported_media": "The device does not support this format",
+			"bad_type": "Invalid file type",
+			"unimplemented": "Unimplemented"
+		},
+		"Receiver": {
+			"Capabilities": {
+				"photo": "can display photos",
+				"audio": "can play audio files",
+				"video": "can play video files",
+				"screen": "can display remote screen"
+			},
+			"Action": {
+				"start": "start playing a media",
+				"stop": "stop playing a media"
+			},
+			"Media_Type": {
+				"photo": "display a photo",
+				"video": "display a video"
+			}
+		}
+	},
+	"Call": {
+		"Errors": {
+			"internal_error": "Internal error",
+			"invalid_id": "No call with this id"
+		},
+		"Type": {
+			"missed": "Missed incoming call",
+			"accepted": "Incoming call",
+			"outgoing": "Outgoing call"
+		}
+	},
+	"Contatcs": {
+		"Errors": {
+			"noent": "no entry with this id",
+			"exists": "an entry already exists",
+			"no_match": "no entry matched your request"
+		},
+		"Number": {
+			"Type": {
+				"fixed": "fixed phone",
+				"mobile": "mobile phone",
+				"work": "work",
+				"fax": "fax",
+				"other": "other"
+			}
+		},
+		"Address": {
+			"home": "home address",
+			"work": "work address",
+			"other": "other"
+		},
+		"Url": {
+			"Type": {
+				"profile": "profile address",
+				"blog": "blog address",
+				"site": "website address",
+				"other": "other"
+			}
+		},
+		"Email": {
+			"Type":{
+				"home": "home address",
+				"work": "work address",
+				"other": "other"
+			}
+		}
+	},
+	"Connection": {
+		"Errors": {
+			"inval": "invalid request",
+			"nodev": "no device found with this name",
+			"noent": "no entity found with this name",
+			"netdown": "network is down",
+			"busy": "device is busy",
+			"invalid_port": "invalid port",
+			"insecure_password": "the password is too weak to enable remote access",
+			"invalid_provider": "invalid ddns provider name",
+			"invalid_next_hop": "invalid next hop address (should be a link local address)"
+		},
+		"State": {
+			"going_up": "connection is initializing",
+			"up": "connection is active",
+			"going_down": "connection is about to become inactive",
+			"down": "connection is inactive"
+		},
+		"Type": {
+			"ethernet": "FTTH",
+			"rfc2684": "xDSL (unbundled)",
+			"pppoatm": "xDSL"
+		},
+		"Media": {
+			"ftth": "FTTH",
+			"adsl": "XDSL"
+		},
+		"XDSL": {
+			"Status": {
+				"down": "unsynchronized",
+				"training": "synchronizing step 1/4",
+				"started": "synchronizing step 2/4",
+				"chan_analysis": "synchronizing step 3/4",
+				"msg_exchange": "synchronizing step 4/4",
+				"showtime": "Ready",
+				"disabled": "Disabled"
+			},
+			"Protocol": {
+				"t1413": "T1.413",
+				"adsl1_a": "ADSL",
+				"adsl2_a": "ADSL2",
+				"adsl2plus_a": "ADSL2+",
+				"readsl2": "ReachDSL",
+				"adsl2_m": "ADSL2 annex M",
+				"adsl2plus_m": "ADSL2+ annex M",
+				"unknown": "Unknown"
+			},
+			"Modulation": {
+				"adsl": "ADSL",
+				"vdsl": "VDSL"
+			}
+		}
+	},
+	"DynDns": {
+		"Status": {
+			"disabled": "Disabled",
+			"ok": "Ok",
+			"wait": "Updating",
+			"reqfail": "Request failed",
+			"authfail": "Authentication error",
+			"nocredential": "Invalid credential",
+			"ipinval": "Invalid IP",
+			"hostinval": "Invalid hostname",
+			"abuse": "Blocked because of abuse",
+			"dnserror": "DNS error",
+			"unavailable": "Service unavailable",
+			"nowan": "Unable to get wan IP",
+			"unknown": "Unknown"
+		}
+	},
+	"Lan": {
+		"Errors": {
+			"noent": "Invalid id",
+			"internal_error": "Internal error",
+			"ioerror": "Internal error",
+			"inval": "Invalid parameter",
+			"inval_gateway_ip": "Invalid Gateway IP"
+		},
+		"Config": {
+			"Type": {
+				"router": "The Freebox acts as a network router",
+				"bridge": "The Freebox acts as a network bridge"
+			}
+		},
+		"Browser": {
+			"Errors": {
+				"inval": "Invalid parameter",
+				"nodev": "Invalid interface",
+				"nohost": "Invalid host id",
+				"nomem": "Internal error",
+				"netdown": "Network is down"
+			}
+		},
+		"Host": {
+			"Type": {
+				"workstation": "Workstation",
+				"laptop": "Laptop",
+				"smartphone": "Smartphone",
+				"tablet": "Tablet",
+				"printer": "Printer",
+				"vg_console": "Video game console",
+				"television": "TV",
+				"nas": "Nas",
+				"ip_camera": "IP Camera",
+				"ip_phone": "IP Phone",
+				"freebox_player": "Freebox Player",
+				"freebox_hd": "Freebox Server",
+				"networking_device": "Networking device",
+				"multimedia_device": "Multimedia device",
+				"other": "Other"
+			},
+			"L2Ident": {
+				"Type": {
+					"dhcp": "DHCP",
+					"netbios": "Netbios",
+					"mdns": "mDNS",
+					"upnp": "UPnP"
+				}
+			},
+			"L3Connectivity": {
+				"AF": {
+					"ipv4": "IPV4",
+					"ipv6": "IPV6"
+				}
+			}
+		}
+	},
+	"Freeplug": {
+		"Errors": {
+			"inval": "Invalid request",
+			"nomem": "Internal error",
+			"nosta": "No freeplug with this id",
+			"nopeer": "No freeplug with this id"
+		},
+		"Net_Role": {
+			"sta": "Freeplug Station",
+			"pco": "Freeplug proxy coordinator",
+			"cco": "Central coordinator"
+		},
+		"Port_Status": {
+			"Type": "Description",
+			"up": "The ethernet port is up",
+			"down": "The ethernet port is down",
+			"unknown": "The ethernet port state is unknown"
+		}
+	},
+	"DHCP": {
+		"Errors": {
+			"inval": "invalid argument",
+			"inval_netmask": "invalid netmask",
+			"inval_ip_range": "invalid IP range",
+			"inval_ip_range_net": "IP range & netmask mismatch",
+			"inval_gw_net": "gateway & netmask mismatch",
+			"exist": "already exists",
+			"nodev": "no such device",
+			"noent": "no such entry",
+			"netdown": "network is down",
+			"busy": "device or resource busy"
+		}
+	},
+	"FTP": {
+		"Errors": {
+			"internal_error": "internal_error",
+			"weak_password": "	Password is too weak for remote access"
+		}
+	},
+	"NAT": {
+		"Errors": {
+			"noent": "Invalid id",
+			"internal_error": "Internal error",
+			"exist": "Conflict with an existing redirection"
+		}
+	},
+	"PortForwardingConfig": {
+		"ip_proto": {
+			"tcp": "TCP",
+			"udp": "UDP"
+		}
+	},
+	"IncomingPortConfig": {
+		"id": {
+			"http": "http port for remote access to Freebox OS",
+			"https": "https port for tls remote access to Freebox OS",
+			"bittorrent-main": "main bittorrent port for Freebox downloader",
+			"bittorrent-dht": "bittorrent port for DHT",
+			"openvpn_routed": "routed openvpn port",
+			"openvpn_bridge": "bridged openvpn port",
+			"ipsec_ike": "ipsec ikev2 vpn port",
+			"ipsec_nat": "ipsec nat vpn port",
+			"pptp": "pptp vpn server port",
+			"ftp": "ftp control port for FTP remote access",
+			"ftp_pasv": "ftp data port for FTP remote access"
+		},
+		"type": {
+			"tcp": "TCP",
+			"udp": "UDP",
+			"tcp_udp": "both TCP and UDP"
+		}
+	},
+	"UPnPIGD": {
+		"Errors": {
+			"disabled": "the service is disabled",
+			"noent": "invalid rule id"
+		}
+	},
+	"LCD": {
+		"Errors": {
+			"inval": "Invalid parameters",
+			"no_panel": "No screen detected",
+			"setup": "Unable to setup screen"
+		}
+	},
+	"NetworkSahre": {
+		"Errors": {
+			"invalid_workgroup_name": "Invalid workgroup name",
+			"invalid_logon_user": "Invalid samba user name",
+			"invalid_logon_password": "Invalid samba user password",
+			"invalid_afp_login_name": "Invalid AFP user name",
+			"invalid_afp_login_password": "Invalid AFP user password"
+		}
+	},
+	"AfpConfig": {
+		"ServerType": {
+			"powerbook": "powerbook",
+			"powermac": "powermac",
+			"macmini": "macmini",
+			"imac": "imac",
+			"macbook": "macbook",
+			"macbookpro": "macbookpro",
+			"macbookair": "macbookair",
+			"macpro": "macpro",
+			"appletv": "appletv",
+			"airport": "airport",
+			"xserve": "xserve"
+		}
+	},
+	"UPnPAV": {
+		"Errors": {
+			"internal_error": "internal_error"
+		}
+	},
+	"Switch": {
+		"Errors": {
+			"bad_port": "invalid port number",
+			"bad_speed": "unable to set port speed",
+			"bad_link": "unable to set port link mode",
+			"bad_mac_entry_type": "invalid mac entry type"
+		}
+	},
+	"SwitchPortStatus": {
+		"link": {
+			"up": "port is up",
+			"down": "port is down"
+		},
+		"duplex": {
+			"half": "force in half duplex mode",
+			"full": "force in full duplex mode"
+		},
+		"speed": {
+			"10": "10Base-T",
+			"100": "100Base-TX",
+			"1000": "1000Base-T"
+
+		}
+	},
+	"SwitchPortConfig": {
+		"duplex": {
+			"auto": "auto negotiate duplex mode",
+			"half": "force in half duplex mode",
+			"full": "force in full duplex mode"
+		},
+		"speed": {
+			"Auto": "auto negotiate speed",
+			"10": "10Base-T",
+			"100": "100Base-TX",
+			"1000": "1000Base-T"
+		}
+	},
+	"Wifi": {
+		"Errors": {
+			"inval": "invalid parameters",
+			"exist": "entry already exists",
+			"nospc": "maximum entry count reached",
+			"nodev": "invalid device id",
+			"noent": "invalid id",
+			"busy": "device busy",
+			"inval_band": "invalid wifi band",
+			"inval_ssid": "invalid ssid",
+			"inval_freq": "invalid wifi frequency",
+			"inval_cipher": "invalid cipher mod",
+			"inval_key_len": "invalid key length",
+			"inval_key": "invalid key",
+			"inval_ht_mode": "invalid 802.11n mode",
+			"inval_ht_mode": "invalid wifi frequency for this 802.11n mode",
+			"inval_ht_needs_wmm": "wmm must be enabled for 802.11n",
+			"inval_ac_needs_ht": "invalid configuration 802.11ac need ht support",
+			"inval_ac_not_2d4g": "invalid configuration 802.11ac is not supported on 2.4G band"
+		}
+	},
+	"GlobalConfig": {
+		"mac_filter_state":{
+			"disabled": "mac filter is disabled",
+			"whitelist": "mac filter is enabled, using a whitelist",
+			"blacklist": "mac filter is enabled, using a blacklist"
+		}
+	},
+	"WifiApStatus": {
+		"State": {
+			"scanning": "Ap is probing wifi channels",
+			"no_param": "Ap is not configured",
+			"bad_param": "Ap has an invalid configuration",
+			"disabled": "Ap is permanently disabled",
+			"disabled_planning": "Ap is currently disabled according to planning",
+			"no_active_bss": "Ap has no active BSS",
+			"starting": "Ap is starting",
+			"acs": "Ap is selecting the best available channel",
+			"ht_scan": "Ap is scanning for other access point",
+			"dfs": "Ap is performing dynamic frequency selection",
+			"active": "Ap is active",
+			"failed": "Ap has failed to start"
+		}
+	},
+	"WifiApConfig": {
+		"band": {
+			"2d4g": "2.4 GHz",
+			"5g": "5 GHz",
+			"60g": "60 GHz"
+		}
+	},
+	"WifiAllowedComb": {
+		"band": {
+			"2d4g": "2.4 GHz",
+			"5g": "5 GHz",
+			"60g": "60 GHz"
+		}
+	},
+	"WifiStation": {
+		"state ": {
+			"associated": "station is associated",
+			"authenticated": "station is authenticated"
+		}
+	},
+	"WifiBssStatus": {
+		"state": {
+			"phy_stopped": "associated AP is stopped",
+			"no_param": "bss is missing config",
+			"bad_param": "bss has an invalid config",
+			"disabled": "bss is disabled",
+			"starting": "bss is starting",
+			"active": "bss is active",
+			"failed": "bss has failed to start"
+		}
+	},
+	"WifiBssConfig": {
+		"use_default_config": {
+			"encryption": {
+				"wep": "wep (should not use)",
+				"wpa_psk_auto": "wpa/psk auto",
+				"wpa_psk_tkip": "wpa/psk tkip",
+				"wpa_psk_ccmp": "wpa/psk ccmp",
+				"wpa2_psk_auto": "wpa2/psk auto",
+				"wpa2_psk_tkip": "wpa2/psk tkip",
+				"wpa2_psk_ccmp": "wpa2/psk ccmp"
+			}
+		}
+	},
+	"WifiNeighbor": {
+		"band": {
+			"2d4g": "2.4 GHz",
+			"5g": "5 GHz",
+			"60g": "60 GHz"
+		}
+	},
+	"WifiChannelUsage": {
+		"band": {
+			"2d4g": "2.4 GHz",
+			"5g": "5 GHz",
+			"60g": "60 GHz"
+		}
+	},
+	"WifiMacFilter": {
+		"type": {
+			"whitelist": "if mac_filter is set to whitelist this station will be allowed",
+			"blacklist": "if mac_filter is set to blacklist this station will be rejected"
+		}
+	},
+	"SystemConfig": {
+		"disk_status": {
+			"not_detected": "The disk as not been detected",
+			"disabled": "The disk is disabled",
+			"initializing": "The disk is initializing",
+			"error": "The disk failed to mount",
+			"active": "The disk is ready"
+		},
+		"box_flavor": {
+			"full": "The box has an internal storage",
+			"light": "The box has no internal storage"
+		}
+	},
+	"VPNServer" : {
+		"type": {
+			"pptp": "PPTP VPN server",
+			"openvpn": "OpenVPN server"
+		},
+		"state": {
+			"stopped": "stopped",
+			"starting": "starting",
+			"started": "started",
+			"stopping": "stopping",
+			"error": "error"
+		}
+	},
+	"VPNClient": {
+		"errors": {
+			"inval": "invalid parameters",
+			"nomem": "internal error",
+			"ioerror": "internal error",
+			"nodev": "invalid device",
+			"noent": "invalid id",
+			"netdown": "network is not available",
+			"exist": "entry already exists",
+			"busy": "resource is busy"
+		}
+	},
+	"VPNClientConfig": {
+		"type": {
+			"pptp": "PPTP VPN server",
+			"openvpn": "OpenVPN server"
+		},
+		"mppe": {
+			"disable": "disable mppe",
+			"require": "require mppe",
+			"require_128": "require 128 bits mppe"
+		}
+	},
+	"VPNClientStatus": {
+		"type": {
+			"pptp": "PPTP VPN server",
+			"openvpn": "OpenVPN server"
+		},
+		"state": {
+			"waiting_wan": "waiting for wan connection",
+			"going_up": "connecting",
+			"up": "connected",
+			"going_down": "disconnecting",
+			"down": "disconnected"
+		},
+		"last_error": {
+			"none": "no error",
+			"internal": "internal error",
+			"authentication_failed": "wrong credentials",
+			"auth_failed": "wrong credentials",
+			"resolv_failed": "invalid host name",
+			"connect_timeout": "connection timeout",
+			"connect_failed": "connection failed",
+			"setup_control_failed": "PPTP session negociation failure",
+			"setup_call_failed": "PPTP session failure",
+			"protocol": "protocol error",
+			"remote_terminated": "connection closed by remote peer",
+			"remote_disconnect": "connection closed by remote peer"
+		}
+	},
+	"VpnClientIpInfo": {
+		"Provider": {
+			"none": "none",
+			"static": "static IP configuration",
+			"ppp": "ppp",
+			"dhcp": "DHCP server"
+		}
+	},
+	"Storage": {
+		"Errors": {
+			"not_found": "No disk/partition with this id",
+			"invalid_disk": "No such disk",
+			"is_a_partition": "This is not a disk but a partition",
+			"is_internal": "This action is not permitted on internal disk",
+			"op_not_supported": "Operation not supported",
+			"op_failed": "Operation failed",
+			"disk_busy": "Disk is busy"
+		}
+	},
+	"DiskPartition": {
+		"state": {
+			"error": "Partition has error",
+			"checking": "Partition check in progress",
+			"formatting": "Partition format in progress",
+			"mounting": "Partition mount in progress",
+			"maintenance": "Partition is in maintenance mode",
+			"mounted": "Partition is ready",
+			"umounting": "Partition umount in progress",
+			"umounted": "Partition is umounted",
+			"ejecting": "Partition ejection in progress"
+		},
+		"fstype": {
+			"empty": "empty",
+			"unknown": "unknown",
+			"xfs": "xfs",
+			"ext4": "ext4",
+			"vfat": "vfat",
+			"ntf": "ntf",
+			"hf": "hf",
+			"hfsplus": "hfsplus",
+			"swap": "swap",
+			"exfat": "exfat"
+		},
+		"fsck_result": {
+			"no_run_yet": "Partition has not been checked yet",
+			"running": "Check is in progress",
+			"fs_clean": "File system is ok",
+			"fs_corrected": "File system was corrected",
+			"fs_needs_correction": "File system need correction",
+			"failed": "File system has unrecoverable error"
+		}
+	},
+	"StorageDisk": {
+		"Errors": {
+			"not_found": "No disk/partition with this id",
+			"invalid_disk": "No such disk",
+			"is_a_partition": "This is not a disk but a partition",
+			"is_internal": "This action is not permitted on internal disk",
+			"op_not_supported": "Operation not supported",
+			"op_failed": "Operation failed",
+			"disk_busy": "Disk is busy"
+		},
+		"type": {
+			"internal": "Freebox internal disk",
+			"usb": "usb disk",
+			"sata": "sata disk"
+		},
+		"State": {
+			"error": "Disk has error",
+			"disabled": "Disk is disabled",
+			"enabled": "Disk is enabled",
+			"formatting": "Disk is formatting"
+		},
+		"table_type": {
+			"msdos": "msdos",
+			"gpt": "gpt",
+			"superfloppy": "superfloppy",
+			"empty": "empty"
+		}
+	}
+	"DiskPartition": {
+		"State": {
+			"error": "Partition has error",
+			"checking": "Partition check in progress",
+			"formatting": "Partition format in progress",
+			"mounting": "Partition mount in progress",
+			"maintenance": "Partition is in maintenance mode",
+			"mounted": "Partition is ready",
+			"umounting": "Partition umount in progress",
+			"umounted": "Partition is umounted",
+			"ejecting": "Partition ejection in progress"
+		},
+		"fstype": {
+			"empty": "empty",
+			"unknown": "unknown",
+			"xfs": "xfs",
+			"ext4": "ext4",
+			"vfat": "vfat",
+			"ntf": "ntf",
+			"hf": "hf",
+			"hfsplus": "hfsplus",
+			"swap": "swap",
+			"exfat": "exfat"
+		},
+		"fsck_result": {
+			"no_run_yet": "Partition has not been checked yet",
+			"running": "Check is in progress",
+			"fs_clean": "File system is ok",
+			"fs_corrected": "File system was corrected",
+			"fs_needs_correction": "File system need correction",
+			"failed": "File system has unrecoverable error"
+		}
+	},
+	"ParentalControl": {
+		"Errors": {
+			"allowed": "access is allowed",
+			"denied": "access is denied",
+			"webonly": "access is granted only for HTTP and HTTPS traffic"
+		},
+		"ParentalFilterPlanning": {
+			"cdayranges": {
+				"fr_bank_holidays": "French bank holidays",
+				"fr_school_holidays_a": "French school holidays - Zone A",
+				"fr_school_holidays_b": "French school holidays - Zone B",
+				"fr_school_holidays_c": "French school holidays - Zone C",
+				"fr_school_holidays_corse": "French school holidays - Corse"
+			}
+		},
+		"ParentalFilter": {
+			"scheduling_mode": {
+				"forced": "filter_state is forced to forced_mode",
+				"temporary": "filter_state is temporary set to tmp_mode for the next tmp_mode_expire seconds",
+				"planning": "filter_state is set using the planning"
+			},
+			"filter_state": {
+				"allowed": "access is allowed",
+				"denied": "access is denied",
+				"webonly": "access is granted only for HTTP and HTTPS traffic"
+			}
+		}
+	},
+	"PVR": {
+		"Errors": {
+			"noent": "wrong id",
+			"inval": "invalid params",
+			"inval_date_fmt": "invalid date format",
+			"inval_end_before_start": "start time must be before end time",
+			"system_time_incorrect": "system time not available",
+			"record_duration_too_long": "record duration is too long",
+			"record_date_in_past": "record date is already passed",
+			"unknown_channel": "unknown channel",
+			"no_channel_svc": "no service for this channel",
+			"only_auto_disable": "can’t disable manual precord",
+			"cannot_change_en_state": "can’t change enabled state",
+			"cannot_disable_has_data": "can’t disable started record",
+			"internal_error": "internal error"
+		},
+		"Precord": {
+			"State": {
+				"disabled": "disabled",
+				"start_error": "failed to start",
+				"waiting_start_time": "scheduled",
+				"starting": "starting",
+				"running": "running",
+				"running_error": "running with error",
+				"failed": "failed",
+				"finished": "finished"
+			},
+			"Error": {
+				"none": "none",
+				"file_access_error": "File Access Error",
+				"disk_full": "Disk Full",
+				"private_but_no_private_dir": "Private But No Private Dir",
+				"network_problem": "Network Problem",
+				"resource_problem": "Resource Problem",
+				"no_stream_available": "No Stream Available",
+				"no_data_received": "No Data Received",
+				"missed": "Missed",
+				"stopped": "Stopped",
+				"internal_error": "Internal Error",
+				"unknown_error": "Unknown Error"
+			},
+			"channel_quality": {
+				"auto": "auto",
+				"hd": "hd",
+				"sd": "sd",
+				"ld": "ld",
+				"3d": "3d"
+			},
+			"channel_type": {
+				"": "auto",
+				"iptv": "use only iptv streams",
+				"dvb": "use only dvb streams"
+			},
+			"broadcast_type": {
+				"tv": "tv",
+				"radio": "radio"
+			}
+		},
+		"Frecord": {
+			"State": {
+				"disabled": "disabled",
+				"start_error": "failed to start",
+				"waiting_start_time": "scheduled",
+				"starting": "starting",
+				"running": "running",
+				"running_error": "running with error",
+				"failed": "failed",
+				"finished": "finished"
+			},
+			"Error": {
+				"none": "none",
+				"file_access_error": "File Access Error",
+				"disk_full": "Disk Full",
+				"private_but_no_private_dir": "Private But No Private Dir",
+				"network_problem": "Network Problem",
+				"resource_problem": "Resource Problem",
+				"no_stream_available": "No Stream Available",
+				"no_data_received": "No Data Received",
+				"missed": "Missed",
+				"stopped": "Stopped",
+				"internal_error": "Internal Error",
+				"unknown_error": "Unknown Error"
+			},
+			"channel_quality": {
+				"auto": "auto",
+				"hd": "hd",
+				"sd": "sd",
+				"ld": "ld",
+				"3d": "3d"
+			},
+			"channel_type": {
+				"": "auto",
+				"iptv": "use only iptv streams",
+				"dvb": "use only dvb streams"
+			},
+			"broadcast_type": {
+				"tv": "tv",
+				"radio": "radio"
+			}
+		}
+	}
+}

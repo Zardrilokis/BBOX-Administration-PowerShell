@@ -1,104 +1,158 @@
 {
-  "UserConfigurationFile": {
-    "DefaultFileName": "Settings-Default-User.json",
-    "CurrentFileName": "Settings-Current-User.json"
-  },
-  "Values": {
-    "OpenExportFolder": "Y|N",
-	"OpenHTMLReport": "Y|N",
-    "LineNumber": "1|2",
-    "DisplayFormat": "H|T",
-    "ExportFormat": "C|J",
-    "LANNetworkRemote": "R|Q",
-    "LANNetworkLocal": "L|R|Q"
-  },
-  "Various": {
-    "Mail": "tom78_91_45@yahoo.fr",
-	"GitHubUrlSite": "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
-  },
-  "BBox": {
-    "APIVersion": "api/v1",
-	"UrlPrefixe": "https://",
-    "DefaultRemotePort": "8560",
-	"DefaultLocalUrl": "mabbox.bytel.fr",
-    "BBoxDns": "mabbox.bytel.fr",
-	"BBoxUrlRemote": "https://mabbox.bytel.fr/remote.html",
-    "BBoxUrlFirewall": "https://mabbox.bytel.fr/firewall.html",
-    "APIUrlDocumentation": "https://api.bbox.fr/doc/apirouter/index.html",
-    "BBoxUrlDynDns": "https://mabbox.bytel.fr/dyndns.html"
-  },
-  "APIName": {
-    "Exclusions": {
-      "Full": "401|404|log.html|voip/calllog|voip/fullcalllog",
-      "Full_Testing_Program": "401|404|Full|Full_Testing_Program|Stop_Program"
-    },
-    "Action": {
-      "Exclusions": {
-        "Full": "Export"
-      }
-    },
-    "Scope": {
-      "Exclusions": {
-        "Full": "Program"
-      }
-    },
-    "Available": "Yes"
-  },
-  "GoogleChrome": {
-    "ChromeDriverDefaultFolderName": "Default",
-    "ChromeDriverDefaultWebDriverSupportFileName": "webdriver.support.dll",
-    "ChromeProgramFilesX86InstallationPath": "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    "ChromeDriverRessourcesFolderName": "ChromeDriver",
-    "ChromeDriverDefaultSetupFileName": "chromedriver.exe",
-    "ChromeVersionRegistry": "HKCU:\\SOFTWARE\\Google\\Chrome\\BLBeacon",
-    "ChromeDriverDefaultWebDriverDLLFileName": "webdriver.dll",
-    "ChromeProgramFilesInstallationPath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "ChromeDriverDefaultProfileName": "Guest Profile",
-	"ChromeDriverDownloadFileName": "chromedriver_win32.zip",
-	"ChromeDriverDownloadHomeUrl": "https://chromedriver.storage.googleapis.com/index.html",
-	"ChromeDriverDownloadPathUrl": "https://chromedriver.storage.googleapis.com/index.html?path=",
-	"ChromeDownloadUrl" : "https://www.google.com/intl/en_us/chrome/"
-  },
-  "HTMLReport": {
-    "Type": "List|Table"
-  },
-  "Path": {
-    "ReportFolderName": "Report",
-    "JournalName": "journal-1242358",
-    "ExportCSVFolderName": "CSV",
-    "DownloadShellRegistryFolder": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
-    "ExportFolderName": "Export",
-    "RessourcesFolderName": "Ressources",
-    "DownloadShellRegistryFolderName": "{374DE290-123F-4565-9164-39C4925E467B}",
-    "JournalFolderName": "Journal",
-    "TestedEnvironnementFileName": "TestedEnvironnement.csv",
-    "JsonBboxconfigFolderName": "Json_Bbox_config",
-    "ExportJSONFolderName": "JSON",
-    "BBOXModuleFileName": "BBOX-Module.psm1",
-    "APISummaryFileName": "API-Summary.csv"
-  },
-  "Actions": {
-    "Exclusions": {
-      "Scope": "Program",
-      "Actions": "Add|Quit|Remove|Reset|Show|Switch"
-    }
-  },
-  "FormatedData": {
-    "ExcludedValues": "Domain|Program"
-  },
-  "Sleep": {
-      "Default": "1",
-	  "ChromeDriverNavigation": "2",
-	  "ChromeDriverUnzip": "5",
-	  "ChromeDriverLoading": "5",
-	  "BboxJournalDownload": "8",
-	  "ChromeDriverDownload": "30",
-	  "TUNCredentialManagerModuleinstallation": "5",
-	  "RefreshWIRELESSFrequencyNeighborhoodScan": "20"
-    },
-  "Notification": {
-	"Event": {
-		"Type": "ALARM|NOTIFY"
+	"UserConfigurationFile": {
+		"DefaultFileName": "Settings-Default-User.json",
+		"CurrentFileName": "Settings-Current-User.json"
+	},
+	"Credentials": {
+		"BBox": {
+			"Target": "AdminBBox",
+			"UserName": "AdminBBox",
+			"Comment": "Credentials to connect to BBox Web Admin Console"
+		},
+		"FREEBox": {
+			"Target": "AdminFREEBox",
+			"UserName": "AdminFREEBBox",
+			"Comment": "Credentials to connect to FREEBox Web Admin Console"
+		}
+	},
+	"Values": {
+		"OpenExportFolder": "Y|N",
+		"OpenHTMLReport": "Y|N",
+		"LineNumber": "1|2",
+		"DisplayFormat": "H|T",
+		"ExportFormat": "C|J",
+		"LANNetworkRemote": "R|Q",
+		"LANNetworkLocal": "L|R|Q",
+		"ResolveDnsName": "Y|N",
+		"PowershellModuleFileExtention": ".psm1"
+	},
+	"Various": {
+		"Mail": "tom78_91_45@yahoo.fr",
+		"GitHubUrlSite": "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+	},
+	"Box": {
+		"UrlPrefixe": "https://",
+		"TypeList": "Bbox|Freebox",
+		"BBox": {
+			"Name": "BBox",
+			"APIVersion": "api/v1",
+			"DefaultRemotePort": "8560",
+			"DefaultLocalUrl": "mabbox.bytel.fr",
+			"DefaultLocalIPAddress": "192.168.1.254",
+			"BoxDns": "mabbox.bytel.fr",
+			"BoxUrlLogin": "/login.html",
+			"BoxUrlHomePage": "/index.html",
+			"BoxUrlRemote": "https://mabbox.bytel.fr/remote.html",
+			"BoxUrlFirewall": "https://mabbox.bytel.fr/firewall.html",
+			"APIUrlDocumentation": "https://api.bbox.fr/doc/apirouter/index.html",
+			"BoxUrlDynDns": "https://mabbox.bytel.fr/dyndns.html"
+		},
+		"Freebox": {
+			"Name": "Freebox",
+			"APIVersion": "api/v4",
+			"DefaultRemotePort": "3615",
+			"DefaultLocalUrl": "mafreebox.freebox.fr",
+			"DefaultLocalIPAddress": "192.168.0.254",
+			"BoxDns": "mafreebox.freebox.fr",
+			"BoxUrlLogin": "/login.php",
+			"BoxUrlHomePage": "",
+			"BoxUrlRemote": "https://mafreebox.freebox.fr",
+			"BoxUrlFirewall": "https://mafreebox.freebox.fr",
+			"APIUrlDocumentation": "https://dev.freebox.fr/sdk/os/",
+			"BoxUrlDynDns": "https://mafreebox.freebox.fr"
+		}
+	},
+	"APIName": {
+		"Available": "Yes",
+		"Exclusions": {
+			"BBox": {
+				"Full": "401|404|log.html|voip/calllog|voip/fullcalllog|device/log"
+			},
+			"Freebox": {
+				"Full": ""
+			},
+			"Chrome" : "log.html|voip/calllog|voip/fullcalllog|device/log",
+			"Full" : "Full|Full_Testing_Program"
+		}
+	},
+	"Scope": {
+		"Exclusions": {
+			"Full": "Program"
+		}
+	},
+	"Action": {
+		"Exclusions": {
+			"FullTestingProgram" : "Export|Quit"
+		}
+	},
+	"ChromeDriver": {
+		"ChromeDriverDefaultWebDriverDLLFileName": "webdriver.dll",
+		"ChromeDriverDefaultWebDriverSupportFileName": "webdriver.support.dll",
+		"ChromeDriverRessourcesFolderName": "ChromeDriver",
+		"ChromeDriverDefaultFolderName": "Default",
+		"ChromeDriverDefaultSetupFileName": "chromedriver.exe",
+		"ChromeDriverDownloadFileName": "chromedriver-win32.zip",
+		"ChromeDriverLastStableVersionUrl": "https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE",
+		"ChromeDriverDownloadHomeUrl": "https://storage.googleapis.com/chrome-for-testing-public",
+		"ChromeDriverDownloadPathUrl": "https://storage.googleapis.com/chrome-for-testing-public"
+	},
+	"GoogleChrome": {
+		"GoogleChromeRessourcesFolderName": "GoogleChrome",
+		"GoogleChromeDefaultFolderName": "Default",
+		"GoogleChromeDefaultSetupFileName": "chrome.exe",
+		"//GoogleChromeDefaultProfileName": "Guest Profile",
+		"GoogleChromeDefaultProfileName": "Default",
+		"GoogleChromeDownloadFileName": "chrome-win32.zip",
+		"GoogleChromeDownloadFileNameExtention": "*.crdownload",
+		"GoogleChromeDownloadHomeUrl": "https://storage.googleapis.com/chrome-for-testing-public",
+		"GoogleChromeDownloadPathUrl": "https://storage.googleapis.com/chrome-for-testing-public"
+	},
+	"HTMLReport": {
+		"Type": "List|Table"
+	},
+	"Path": {
+		"HelpFolderName": "Help",
+		"ExportFolderName": "Export",
+		"ExportCSVFolderName": "CSV",
+		"ExportJSONFolderName": "JSON",
+		"JournalFolderName": "Journal",
+		"JournalName": "journal-1242358",
+		"JsonBoxconfigFolderName": "Json_Box_Config",
+		"ReportFolderName": "Report",
+		"RessourcesFolderName": "Ressources",
+		"TestedEnvironnementFileName": "Tested-Environnement.csv",
+		"CommonFunctionsFileName": "Common-Functions.csv",
+		"BBox": {
+			"APISummaryFileName": "BBox-API-Summary.csv"
+		},
+		"Freebox": {
+			"APISummaryFileName": "Freebox-API-Summary.csv"
+		},
+		"DownloadShellRegistryFolder": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+		"DownloadShellRegistryFolderName": "{374DE290-123F-4565-9164-39C4925E467B}",
+		"BoxModuleFileName": "BOX-Module"
+	},
+	"FormatedData": {
+		"GlobalOutputDataExclusion" : "exception|error_code"
+	},
+	"Sleep": {
+		"Default": "3",
+		"ChromeDriverNavigation": "5",
+		"ChromeDriverUnzip": "5",
+		"ChromeDriverLoading": "5",
+		"BoxJournalDownload": "8",
+		"ChromeDriverDownload": "60",
+		"TUNCredentialManagerModuleinstallation": "10",
+		"RefreshWIRELESSFrequencyNeighborhoodScan": "60"
+	},
+	"Notification": {
+		"Event": {
+			"Type": "ALARM|NOTIFY"
+		}
+	},
+	"Error": {
+		"ResolveDNS" : {
+			"Message" : "Unknow Error / Can not Verifyed / Resolved / Available"
+		}
 	}
-  }
 }
