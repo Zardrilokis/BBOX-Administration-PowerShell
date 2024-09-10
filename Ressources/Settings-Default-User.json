@@ -1,32 +1,34 @@
 {
-  "Credentials": {
-    "Target": "AdminBytel",
-	"UserName": "AdminBytel",
-    "Comment": "Credentials to connect to BYTEL Web Admin Console"
-  },
-  "Site": {
-	"OldRemotePort": "",
-    "OldRemoteUrl": "",
-    "CurrentLocalUrl": "",
-    "CurrentRemoteUrl": "",
-    "CurrentRemotePort": ""
-  },
-  "OpenHTMLReport": {
-    "OpenHTMLReport": "0"
-  },
-  "Trigger": {
-    "DisplayFormat": "0",
-    "OpenHTMLReport": "0",
-    "ExportFormat": "0",
-	"OpenExportFolder": "0"
-  },
-  "DisplayFormat": {
-    "DisplayFormat": "0"
-  },
-  "ExportFormat": {
-    "ExportFormat": "0"
-  },
-  "OpenExportFolder": {
-    "OpenExportFolder": "0"
-  }
+	"Box": {
+		"OldType": "",
+		"CurrentType": ""
+	},
+	"Site": {
+		"OldRemotePort": "",
+		"OldRemoteUrl": "",
+		"CurrentLocalUrl": "",
+		"CurrentRemoteUrl": "",
+		"CurrentRemotePort": ""
+	},
+	"Trigger": {
+		"DisplayFormat": "0",
+		"ExportFormat": "0",
+		"OpenExportFolder": "0",
+		"OpenHTMLReport": "0"
+	},
+	"DisplayFormat": {
+		"DisplayFormat": "0"
+	},
+	"ExportFormat": {
+		"ExportFormat": "0"
+	},
+	"OpenExportFolder": {
+		"OpenExportFolder": "0"
+	},
+	"OpenHTMLReport": {
+		"OpenHTMLReport": "0"
+	},
+	"ResolveDnsName": {
+		"ResolveDnsName": "N"
+	}
 }
