@@ -294,9 +294,10 @@
     Update       : Update functions : 'Get-DeviceLog' and 'Get-DeviceFullLog' and 'Get-DeviceFullTechnicalLog' - Add new entries not yet managed (LAN_BAD_SUBNET,LAN_DUPLICATE_IP)
     Update       : Update function : 'Get-NOTIFICATIONConfigEvents' - Add new headers : Index,Type,Scope,ShortName
     Update       : Update function : 'Get-NOTIFICATIONConfig' - Change Headers
-    Update       : Rename functions : 'Get-NOTIFICATIONConfigAlerts' to 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONConfigContacts' to 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONConfigEvents' to 'Get-NOTIFICATIONEvents'
+    Update       : Rename functions from : 'Get-NOTIFICATIONConfigAlerts' to : 'Get-NOTIFICATIONAlerts' and from : 'Get-NOTIFICATIONConfigContacts' to : 'Get-NOTIFICATIONContacts' and from : 'Get-NOTIFICATIONConfigEvents' to : 'Get-NOTIFICATIONEvents'
     Update       : Remove functions : 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONEvents' - Due to duplicates functions
-    Update       : Update function : 'Switch-Info' - Change Function name : 'Get-NOTIFICATIONConfigAlerts' to 'Get-NOTIFICATIONAlerts' and 'Get-NOTIFICATIONConfigContacts' to 'Get-NOTIFICATIONContacts' and 'Get-NOTIFICATIONConfigEvents' to 'Get-NOTIFICATIONEvents'
+    Update       : Update function : 'Switch-Info'
+    Update       : Rename Function from : 'Get-NOTIFICATIONConfigAlerts' to : 'Get-NOTIFICATIONAlerts' and from : 'Get-NOTIFICATIONConfigContacts' to : 'Get-NOTIFICATIONContacts' and from : 'Get-NOTIFICATIONConfigEvents' to : 'Get-NOTIFICATIONEvents'
     Update       : Update File : '.\API-Summary.csv'
     Update       : Update function : 'Get-NOTIFICATIONAlerts' - Add Header 'Mail' to see at which email addresses was sent the alerts
     Update       : Update function : 'Get-USERSAVE' - Change date format
@@ -366,7 +367,7 @@
     Update       : Update defaut chrome driver to version : 123.0.6312.58
     Update       : Update defaut Google chrome to version : 123.0.6312.105
     Update       : Update functions linked to function : "Switch-Function"
-    Update       : Rename function from 'Get-VOIPDiag' to : 'Get-VOIPDiagLine'
+    Update       : Rename function from : 'Get-VOIPDiag' to : 'Get-VOIPDiagLine'
     Update       : Add function : 'Get-VOIPDiagConfig', to have VOIP Diag Summary
     Update       : Update system config file : '.\Ressources\Settings-Program.json' parameter : 'ChromeDriverLastStableVersionUrl' to : 'https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE'
     Update       : Update logs files : '.\Logs\*\*-Box_Administration_Log.csv' and '.\Logs\*\*-Box-Administration-Transcript-Log.log'
@@ -387,7 +388,7 @@
     Update       : Add function :'Remove-FolderContentAll' - to delete all files from all folders known by program
     Update       : Correct syntaxe error and ajust text for end user for better understanding
     Update       : Update function : 'Stop-Program' add 2 new parameter '-ErrorMessage' (To get error message) and '-Reason' (To add more explaintion for better Human understanding)
-    Update       : Switch Chrome driver request to invoke web request to optimize the download for Chrome Driver & Google Chrome StandAlone version to local
+    Update       : Switch Chrome driver request to invoke web request to optimize the download for Chrome Driver and Google Chrome StandAlone version to local
     Update       : Update program to use 'Invoke-WebRequest' Powershell cmlet when no autentification is mandatory to get json data and optimize the run program
     Update       : Chrome driver is use only to get data if autentification is mandatory with (Local / Remote) access (Public / Private) permissions
     Update       : Add New function : 'Export-ProgramFilesCount'
@@ -400,7 +401,15 @@
     Update       : Modify configuration file : '.\Ressources\Settings-Program.json' and new settings lincked to the new function
     Update       : Add details about Module : '.\BOX-Module.psm1'
     Update       : Add new function : 'Export-ModuleHelp' - to get information regarding the module details
-    Update       : Rename function : 'Get-LastestStableChromeVersion' to 'Get-LastestStableChromeVersionOnline'
+    Update       : Rename function from : 'Get-LastestStableChromeVersion' to : 'Get-LastestStableChromeVersionOnline'
+    Update       : Update functions : 'Update-ChromeDriver' and 'Update-GoogleChrome' - Adapt functions with 'Invoke-webRequest' instead of Chrome driver for better performance and
+    Update       : Optimize code in the script : '.\BBOX-Administration.ps1'
+    Update       : Add new function : 'Uninstall-TUNCredentialManager' to uninstall the module : 'TUNCredentialManager'
+    Update       : Add new function : 'Uninstall-Program' to uninstall the program and all features
+    Update       : Rename function from : 'Import-TUNCredentialManager' to : 'Install-TUNCredentialManager' for more understanding
+    Update       : Update log files for better understanding
+    Update       : Cleaning old code lines that are only for devlopement and help to switch to the new web request type
+    Update       : Add Help 'Template' for each function and Powershell file to use 'Get-help' with it - Functions that Export data from API web request are not documented because this is the same function build
 
 .LINKS
     
@@ -417,14 +426,7 @@
     http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help
     
-
-#region admin execution control
-
-#$Script_Name = $MyInvocation.MyCommand.Name
-#$Script = "$PSScriptRoot\$Script_Name"
-#If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {Start-Process Pwsh " -ExecutionPolicy Bypass -File `"$Script`"" -Verb RunAs; Exit}
-
-#endregion admin execution control
+#>
 
 #region function
 
@@ -560,23 +562,27 @@ Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -M
 #endregion Start Program initialisation
 
 #region Create logs folder
+Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Step 1/10) : Logs Folder Creation'
 
-Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation' -NotDisplay
-Write-Log -Type INFONO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation status : ' -NotDisplay
 If (-not (Test-Path -Path $ScriptRootFolderPath)) {
     
+    Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation status : ' -NotDisplay
+
     Try {
         $Null = New-Item -Path $ScriptRootFolderPath -Name $global:LogFolderName -ItemType Directory -Force -ErrorAction Stop
         Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Successful' -NotDisplay
+        Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
     }
     Catch {
         Write-Log -Type ERROR -Name 'Program initialisation - Logs Folder Creation' -Message "Failed, due to :$($_.string())" -NotDisplay
+        Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
     }
 }
 Else {
     Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Already exist' -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
 }
-Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
 
 #endregion Create logs folder
 
@@ -584,6 +590,7 @@ Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Mess
 
 If ($Null -eq $global:TriggerExitSystem) {
 
+    Write-Log -Type VALUE -Name 'Program initialisation - Import JSON Settings Program' -Message 'Step 2/10) : Import JSON Settings Program'
     Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Start Import JSON Settings Program' -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Import JSON Settings Program Status : ' -NotDisplay
     Try {
@@ -602,10 +609,10 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region Load System Json Configuration files
 
-Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Start Load JSON Settings Program' -NotDisplay
-
 If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsProgramContent)) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Step 3/10) : Load JSON Settings Program'
+    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Start Load JSON Settings Program' -NotDisplay
     Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message "JSON Settings Program file path : $global:ProgramConfigurationFileSettingsPath" -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
 
@@ -651,9 +658,9 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         $global:ChromeDriverDefaultSetupFileName                = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultSetupFileName
         $global:ChromeDriverDefaultSetupFileNamePath            = "$global:ChromeDriverDefaultFolderNamePath\" + $global:ChromeDriverDefaultSetupFileName
         $global:ChromeDriverDefaultWebDriverDLLFileName         = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultWebDriverDLLFileName
-        $global:ChromeDriverDefaultWebDriverDLLFileNamePath     = "$global:ChromeDriverRessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverDLLFileName
+        $global:ChromeDriverDefaultWebDriverDLLFileNamePath     = "$global:RessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverDLLFileName
         $global:ChromeDriverDefaultWebDriverSupportFileName     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultWebDriverSupportFileName
-        $global:ChromeDriverDefaultWebDriverSupportFileNamePath = "$global:ChromeDriverRessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverSupportFileName
+        $global:ChromeDriverDefaultWebDriverSupportFileNamePath = "$global:RessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverSupportFileName
         $global:ChromeDriverLastStableVersionUrl                = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverLastStableVersionUrl
         $global:ChromeDriverDownloadHomeUrl                     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDownloadHomeUrl
         $global:ChromeDriverDownloadPathUrl                     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDownloadPathUrl
@@ -723,24 +730,27 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         $global:ErrorResolveDNSMessage = $global:JSONSettingsProgramContent.Error.ResolveDNS.Message
         
         Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Successful' -NotDisplay
+        Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
     }
     Catch {
         Write-Log -Type ERROR -Name 'Program initialisation - Load JSON Settings Program' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
         $global:TriggerExitSystem = 1
     }
 }
 Else {
     Write-Log -Type ERROR -Name 'Program initialisation - Load JSON Settings Program' -Message 'Failed, to load JSON Settings Program'
+    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
+
     $global:TriggerExitSystem = 1
 }
-Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
-
 #endregion Load System Json Configuration files
 
 #region Import Functions with Module : 'Box-Module.psm1'
 
 If ($Null -eq $global:TriggerExitSystem) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Step 4/10) : Powershell Module Importation'
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'Start Powershell Module Importation' -NotDisplay
     Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $BoxModuleFileNamePath" -NotDisplay
     Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
@@ -773,7 +783,8 @@ If ($Null -eq $global:TriggerExitSystem) {
     Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
     
     Try {
-        Import-TUNCredentialManager -ModuleName $ModuleName -ErrorAction Stop
+        Install-TUNCredentialManager -ModuleName $ModuleName -ErrorAction Stop
+        Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Successful' -NotDisplay
     }
     Catch {
         Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $ModuleName can't be installed or imported, due to : $($_.ToString())"
@@ -787,20 +798,21 @@ If ($Null -eq $global:TriggerExitSystem) {
 #region Check if ressources folder exist
 
 If ($Null -eq $global:TriggerExitSystem) { 
-
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'Start Folder Ressources Check' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message "Ressources Folder Path : $global:RessourcesFolderNamePath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Ressources Folder' -Message 'Ressources Folder State : ' -NotDisplay
+    
+    Write-Log -Type VALUE -Name 'Program initialisation -Ressources Folder Check' -Message 'Step 5/10) : Folder Ressources Check'
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message 'Start Folder Ressources Check' -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message "Ressources Folder Path : $global:RessourcesFolderNamePath" -NotDisplay
+    Write-Log -Type INFONO -Name 'Program initialisation - Ressources Folder Check' -Message 'Ressources Folder State : ' -NotDisplay
     
     If (Test-Path -Path $global:RessourcesFolderNamePath -ErrorAction Stop) {
     
-        Write-Log -Type VALUE -Name 'Program initialisation - Ressources Folder' -Message 'Already Exist' -NotDisplay
+        Write-Log -Type VALUE -Name 'Program initialisation - Ressources Folder Check' -Message 'Already Exist' -NotDisplay
     }
     Else {
-        Write-Log -Type ERROR -Name 'Program initialisation - Ressources Folder' -Message 'Not found'
+        Write-Log -Type ERROR -Name 'Program initialisation - Ressources Folder Check' -Message 'Not found'
         $global:TriggerExitSystem = 1
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder' -Message 'End Folder Ressources check' -NotDisplay
+    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message 'End Folder Ressources check' -NotDisplay
 }
 
 #endregion Check if ressources folder exist
@@ -809,6 +821,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Program Folders/Files check' -Message 'Step 6/10) : Program Folders/Files check'
     Write-Log -Type INFO -Name 'Program initialisation - Program Folders/Files check' -Message 'Start Program Folders/Files check' -NotDisplay
     
     # Folders test
@@ -818,10 +831,10 @@ If ($Null -eq $global:TriggerExitSystem) {
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $JournalFolderNamePath                       -FolderName $JournalFolderNamePath                       -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $ReportFolderNamePath                        -FolderName $ReportFolderNamePath                        -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $JsonBoxconfigFolderNamePath                 -FolderName $JsonBoxconfigFolderNamePath                 -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverRessourcesFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath           -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverRessourcesFolderNamePath -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeRessourcesFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath           -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $global:HelpFolderNamePath                   -FolderName $global:HelpFolderNamePath                   -ErrorAction Stop
     
     # Export folder by Box Type
@@ -851,13 +864,14 @@ If ($Null -eq $global:TriggerExitSystem) {
 #endregion Create folders/files if not yet existing
 
 #region Check Internet connection
-
+Write-Log -Type VALUE -Name 'Program initialisation - Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
 #endregion Check Internet connection
 
 #region Get Lastest Stable Chrome Version Online
 
 If ($Null -eq $global:TriggerExitSystem) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'Step 8/10) : Get Lastest Stable Chrome Version Online'
     Write-Log -Type INFO -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'Start Get Lastest Stable Chrome Version Online' -NotDisplay
     Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl $Global:ChromeDriverLastStableVersionUrl -ErrorAction Stop
     Write-Log -Type INFO -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'End Get Lastest Stable Chrome Version Online' -NotDisplay
@@ -869,6 +883,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Step 9/10) : Default Chrome Driver Standalone Installation Check'
     Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Start Default Chrome Driver Standalone Installation Check' -NotDisplay    
     Write-Log -Type INFONO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Default Chrome Driver Standalone Installation Check status : ' -NotDisplay
     
@@ -880,8 +895,8 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type VALUE -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Undefine' -NotDisplay
-            $ChromeDriverVersion = 'Undefine'
+            Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'To be download and install' -NotDisplay
+            $ChromeDriverVersion = 'To be download and install'
         }
         
         Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
@@ -901,13 +916,17 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $global:ChromeDriverLastStableVersion -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Chrome Driver Standalone' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start stop Chrome Driver' -NotDisplay
+            
             Stop-ChromeDriver
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End stop Chrome Driver' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
             Remove-FolderContent -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverDefaultFolderName
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End Remove Old Chrome Driver Version' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start update Chrome Driver' -NotDisplay
+            
             Update-ChromeDriver
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End update Chrome Driver' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
         }
@@ -918,16 +937,22 @@ If ($Null -eq $global:TriggerExitSystem) {
         }
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Undefine' -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'To be download and install' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start stop Chrome Driver' -NotDisplay
+        
         Stop-ChromeDriver
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End stop Chrome Driver' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
+        
         Remove-FolderContent -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverDefaultFolderName
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End Remove Old Chrome Driver Version' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start update Chrome Driver' -NotDisplay
+        
         Update-ChromeDriver
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End update Chrome Driver' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
     }
@@ -939,6 +964,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
+    Write-Log -Type VALUE -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Step 10/10) : Default Google Chrome Standalone Installation Check'
     Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Start Default Google Chrome Standalone Installation Check' -NotDisplay    
     Write-Log -Type INFONO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Default Google Chrome Standalone Installation Check status : ' -NotDisplay
     
@@ -949,8 +975,8 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type VALUE -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Successful' -NotDisplay
         }
         Catch {
-            $GoogleChromeVersion = 'Undefine'
-            Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Undefine' -NotDisplay
+            $GoogleChromeVersion = 'To be download and install'
+            Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'To be download and install' -NotDisplay
         }
         
         Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
@@ -970,13 +996,19 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $global:ChromeDriverLastStableVersion -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Google Chrome Standalone' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+            
             Stop-ChromeDriver
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End stop Google Chrome' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start Remove Old Google Chrome Version' -NotDisplay
+            
             Remove-FolderContent -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeDefaultFolderName
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End Remove Old Google Chrome Version' -NotDisplay
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
             Update-GoogleChrome
+            
             Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
             Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
         }
@@ -987,140 +1019,28 @@ If ($Null -eq $global:TriggerExitSystem) {
         }
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Undefine' -NotDisplay
+        Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'To be download and install' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+        
         Stop-ChromeDriver
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End stop Google Chrome' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start Remove Old Google Chrome Version' -NotDisplay
+        
         Remove-FolderContent -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeDefaultFolderName
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End Remove Old Google Chrome Version' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
+        
         Update-GoogleChrome
+        
         Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
         Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
     }
 }
 
 #endregion Check if Default Google Chrome Standalone is already install else download and install it
-
-<#
-
-#region Check Chrome Driver Version installed
-
-If ($Null -eq $global:TriggerExitSystem) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start check Chrome Driver Version installed on device' -NotDisplay   
-    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'Check Chrome Driver Version installed on device status :' -NotDisplay
-    
-    Try {
-        Get-ChromeDriverVersion -ErrorAction Stop
-        $ChromeDriverBinaryPath = "$global:ChromeDriverRessourcesFolderNamePath\$global:ChromeDriverFolder\$ChromeDriverDefaultSetupFileName"
-        Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'New Chrome Driver Binary Path : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverBinaryPath -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct Chrome Driver Version, due to : $($_.ToString())"
-        $global:ChromeDriverVersion = "Undefine"
-        $global:TriggerExitSystem = 1
-    }
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End check Chrome Driver Version installed on device' -NotDisplay
-}
-
-#endregion Check Chrome Driver Version installed
-
-#region Check Google Chrome Version installed
-
-If ($Null -eq $global:TriggerExitSystem) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Version' -Message 'Start check Google Chrome Version installed on device' -NotDisplay   
-    Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'Check Google Chrome Version installed on device status :' -NotDisplay
-    
-    Try {
-        Get-GoogleChromeVersion -ErrorAction Stop
-        $GoogleChromeBinaryPath = "$global:GoogleChromeRessourcesFolderNamePath\$global:GoogleChromeFolder\$GoogleChromeDefaultSetupFileName"
-        Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'New Google Chrome Binary Path : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome Version' -Message $GoogleChromeBinaryPath -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Google Chrome Version' -Message "Failed, to define the correct Google Chrome Version, due to : $($_.ToString())"
-        $global:GoogleChromeVersion = "Undefine"
-        $global:TriggerExitSystem = 1
-    }
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Version' -Message 'End check Google Chrome Version installed on device' -NotDisplay
-}
-
-#endregion Check Chrome Driver Version installed
-
-#region Update Chrome Driver version
-
-If ($Null -eq $global:TriggerExitSystem) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Start update ChromeDriver' -NotDisplay
-    
-    #Start-ChromeDriver -ChromeBinaryPath $GoogleChromeBinaryPath -LogsPath $global:LogDateFolderNamePath -ChromeDriverDefaultProfile $GoogleChromeDefaultProfileName -ErrorAction Stop
-    Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl $Global:ChromeDriverLastStableVersionUrl -ErrorAction Stop
-    Update-ChromeDriver -ErrorAction Stop
-    Update-GoogleChrome -ErrorAction Stop
-    #Stop-ChromeDriver -ErrorAction Stop
-    Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'End update ChromeDriver' -NotDisplay
-}
-
-#endregion Update Chrome Driver version
-
-#region Check Chrome Driver Version installed
-
-If ($Null -eq $global:TriggerExitSystem) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'Start check Chrome Driver Version installed on device' -NotDisplay   
-    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'Check Chrome Driver Version installed on device status :' -NotDisplay
-    
-    Try {
-        Get-ChromeDriverVersion -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message 'Successful' -NotDisplay
-        $ChromeDriverBinaryPath = "$global:ChromeDriverRessourcesFolderNamePath\$global:ChromeDriverFolder\$ChromeDriverDefaultSetupFileName"
-        Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'New Chrome Driver Binary Path : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message $ChromeDriverBinaryPath -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, to define the correct Chrome Driver Version, due to : $($_.ToString())"
-        $global:ChromeDriverVersion = "Undefine"
-        $global:TriggerExitSystem = 1
-    }
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Chrome Driver Version' -Message 'End check Chrome Driver Version installed on device' -NotDisplay
-}
-
-#endregion Check Chrome Driver Version installed
-
-#region Check Google Chrome Version installed
-
-If ($Null -eq $global:TriggerExitSystem) {
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Version' -Message 'Start check Google Chrome Version installed on device' -NotDisplay   
-    Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'Check Google Chrome Version installed on device status :' -NotDisplay
-    
-    Try {
-        Get-GoogleChromeVersion -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome Version' -Message 'Successful' -NotDisplay
-        $GoogleChromeBinaryPath = "$global:GoogleChromeRessourcesFolderNamePath\$global:GoogleChromeFolder\$GoogleChromeDefaultSetupFileName"
-        Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'New Google Chrome Binary Path : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome Version' -Message $GoogleChromeBinaryPath -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Google Chrome Version' -Message "Failed, to define the correct Google Chrome Version, due to : $($_.ToString())"
-        $global:GoogleChromeVersion = "Undefine"
-        $global:TriggerExitSystem = 1
-    }
-    
-    Write-Log -Type INFO -Name 'Program initialisation - Google Chrome Version' -Message 'End check Google Chrome Version installed on device' -NotDisplay
-}
-
-#endregion Check Chrome Driver Version installed
-
-#>
 
 #region End Program Initialisation
 
@@ -1531,7 +1451,7 @@ While ($Null -eq $global:TriggerExitSystem) {
                 Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
                 
                 Try {
-                    Start-ChromeDriver -ChromeBinaryPath $GoogleChromeBinaryPath -DownloadPath $JournalFolderNamePath -LogsPath $global:LogDateFolderNamePath -ChromeDriverDefaultProfile $GoogleChromeDefaultProfileName -ErrorAction Stop
+                    Start-ChromeDriver -ChromeBinaryPath $Global:GoogleChromeDefaultSetupFileNamePath -DownloadPath $JournalFolderNamePath -LogsPath $global:LogDateFolderNamePath -ChromeDriverDefaultProfile $GoogleChromeDefaultProfileName -ErrorAction Stop
                     Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
                 }
                 Catch {

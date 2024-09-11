@@ -1,13 +1,14 @@
 ﻿Label;Function;Description;APIName;APIUrl;Action;LocalPermissions;RemotePermissions;Scope;Settings;Available;ReportType;ExportFile;BoxVersion
 STOP-Program;Stop-Program;Stop / Quit Program;Stop_Program;Stop_Program;Quit;Computer;Computer;Program;No;Yes;List;stop_program;Custom
+Uninstall-Program;Uninstall-Program;Uninstall Program;Uninstall_Program;Uninstall_Program;Quit;Computer;Computer;Program;No;Yes;List;uninstall_program;Custom
+EXPORT-BoxConfigTP;Export-BoxConfigTestingProgram;Export Full Box Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Computer;Computer;Program;No;Yes;List;full_testing_program;Custom
+EXPORT-BoxConfig;Export-BoxConfiguration;Export Full Box Configuration;Full;Full;Export;Computer;Computer;Program;No;Yes;List;full;Custom
+EXPORT-PFC;Export-ProgramFilesCount;Export Program Files Count;Export_Program_Files_Count;Export_Program_Files_Count;Export;Computer;Computer;Program;Yes;Yes;List;program-files-count;Custom
 EXPORT-MH;EXPORT-ModuleHelp;Export All Summary details that are written to the PowerShell module .\BOX-Module.psm1;Export-Module_Help;Export-Module_Help;Export;Computer;Computer;Program;No;Yes;Table;module_details;Custom
 EXPORT-MFS;Export-ModuleFunctions;Export All Functions Summary that are written to the PowerShell module .\BOX-Module.psm1;Export-Module_Functions_Summary;Export-Module_Functions_Summary;Export;Computer;Computer;Program;No;Yes;Table;module_functions_summary;Custom
 EXPORT-MFD;Export-ModuleFunctions;Export All Functions Details that are written to the PowerShell module .\BOX-Module.psm1;Export-Module_Functions_Details;Export-Module_Functions_Details;Export;Computer;Computer;Program;No;Yes;Table;module_functions_details;Custom
 EXPORT-MFSD;Export-ModuleFunctions;Export All Functions Summary and Details that are written to the PowerShell module .\BOX-Module.psm1;Export-Module_Functions_Summary_Details;Export-Module_Functions_Summary_Details;Export;Computer;Computer;Program;No;Yes;Table;module_functions_summary_details;Custom
-EXPORT-BoxConfigTP;Export-BoxConfigTestingProgram;Export Full Box Configuration Testing Program;Full_Testing_Program;Full_Testing_Program;Export;Computer;Computer;Program;No;Yes;List;full_testing_program;Custom
-EXPORT-BoxConfig;Export-BoxConfiguration;Export Full Box Configuration;Full;Full;Export;Computer;Computer;Program;No;Yes;List;full;Custom
-EXPORT-PFC;Export-ProgramFilesCount;Export Program Files Count;Export_Program_Files_Count;Export_Program_Files_Count;Export;Computer;Computer;Program;Yes;Yes;List;program-files-count;Custom
-REMOVE-FCAll;Remove-FolderContentAll;Remove All files in folders : logs\*,Export\CSV\*,Export\JSON\*,Journal\*,Json_Box_Config\*,Report\*;logs,Export\CSV,Export\JSON,Journal,Json_Box_Config,Report;logs,Export\CSV,Export\JSON,Journal,Json_Box_Config,Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-all-files;Custom
+REMOVE-FCAll;Remove-FolderContentAll;Remove All files in folders : logs\*,Export\CSV\*,Export\JSON\*,Journal\*,Json_Box_Config\*,Report\*,Help\*;logs,Export\CSV,Export\JSON,Journal,Json_Box_Config,Report,\Help;logs,Export\CSV,Export\JSON,Journal,Json_Box_Config,Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-all-files;Custom
 REMOVE-FCLogs;Remove-FolderContent;Remove All files in folder : .\logs\*;Logs;Logs;Remove;Computer;Computer;Program;Yes;Yes;List;remove-logs;Custom
 REMOVE-FCExportCSV;Remove-FolderContent;Remove All files in folder : .\Export\CSV\*;Export\CSV;Export\CSV;Remove;Computer;Computer;Program;Yes;Yes;List;remove-csv;Custom
 REMOVE-FCExportJSON;Remove-FolderContent;Remove All files in folder : .\Export\JSON\*;Export\JSON;Export\JSON;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Json;Custom
@@ -15,8 +16,6 @@ REMOVE-FCJournal;Remove-FolderContent;Remove All files in folder : .\Journal\*;J
 REMOVE-FCJBC;Remove-FolderContent;Remove All files in folder : .\Json_Box_Config\*;Json_Box_Config;Json_Box_config;Remove;Computer;Computer;Program;Yes;Yes;List;remove-Box-config;Custom
 REMOVE-FCReport;Remove-FolderContent;Remove All files in folder : .\Report\*;Report;Report;Remove;Computer;Computer;Program;Yes;Yes;List;remove-report;Custom
 REMOVE-FCH;Remove-FolderContent;Remove All files in folder : .\Help\*;Help;Help;Remove;Computer;Computer;Program;Yes;Yes;List;remove-help;Custom
-REMOVE-FCGCV;Remove-FolderContent;Remove All files in folder : .\Ressources\GoogleChrome\Default\*;Google_Chrome;Google_Chrome;Remove;Computer;Computer;Program;Yes;Yes;List;remove-google-chrome;Custom
-REMOVE-FCCDV;Remove-FolderContent;Remove All files in folder : .\Ressources\ChromeDriver\Default\*;Chrome_Driver;Chrome_Driver;Remove;Computer;Computer;Program;Yes;Yes;List;remove-chrome-driver;Custom
 SWITCH-DF;Switch-DisplayFormat;Switch Display Format;Switch_Display;Switch_Display;Switch;Computer;Computer;Program;Yes;Yes;HTML/Table/Out-Gridview;html-table-outgridview;Custom
 SWITCH-EF;Switch-ExportFormat;Switch Export Format;Switch_Export;Switch_Export;Switch;Computer;Computer;Program;Yes;Yes;CSV/JSON;csv-json;Custom
 SWITCH-OEF;Switch-OpenExportFolder;Switch Open Export Folder;Switch_Open_Export_Folder;Switch_Open_Export_Folder;Switch;Computer;Computer;Program;Yes;Yes;List;open-folder;Custom
@@ -25,4 +24,4 @@ SWITCH-RDN;Switch-ResolveDnsName;Switch Resolve Dns Name;Switch_Resolve_Dns_Name
 REMOVE-BoxC;Remove-BoxCredential;Remove Box Credential stored in Windows Credential Manager;Remove_Box_Credential;Remove_Box_Credential;Remove;Computer;Computer;Program;Yes;Yes;List;remove-credential;Custom
 SHOW-BoxC;Show-BoxCredential;Show Box Credential stored in Windows Credential Manager;Show_Box_Credential;Show_Box_Credential;Show;Computer;Computer;Program;Yes;Yes;List;show-credential;Custom
 ADD-BoxC;Add-BoxCredential;Add Box Credential in Windows Credential Manager;Add_Box_Credential;Add_Box_Credential;Add;Computer;Computer;Program;Yes;Yes;List;add-credential;Custom
-Reset-CUPC;Reset-CurrentUserProgramConfiguration;Reset Current User Program Configuration;Reset_Current_User_Program_Configuration;Reset_Current_User_Program_Configuration;Reset;Computer;Computer;Program;Yes;Yes;List;reset-current-user-program-configuration;Custom
+RESET-CUPC;Reset-CurrentUserProgramConfiguration;Reset Current User Program Configuration;Reset_Current_User_Program_Configuration;Reset_Current_User_Program_Configuration;Reset;Computer;Computer;Program;Yes;Yes;List;reset-current-user-program-configuration;Custom

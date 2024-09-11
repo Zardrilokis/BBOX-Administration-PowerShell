@@ -33,7 +33,7 @@
 .NOTES
     Version : 2.7
     Creation Date : 2020/04/30
-    Updated Date  : 2024/09/06
+    Updated Date  : 2024/09/10
     Updated By    : @Zardrilokis => Tom78_91_45@yahoo.fr
     Author        : @Zardrilokis => Tom78_91_45@yahoo.fr
 
@@ -162,21 +162,21 @@ function Write-Log {
 
 #region Windows Credential Manager
 
-# Import module TUN.CredentialManager
-Function Import-TUNCredentialManager {
+# Install module TUN.CredentialManager
+Function Install-TUNCredentialManager {
 
 <#
 .SYNOPSIS
-    To Import 'TUNCredentialManager' Module
+    To Install 'TUNCredentialManager' Module
 
 .DESCRIPTION
-    To Import 'TUNCredentialManager' Module
+    To Install 'TUNCredentialManager' Module
 
 .PARAMETER ModuleName
     Use the Module Name without the version
 
 .EXAMPLE
-    Import-TUNCredentialManager -ModuleName TUNCredentialManager
+    Install-TUNCredentialManager -ModuleName TUNCredentialManager
 
 .INPUTS
     'TUNCredentialManager' module from: https://www.powershellgallery.com
@@ -208,6 +208,7 @@ Function Import-TUNCredentialManager {
         Try {
             Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope Allusers -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
             Start-Sleep -Seconds $global:SleepTUNCredentialManagerModuleinstallation
+            Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Successful' -NotDisplay
         }
         Catch {
             Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
@@ -235,6 +236,72 @@ Function Import-TUNCredentialManager {
     Else {
         Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Already installed' -NotDisplay
     }
+}
+
+# Unistall module TUN.CredentialManager
+Function Uninstall-TUNCredentialManager {
+
+    <#
+    .SYNOPSIS
+        To Uninstall 'TUNCredentialManager' Module
+    
+    .DESCRIPTION
+        To Uninstall 'TUNCredentialManager' Module
+    
+    .PARAMETER ModuleName
+        Use the Module Name without the version
+    
+    .EXAMPLE
+        Uninstall-TUNCredentialManager -ModuleName TUNCredentialManager
+    
+    .INPUTS
+        'TUNCredentialManager' module from: https://www.powershellgallery.com
+    
+    .OUTPUTS
+        Null
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Stop-Program'
+        Linked to script(s): '.\Box-Administration.ps1'
+        Web Link: https://www.powershellgallery.com/packages/TUN.CredentialManager
+    
+    #>
+    
+        Param (
+            [Parameter(Mandatory=$True)]
+            [String]$ModuleName
+        )
+        
+        Write-Log -Type INFONO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
+        
+        If ($null -eq (Get-InstalledModule -name $ModuleName -ErrorAction SilentlyContinue)) {
+            
+            Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Not yet' -NotDisplay
+            Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Try to install Powershell $ModuleName Module in user context" -NotDisplay
+            Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
+            
+            Try {
+                Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Uninstall-Module -Name TUN.CredentialManager -confirm:$false -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
+                Start-Sleep -Seconds $global:SleepTUNCredentialManagerModuleinstallation
+                Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+                Stop-Program -Context System -ErrorAction Stop
+            }
+            
+            If (($null -eq $global:TriggerExitSystem) -and ($null -eq $(Get-InstalledModule -name $ModuleName))) {
+                
+                Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
+            }
+            Else {
+                Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+            }
+        }
+        Else {
+            Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Already uninstalled' -NotDisplay
+        }
 }
 
 # Remove Box Credential stored in Windows Credential Manager
@@ -1320,7 +1387,7 @@ Function Remove-FolderContent {
     }
     Else {
          Write-Log -Type INFONO -Name 'Program run - Clean folder content' -Message "`"$FolderPath`" folder state : " -NotDisplay
-         Write-Log -Type VALUE -Name 'Program run - Clean folder content' -Message 'Not found' -NotDisplay
+         Write-Log -Type VALUE -Name 'Program run - Clean folder content' -Message 'Do no exist' -NotDisplay
     }
     Write-Log -Type INFO -Name 'Program run - Clean folder content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
 }
@@ -1587,10 +1654,10 @@ function Export-ModuleFunction {
         This is the name of the module
     
     .PARAMETER FileExtention
-        This the file extention file for module, must be : .psm1
+        This is the file extention for module, must be : .psm1
     
     .PARAMETER ExportFolderPath
-        This the path where for all functions have got a dedicated file will be create.
+        This is the path where for all functions have got a dedicated file will be create.
     
     .EXAMPLE
         Export-ModuleFunction -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp"
@@ -2028,7 +2095,7 @@ Function Get-LastestStableChromeVersionOnline {
         To Get Lastest Stable Chrome version
     
     .PARAMETER ChromeDriverLastStableVersionUrl
-        This the url to get the last online version of Chrome Driver and Google Chrome
+        This is the url to get the last online version of Chrome Driver and Google Chrome
     
     .EXAMPLE
         Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl 'https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE'
@@ -2148,7 +2215,7 @@ Function Get-HostStatus {
     To check if external Box DNS is online
 
 .PARAMETER UrlRoot
-    This the Root DNS/url to connect to the Box web interface
+    This is the Root DNS/url to connect to the Box web interface
 
 .EXAMPLE
     Get-HostStatus -UrlRoot "mybox.bytel.fr"
@@ -2257,10 +2324,10 @@ Function Get-PortStatus {
     To check if external Box Port is open
 
 .PARAMETER UrlRoot
-    This the Root DNS/url to connect to the Box web interface
+    This is the Root DNS/url to connect to the Box web interface
 
 .PARAMETER Port
-    This the port to check if open or not
+    This is the port to check if open or not
 
 .EXAMPLE
     Get-HostStatus -UrlRoot "exemple.com" -Port "8560"
@@ -2368,7 +2435,7 @@ Function Get-LanPortState {
     To get Box LAN Switch Port State
 
 .PARAMETER LanPortState
-    This the switch port number to get the state
+    This is the switch port number to get the state
 
 .EXAMPLE
     Get-LanPortState -LanPortState 1
@@ -2417,13 +2484,13 @@ Function Connect-BBox {
     To connect to BBox Web interface
 
 .PARAMETER UrlAuth
-    This the url use to login to the BBox web interface
+    This is the url use to login to the BBox web interface
 
 .PARAMETER UrlHome
     This is the main page of BBox web interface
 
 .PARAMETER Password
-    This the user password to authentificate to Box web interface
+    This is the user password to authentificate to Box web interface
     
 .EXAMPLE
     Connect-BBOX -UrlAuth "https://mabbox.bytel.fr"      -UrlHome "https://mabbox.bytel.fr/index.html"      -Password "Password"
@@ -2510,13 +2577,13 @@ Function Connect-FREEBOX {
     To connect to Box Web interface
 
 .PARAMETER UrlAuth
-    This the url use to login to the Box web interface
+    This is the url use to login to the Box web interface
 
 .PARAMETER UrlHome
     This is the main page of Box web interface
 
 .PARAMETER Password
-    This the user password to authentificate to Box web interface
+    This is the user password to authentificate to Box web interface
     
 .EXAMPLE
     Connect-BOX -UrlAuth "https://192.168.0.254"      -UrlHome "https://192.168.0.254/index.html"      -Password "Password"
@@ -3317,10 +3384,6 @@ Function Switch-Info {
             
             Remove-FCH           {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCGCV         {$FormatedData = Remove-FolderContent -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeDefaultFolderName;Break}
-            
-            Remove-FCCDV         {$FormatedData = Remove-FolderContent -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverDefaultFolderName;Break}
-            
             # DisplayFormat
             Switch-DF            {$FormatedData = Switch-DisplayFormat;Break}
             
@@ -3363,6 +3426,9 @@ Function Switch-Info {
             
             # Quit/Close Program
             Stop-Program         {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
+            
+            # Uninstall Program
+            Uninstall-Program    {Uninstall-Program -ErrorAction Stop;Break}
             
             # Default
             Default              {Write-log WARNING -Name 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
@@ -3450,6 +3516,69 @@ Function Stop-Program {
     Exit
 }
 
+# Used only to unistall the Program
+Function Uninstall-Program {
+
+    <#
+    .SYNOPSIS
+        To uninstall the Program
+    
+    .DESCRIPTION
+        To uninstall the Program
+    
+    .EXAMPLE
+        Uninstall-Program
+    
+    .INPUTS
+        
+    
+    .OUTPUTS
+        - Stop All ChromeDriver and StandAlone Google Chrome Processes
+        - Remove registred credentials
+        - Unistall Modules (BOX-Module.psm1 & TUN.CredentialManager) with Admin Rights
+        - Remove Chrome Driver registry path
+        - Remove All files
+        - Remove Logs (Stop-Transcript)
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-Box', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+    
+        Param ()
+        
+        # Stop All ChromeDriver and StandAlone Google Chrome Processes
+        Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+        $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+        Write-Log -Type INFONO -Name 'Stop Program' -Message 'Detailed Log file is available here : '
+        Write-Log -Type VALUE -Name 'Stop Program' -Message $Current_Log_File
+        Write-Log -Type WARNING -Name 'Stop Program' -Message "Don't forget to close the log files before to launch again the program"
+        Write-Log -Type WARNING -Name 'Stop Program' -Message "Else the program failed to start the next time"
+        Write-Log -Type INFO -Name 'Stop Program' -Message 'Program Closed' -NotDisplay 
+        
+        # Remove Stored Credential
+        Remove-StoredCredential -Target 'AdminBBox' -ErrorAction Continue
+        Remove-StoredCredential -Target 'AdminFREEBox' -ErrorAction Continue
+        
+        # Remove / Unistal Modules
+        remove-module -Name BOX-Module -ErrorAction Continue
+        remove-module -Name TUN.CredentialManager -ErrorAction Continue
+        Uninstall-TUNCredentialManager -ModuleName 'TUN.CredentialManager' -ErrorAction Continue
+        
+        # Stop-Transcript Logs
+        Stop-Transcript -ErrorAction Continue
+        
+        #Remove All Files
+        #Remove-Item -Path $PSScriptRoot -Recurse -Force -ErrorAction Continue
+        Get-Childitem -Path $PSScriptRoot -Recurse | Remove-Item -Force -Confirm:$false
+        Write-Host "Uninstallation finished" -ForegroundColor Green
+        Write-Host "Please remove manually the root foler of the program : $PSScriptRoot" -ForegroundColor Yellow
+        Pause
+        Exit
+}
+
 #endregion Main functions use as part of '.\Box-Administration.ps1' script and 'Box-Module.psm1' module
 
 #region ChromeDriver 
@@ -3509,14 +3638,14 @@ Function Start-ChromeDriver {
     )
     
     # Add path for ChromeDriver.exe to the environmental variable 
-    $env:PATH += ";$global:ChromeDriverRessourcesFolderNamePath\$global:ChromeDriverFolder\$global:ChromeDriverDefaultSetupFileName"
+    $env:PATH += ";$global:ChromeDriverDefaultFolderNamePath\$global:ChromeDriverDefaultSetupFileName"
 
     # Add path for GoogleChrome.exe to the environmental variable 
     #$Temp = $($ChromeBinaryPath.Replace("\$($ChromeBinaryPath.Split("\")[-1])",''))
     #$env:PATH += ";$Temp"
 
     # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
-    Add-Type -Path "$global:ChromeDriverRessourcesFolderNamePath\$global:ChromeDriverFolder\$global:ChromeDriverDefaultWebDriverDLLFileName"
+    Add-Type -Path "$global:ChromeDriverDefaultFolderNamePath\$global:ChromeDriverDefaultWebDriverDLLFileName"
     
     # Create new Chrome Drive Service
     $ChromeDriverService = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService()
@@ -3595,9 +3724,6 @@ Function Stop-ChromeDriver {
     Param ()
     
     # Close all ChromeDriver instances openned
-    #$global:ChromeDriver.Close()
-    #$global:ChromeDriver.Dispose()
-    #$global:ChromeDriver.Quit()
     Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
 }
 
@@ -3633,26 +3759,6 @@ Function Update-ChromeDriver {
     Param () 
     
     Try {
-        <# Navigate to the main Chrome Driver Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to download Page : $global:ChromeDriverDownloadHomeUrl" -NotDisplay
-        $global:ChromeDriver.Navigate().GoToURL("$global:ChromeDriverDownloadHomeUrl")
-        Start-Sleep -Seconds $global:SleepDefault
-        
-        # Get Content Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get HTML code page' -NotDisplay
-        $Html = $global:ChromeDriver.PageSource
-        Start-Sleep -Seconds $global:SleepDefault
-        
-        # Convert-html to text
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Convert HTML code to txt' -NotDisplay
-        $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-        Start-Sleep -Seconds $global:SleepDefault
-        
-        # Get Chrome Driver Version list available
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message 'Get last Chrome Driver version available on internet' -NotDisplay
-        $Temp = $Plaintxt -split '---'
-        $Version = $($Temp | Where-Object {$_ -notmatch 'Index of /NameLast modifiedSizeETag2.0' -and $_ -notmatch 'icons' -and $_ -notmatch 'LATEST_RELEASE'})[-1]
-        #>
         
         # Set Variables
         $UserDownloadFolderDefault   = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName
@@ -3763,55 +3869,6 @@ Function Update-GoogleChrome {
     Param () 
     
     Try {
-        <# Set Variables
-        #$GoogleChromeVersionShort = $global:GoogleChromeVersion.Split(".")[0]
-        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName
-        $SourceFile = "$UserDownloadFolderDefault\*$global:GoogleChromeDownloadFileName"
-        $GoogleChromeDownloadHomeUrl = "$global:GoogleChromeDownloadHomeUrl/$Global:ChromeDriverLastStableVersion/win32/$global:GoogleChromeDownloadFileName"
-        
-        # Navigate to the main Chrome Driver Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Access to download Page : $GoogleChromeDownloadHomeUrl" -NotDisplay
-        $global:ChromeDriver.Navigate().GoToURL("$GoogleChromeDownloadHomeUrl")
-        Start-Sleep -Seconds $global:SleepChromeDriverDownload
-        
-        Get Content Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Get HTML code page' -NotDisplay
-        $Html = $global:ChromeDriver.PageSource
-        Start-Sleep -Seconds $global:SleepChromeDriverNavigation
-        
-        # Convert-html to text
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Convert HTML code to txt' -NotDisplay
-        $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-        Start-Sleep -Seconds $global:SleepChromeDriverNavigation
-        
-        $TimeOut = 10
-        while ($Plaintxt -match "Loading ") {
-            
-            If ($TimeOut -eq '0') {
-                Write-Log -Type ERROR -Name 'Program initialisation - Update Google Chrome' -Message 'Loading Page Time Out' -NotDisplay
-                Stop-Program -Context System -ErrorAction Stop
-            }
-            
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Waiting end of loading page content' -NotDisplay
-            Start-Sleep -Seconds $global:SleepChromeDriverLoading
-            $Html = $global:ChromeDriver.PageSource            
-            $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-            $TimeOut --
-        }
-        
-        # Get Chrome Driver Version list available
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Get last Google Chrome version available with Chrome Driver installed version' -NotDisplay
-        $date = get-date -Format yyyy
-        $OsArchitecture = 'x' + $($(Get-ComputerInfo).OsArchitecture).Split(' ')[0]
-        $Version = $($($($($Plaintxt -split 'Get downloads') | Where-Object {$_ -match $OsArchitecture -and $_ -match 'Stable' -and $_ -match $GoogleChromeVersionShort})[0]) -split 'stable')[0]
-        $Channel = 'stable'
-        $Plateform = $($($($($($Plaintxt -split 'Get downloads') | Where-Object {$_ -match $OsArchitecture -and $_ -match 'Stable' -and $_ -match $GoogleChromeVersionShort})[0] -split 'stable')[-1]) -split $date)[0]
-        
-        Switch ($Plateform) {
-            
-            'Windows (x86)' {$PlateformShort = 'win'}
-            'Windows (x64)' {$PlateformShort = 'win64'}
-        }#>
         
         # Set Variables
         $UserDownloadFolderDefault   = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName
@@ -4323,7 +4380,7 @@ Function Switch-OpenExportFolder {
     
     # Choose Open Export Folder : Y (Yes) or N (No)
     Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
+    Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder at each export (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
     $global:OpenExportFolder = ""
     
     While ($global:OpenExportFolder[0] -notmatch $global:ValuesOpenExportFolder) {
@@ -4553,7 +4610,7 @@ Function Export-toCSV {
     This is the folder path of the Export CSV folder
 
 .PARAMETER Exportfile
-    This the name of the export CSV File (Include file extention)
+    This is the name of the export CSV File (Include file extention)
 
 .EXAMPLE
     Export-toCSV -FormatedData "$FormatedData" -APIName "Device\log" -ExportCSVPath "C:\ExportFolder" -Exportfile "Device-log.csv"
@@ -4628,7 +4685,7 @@ Function Export-toJSON {
     This is the folder path of the Export JSON folder
 
 .PARAMETER Exportfile
-    This the name of the export JSON File (Include file extention)
+    This is the name of the export JSON File (Include file extention)
 
 .EXAMPLE
     Export-toJSON -FormatedData "$FormatedData" -APIName "Device\log" -ExportJSONPath "C:\ExportFolder" -Exportfile "Device-log.json"
@@ -4694,10 +4751,10 @@ Function Export-HTMLReport {
     To create HTML Report
 
 .PARAMETER DataReported
-    This the array data that display in the body html report
+    This is the array data that display in the body html report
 
 .PARAMETER ReportType
-    This the of the report.
+    This is the type of the report that are available
     Validated values :
     - Table
     - List
@@ -5203,16 +5260,16 @@ function Export-BoxConfiguration {
     This is the list of API name that based to collect data
 
 .PARAMETER UrlRoot
-    This the root API url that API name are based to collect data
+    This is the root API url that API name are based to collect data
 
 .PARAMETER JSONFolderPath
-    This the folder path use for JSON export file
+    This is the folder path use for JSON export file
 
 .PARAMETER CSVFolderPath
-    This the folder path use for CSV export file
+    This is the folder path use for CSV export file
 
 .PARAMETER GitHubUrlSite
-    This the url of the Github Project
+    This is the url of the Github Project
 
 .PARAMETER JournalPath
     This is the path of the folder use to store Box Journal
@@ -5346,13 +5403,13 @@ function Export-BoxConfigTestingProgram {
     This is the list of API name that based to collect data
 
 .PARAMETER UrlRoot
-    This the root API url that API name are based to collect data
+    This is the root API url that API name are based to collect data
 
 .PARAMETER OutputFolder
-    This the folder path use for export files
+    This is the folder path use for export files
 
 .PARAMETER GitHubUrlSite
-    This the url of the Github Project
+    This is the url of the Github Project
 
 .PARAMETER JournalPath
     This is the path of the folder use to store Box Journal
@@ -6755,6 +6812,33 @@ Function Set-BoxInformation {
 
 Function Get-ErrorCode {
     
+    <#
+    .SYNOPSIS
+        Get Error code and convert it to human readable
+
+    .DESCRIPTION
+        Get Error code and convert it to human readable
+
+    .PARAMETER Json
+        This the Json error code to convert
+
+    .EXAMPLE
+        Get-ErrorCode -Json $JSON
+
+    .INPUTS
+        [Array]$Json
+        This the Json error code to convert
+
+    .OUTPUTS
+        [PSObject]$Array
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : '', ''
+        linked to script : '.\BBOX-Administration.psm1'
+
+    #>
+    
     Param (
         [Parameter(Mandatory=$True)]
         [Array]$Json
@@ -6781,6 +6865,33 @@ Function Get-ErrorCode {
 
 Function Get-ErrorCodeTest {
     
+    <#
+    .SYNOPSIS
+        Get Error code and convert it to human readable
+
+    .DESCRIPTION
+        Get Error code and convert it to human readable
+
+    .PARAMETER Json
+        This the Json error code to convert
+
+    .EXAMPLE
+        Get-ErrorCodeTest -Json $JSON
+
+    .INPUTS
+        [Array]$Json
+        This the Json error code to convert
+
+    .OUTPUTS
+        [PSObject]$Array
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : '', ''
+        linked to script : '.\BBOX-Administration.psm1'
+
+    #>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -7159,14 +7270,14 @@ Function Get-BackupList {
     # Check if Box Cloud Synchronisation Service is Active and if user allow it
     Else {
         
-        $APIName = 'usersave'
-        $UrlToGo = $UrlToGo.Replace('configs',$APIName)
+        $APIName                   = 'usersave'
+        $UrlToGo                   = $UrlToGo.Replace('configs',$APIName)
         $CloudSynchronisationState = Get-BoxInformation -UrlToGo $UrlToGo
-        $Enable = $(Get-State -State $CloudSynchronisationState.$APIName.enable)
-        $Status = $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
-        $Authorized = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
-        $Datelastsave = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastsave)
-        $Datelastrestore = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
+        $Enable                    = $(Get-State -State $CloudSynchronisationState.$APIName.enable)
+        $Status                    = $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
+        $Authorized                = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
+        $Datelastsave              = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastsave)
+        $Datelastrestore           = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
         If ([string]::IsNullOrEmpty($Datelastrestore)) {$Datelastrestore = "Never"}
         
         Write-Log -Type WARNING -Name 'Program run - Get Box Configuration Save' -Message 'No local backups were found'
@@ -12485,7 +12596,6 @@ Function Get-WANAutowanProfiles {
     
     Return $Array
 }
-
 
 Function Get-WANDiags {
     
