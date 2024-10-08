@@ -1,0 +1,207 @@
+{
+	"Credentials" : {
+		"BBox" : {
+			"Target" : "AdminBBox",
+			"UserName" : "AdminBBox",
+			"Comment" : "Credentials to connect to BBox Web Admin Console"
+		},
+		"FREEBox" : {
+			"Target" : "AdminFREEBox",
+			"UserName" : "AdminFREEBBox",
+			"Comment" : "Credentials to connect to FREEBox Web Admin Console"
+		},
+		"OrangeBox" : {
+			"Target" : "AdminOrangeBox",
+			"UserName" : "AdminOrangeBox",
+			"Comment" : "Credentials to connect to OrangeBox Web Admin Console"
+		},
+		"SFRBox" : {
+			"Target" : "AdminSFRBox",
+			"UserName" : "AdminSFRBox",
+			"Comment" : "Credentials to connect to SFRBox Web Admin Console"
+		}
+	},
+	"Values" : {
+		"OpenExportFolder" : "Y|N",
+		"OpenHTMLReport" : "Y|N",
+		"LineNumber" : "1|2",
+		"DisplayFormat" : "H|T",
+		"ExportFormat" : "C|J",
+		"LANNetworkRemote" : "R|Q",
+		"LANNetworkLocal" : "L|R|Q",
+		"ResolveDnsName" : "Y|N",
+		"PowershellModuleFileExtention" : ".psm1",
+		"ReportType" : "List|Table",
+		"Context" : "User|System",
+		"LogType" : "'INFO|INFONO|VALUE|WARNING|ERROR|DEBUG",
+		"LogCategory" : "'Program initialisation','Program Run','Program Stop'"
+		
+	},
+	"Various" : {
+		"Mail" : "tom78_91_45@yahoo.fr",
+		"GitHubUrlSite" : "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+	},
+	"Box" : {
+		"UrlPrefixe" : "https://",
+		"TypeList" : "Bbox|Freebox",
+		"BBox" : {
+			"Name" : "BBox",
+			"APIVersion" : "api/v1",
+			"DefaultRemotePort" : "8560",
+			"DefaultLocalUrl" : "mabbox.bytel.fr",
+			"DefaultLocalIPAddress" : "192.168.1.254",
+			"BoxDns" : "mabbox.bytel.fr",
+			"BoxUrlLogin" : "/login.html",
+			"BoxUrlHomePage" : "/index.html",
+			"BoxUrlRemote" : "https://mabbox.bytel.fr/remote.html",
+			"BoxUrlFirewall" : "https://mabbox.bytel.fr/firewall.html",
+			"APIUrlDocumentation" : "https://api.bbox.fr/doc/apirouter/index.html",
+			"BoxUrlDynDns" : "https://mabbox.bytel.fr/dyndns.html"
+		},
+		"Freebox" : {
+			"Name" : "Freebox",
+			"APIVersion" : "api/v4",
+			"DefaultRemotePort" : "3615",
+			"DefaultLocalUrl" : "mafreebox.freebox.fr",
+			"DefaultLocalIPAddress" : "192.168.1.254",
+			"BoxDns" : "mafreebox.freebox.fr",
+			"BoxUrlLogin" : "/login.php",
+			"BoxUrlHomePage" : "https://mafreebox.freebox.fr/",
+			"BoxUrlRemote" : "https://mafreebox.freebox.fr",
+			"BoxUrlFirewall" : "https://mafreebox.freebox.fr",
+			"APIUrlDocumentation" : "https://dev.freebox.fr/sdk/os/",
+			"BoxUrlDynDns" : "https://mafreebox.freebox.fr"
+		}
+	},
+	"APIName" : {
+		"Available" : "Yes",
+		"Exclusions" : {
+			"BBox" : {
+				"Full" : "401|404|log.html|voip/calllog|voip/fullcalllog|device/log"
+			},
+			"Freebox" : {
+				"Full" : ""
+			},
+			"Chrome" : "log.html|voip/calllog|voip/fullcalllog|device/log",
+			"Full" : "Full|Full_Testing_Program"
+		}
+	},
+	"Scope" : {
+		"Exclusions" : {
+			"Full" : "Program"
+		}
+	},
+	"Action" : {
+		"Exclusions" : {
+			"FullTestingProgram" : "Export|Quit"
+		}
+	},
+	"HTMLReport" : {
+		"Type" : "List|Table"
+	},
+	"Path" : {
+		"HelpFolderName" : "Help",
+		"ExportFolderName" : "Export",
+		"ExportCSVFolderName" : "CSV",
+		"ExportJSONFolderName" : "JSON",
+		"JournalFolderName" : "Journal",
+		"JsonBoxconfigFolderName" : "Json_Box_Config",
+		"ReportFolderName" : "Report",
+		"RessourcesFolderName" : "Ressources",
+		"Ressources" : {
+			"ApplicationsFolderName" : "Applications",
+			"Applications" : {
+					"ChromeDriver" : {
+						"ChromeDriverDefaultFolderName" : "Default",
+						"ChromeDriverRessourcesFolderName" : "ChromeDriver",
+						"ChromeDriverDefaultSetupFileName" : "chromedriver.exe",
+						"ChromeDriverDownloadFileName" : "chromedriver-win32.zip",
+						"ChromeDriverDefaultWebDriverDLLFileName" : "webdriver.dll",
+						"ChromeDriverDefaultWebDriverSupportFileName" : "webdriver.support.dll",
+						"ChromeDriverLastStableVersionUrl" : "https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE",
+						"ChromeDriverDownloadHomeUrl" : "https://storage.googleapis.com/chrome-for-testing-public",
+						"ChromeDriverDownloadPathUrl" : "https://storage.googleapis.com/chrome-for-testing-public"
+					},
+					"GoogleChrome" : {
+						"GoogleChromeDefaultFolderName" : "Default",
+						"GoogleChromeRessourcesFolderName" : "GoogleChrome",
+						"GoogleChromeDefaultSetupFileName" : "chrome.exe",
+						"//GoogleChromeDefaultProfileName" : "Guest Profile",
+						"GoogleChromeDefaultProfileName" : "Default",
+						"GoogleChromeDownloadFileName" : "chrome-win32.zip",
+						"GoogleChromeDownloadFileNameExtention" : "*.crdownload",
+						"GoogleChromeDownloadHomeUrl" : "https://storage.googleapis.com/chrome-for-testing-public",
+						"GoogleChromeDownloadPathUrl" : "https://storage.googleapis.com/chrome-for-testing-public"
+					}
+			},
+			"ChromeDriverDLLFolderName" : "DLL",
+			"ProgramFolderName" : "Program",
+			"Program" : {
+				"TestedEnvironnementFileName" : "Tested-Environnement.csv",
+				"CommonFunctionsFileName" : "Common-Functions.csv",
+				"UserConfigurationFile" : {
+					"DefaultFileName" : "Settings-Default-User.json",
+					"CurrentFileName" : "Settings-Current-User.json",
+					"SettingsFileName" : "Settings-Program.json"
+				}
+			}
+		},
+		"JournalName" : "journal-1242358",
+		"BoxFolderName" : "Box",
+		"Box": {
+			"BBox" : {
+				"APISummaryFileName" : "BBox-API-Summary.csv",
+				"PhoneNumberReferentialFileName" : "BBox-Phone-Number.csv"
+			},
+			"Freebox": {
+				"APISummaryFileName" : "Freebox-API-Summary.csv"
+			}
+		},
+		"DownloadShellRegistryFolder" : "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+		"DownloadShellRegistryFolderName" : "{374DE290-123F-4565-9164-39C4925E467B}",
+		"BoxModuleFileName" : "BOX-Module",
+		"TUNCredentialManagerModuleFileName" : "TUN.CredentialManager"
+	},
+	"FormatedData" : {
+		"GlobalOutputDataExclusion" : "exception|error_code"
+	},
+	"Sleep" : {
+		"Default" : "3",
+		"ChromeDriverNavigation" : "5",
+		"ChromeDriverUnzip" : "5",
+		"ChromeDriverLoading" : "5",
+		"BoxJournalDownload" : "8",
+		"ChromeDriverDownload" : "60",
+		"TUNCredentialManagerModuleInstallation" : "10",
+		"RefreshWIRELESSFrequencyNeighborhoodScan" : "60"
+	},
+	"Notification" : {
+		"Event" : {
+			"Type" : "ALARM|NOTIFY"
+		}
+	},
+	"Error" : {
+		"ResolveDNS" : {
+			"Message" : "Unknow Error / Can not Verifyed / Resolved / Available"
+		},
+		"Loading" : {
+			"400" : "400",
+			"401" : "401",
+			"402" : "402",
+			"403" : "403",
+			"404" : "404"
+		}
+	},
+	"DialogueBox" : {
+		"ButtonText" : {
+			"Ok" : "Ok",
+			"No" : "No",
+			"Yes" : "Yes",
+			"Cancel" : "Cancel",
+			"Bbox" : "Bbox",
+			"FREEBox" : "FREEBox",
+			"OrangeBox" : "OrangeBox",
+			"SFRBox" : "SFRBox"
+		}
+	}
+}

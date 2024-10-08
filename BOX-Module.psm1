@@ -33,13 +33,13 @@
 .NOTES
     Version : 2.7
     Creation Date : 2020/04/30
-    Updated Date  : 2024/09/10
+    Updated Date  : 2024/10/06
     Updated By    : @Zardrilokis => Tom78_91_45@yahoo.fr
     Author        : @Zardrilokis => Tom78_91_45@yahoo.fr
 
 #>
 
-#region GLOBAL (All functions below are used only on powershell script : '.\Box-Administration.ps1')
+#region GLOBAL Functions
 
 #region Add AssemblyName Classies
 
@@ -96,24 +96,32 @@ function Write-Log {
 #>
 
     Param (
-        [Parameter(Mandatory=$True)]
+        [Parameter(Mandatory=$false)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
-        $Type,
+        $Type = 'INFO',
+        
         [Parameter(Mandatory=$True)]
-        $Message,
+        [ValidateSet('Program initialisation','Program Run','Program Stop')]
+        $Category = 'Program Run',
+        
         [Parameter(Mandatory=$True)]
         $Name,
+        
+        [Parameter(Mandatory=$True)]
+        $Message,
+        
         [Parameter(Mandatory=$False)]
         [switch]$NotDisplay,
+        
         [Parameter(Mandatory=$False)]
         $Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
     )
     
-    $logpath = $Logname + '.csv'
+    $LogPath = $Logname + '.csv'
     
     # Create log object 
-    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; user= $(whoami) ; Type=$type ; Name=$name ; Message=$Message} 
-    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
+    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; user= $(whoami) ; Type=$Type ; Category=$Category ; Name=$Name ; Message=$Message} 
+    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.Date + ' : ' + $this.Type + ' : ' + $this.Category + ' : ' + $this.Name + ' : ' + $this.Message} -Force 
     
     # Append to global journal
     [Object[]] $Global:journal += $log.toString()
@@ -148,10 +156,10 @@ function Write-Log {
         $mtx.WaitOne() | Out-Null
 	    # Write Header if file don't exists yet
         
-        If (-not (Test-Path $logpath)) {
-            Out-File -FilePath $logpath -Encoding unicode -Append -InputObject "Date;PID;Computer-User;Type;Name;Message" 
+        If (-not (Test-Path $LogPath)) {
+            Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "Date;PID;Computer-User;Type;Category;Name;Message" 
         }
-        Out-File -FilePath $logpath -Encoding unicode -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.name);$($Log.Message)" 
+        Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.Category)$($Log.name);$($Log.Message)" 
     }
     Finally {
         $mtx.ReleaseMutex()
@@ -197,44 +205,44 @@ Function Install-TUNCredentialManager {
         [String]$ModuleName
     )
     
-    Write-Log -Type INFONO -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
     
     If ($null -eq (Get-InstalledModule -name $ModuleName -ErrorAction SilentlyContinue)) {
         
-        Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Not yet' -NotDisplay
-        Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Try to install Powershell $ModuleName Module in user context" -NotDisplay
-        Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message 'Not yet' -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message "Try to install Powershell $ModuleName Module in user context" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message "Powershell $ModuleName Module installation status : " -NotDisplay
         
         Try {
             Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Install-Module -Name TUN.CredentialManager -Scope Allusers -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
             Start-Sleep -Seconds $global:SleepTUNCredentialManagerModuleinstallation
-            Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
             Stop-Program -Context System -ErrorAction Stop
         }
 
         If (($null -eq $global:TriggerExitSystem) -and (Get-InstalledModule -name $ModuleName)) {
         
-            Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name "Program initialisation - Powershell $ModuleName Module Importation" -Message "Powershell $ModuleName Module Importation status : " -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program initialisation' -Name "Powershell $ModuleName Module Importation" -Message "Powershell $ModuleName Module Importation status : " -NotDisplay
             
             Try {
                 Import-Module $ModuleName -Global -Force -ErrorAction Stop
-                Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module Importation" -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module Importation" -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module Importation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+                Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module Importation" -Message "Failed, due to $($_.ToString())" -NotDisplay
                 Stop-Program -Context System -ErrorAction Stop
             }
         }
         Else {
-            Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message "Failed, due to $($_.ToString())" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module installation" -Message 'Already installed' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module installation" -Message 'Already installed' -NotDisplay
     }
 }
 
@@ -273,34 +281,34 @@ Function Uninstall-TUNCredentialManager {
             [String]$ModuleName
         )
         
-        Write-Log -Type INFONO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
         
         If ($null -eq (Get-InstalledModule -name $ModuleName -ErrorAction SilentlyContinue)) {
             
-            Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Not yet' -NotDisplay
-            Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Try to install Powershell $ModuleName Module in user context" -NotDisplay
-            Write-Log -Type INFO -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message 'Not yet' -NotDisplay
+            Write-Log -Type INFO -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message "Try to install Powershell $ModuleName Module in user context" -NotDisplay
+            Write-Log -Type INFO -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message "Powershell $ModuleName Module uninstallation status : " -NotDisplay
             
             Try {
                 Start-Process -FilePath Pwsh -Verb RunAs -WindowStyle Normal -Wait -ArgumentList {-ExecutionPolicy bypass -command "Uninstall-Module -Name TUN.CredentialManager -confirm:$false -verbose -Force -ErrorAction Stop;Pause"} -ErrorAction Stop
                 Start-Sleep -Seconds $global:SleepTUNCredentialManagerModuleinstallation
-                Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+                Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
                 Stop-Program -Context System -ErrorAction Stop
             }
             
             If (($null -eq $global:TriggerExitSystem) -and ($null -eq $(Get-InstalledModule -name $ModuleName))) {
                 
-                Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message 'Successful' -NotDisplay
             }
             Else {
-                Write-Log -Type WARNING -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
+                Write-Log -Type WARNING -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message "Failed, due to $($_.ToString())" -NotDisplay
             }
         }
         Else {
-            Write-Log -Type VALUE -Name "Program initialisation - Powershell $ModuleName Module uninstallation" -Message 'Already uninstalled' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name "Powershell $ModuleName Module uninstallation" -Message 'Already uninstalled' -NotDisplay
         }
 }
 
@@ -334,18 +342,18 @@ Function Remove-BoxCredential {
 
     Param ()
     
-    Write-Log -Type INFO -Name 'Program run - Remove Box Credential' -Message 'Start Remove Box Credential' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Remove Box Credential' -Message 'Remove Box Credential status : ' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Remove Box Credential' -Message 'Start Remove Box Credential' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Remove Box Credential' -Message 'Remove Box Credential status : ' -NotDisplay
     
     Try {
         $null = Remove-StoredCredential -Target $global:CredentialsTarget -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program run - Remove Box Credential' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Remove Box Credential' -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Name 'Program run - Remove Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Remove Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
     
-    Write-Log -Type INFO -Name 'Program run - Remove Box Credential' -Message 'End Remove Box Credential' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Remove Box Credential' -Message 'End Remove Box Credential' -NotDisplay
 }
 
 # Show Box Credential stored in Windows Credential Manager
@@ -378,31 +386,31 @@ Function Show-BoxCredential {
 
     Param ()
 
-    Write-Log -Type INFO -Name 'Program run - Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Show Box Credential' -Message 'Show Box Credential status : ' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Show Box Credential' -Message 'Show Box Credential status : ' -NotDisplay
 
     Try {
-        $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password 
+        $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password
         
         If ($Password) {
             
             $Password = $Password | ConvertFrom-SecureString -AsPlainText
-            Write-Log -Type VALUE -Name 'Program run - Show Box Credential' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Show Box Credential' -Message "Actual $global:BoxType Stored Password : **********" -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Show Box Credential' -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Show Box Credential' -Message "Actual $global:BoxType Stored Password : **********" -NotDisplay
         }
         Else {
             $Password = 'None password was found, please set it, before to show it'
-            Write-Log -Type VALUE -Name 'Program run - Show Box Credential' -Message $Password -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Show Box Credential' -Message $Password -NotDisplay
         }
         
         $null = Show-WindowsFormDialogBox -Title 'Program run - Show Box Credential' -Message "Actual $global:BoxType Password stored in Windows Credential Manager : $Password" -InfoIcon
         Clear-Variable -Name Password
     }
     Catch {
-        Write-Log -Type WARNING -Name 'Program run - Show Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Show Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
 
-    Write-Log -Type INFO -Name 'Program run - Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
 }
 
 # Add Box Credential in Windows Credential Manager
@@ -438,7 +446,7 @@ function Add-BoxCredential {
     
     $Credential = $null
     $Credentialbuild = $null
-    Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Asking password to the user ...' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Password Status' -Message 'Asking password to the user ...' -NotDisplay
     
     While ([string]::IsNullOrEmpty($Credential.Password) -or [string]::IsNullOrEmpty($Credential.UserName)) {
         
@@ -446,18 +454,18 @@ function Add-BoxCredential {
         $Credential = Get-Credential -Message "Please enter your $global:BoxType Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future" -UserName $global:CredentialsTarget
     }
     
-    Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Password Status' -Message 'Windows Credential Manager status : ' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Password Status' -Message 'Windows Credential Manager status : ' -NotDisplay
 
     Try {
-        $Comment = $global:CredentialsComment + " - Last modification : $(get-date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
+        $Comment = $global:CredentialsComment + " - Last modification : $(Get-Date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
         $Password = $Credential.Password | ConvertFrom-SecureString -AsPlainText
         $Credentialbuild = New-StoredCredential -Target $global:CredentialsTarget -UserName $global:CredentialsUserName -Password $Password -Comment $Comment -Type Generic -Persist Session | Out-Null
-        Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Set - $Comment' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Password Status' -Message 'Set - $Comment' -NotDisplay
         Clear-Variable -Name Password
     }
     Catch {
-        Write-Log -Type WARNING -Name 'Program run - Password Status' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Password Status' -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
     
     Show-BoxCredential
@@ -466,9 +474,530 @@ function Add-BoxCredential {
     Clear-Variable -Name Credentialbuild
 }
 
+# Get Box Credential stored in Windows Credential Manager
+Function Get-BoxCredential {
+
+    <#
+    .SYNOPSIS
+        To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+    
+    .DESCRIPTION
+        To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+    
+    .PARAMETER 
+        
+    
+    .EXAMPLE
+        Get-BoxCredential
+    
+    .INPUTS
+        Credentials from Windows Credential Manager
+    
+    .OUTPUTS
+        Standard System Windows Forms MessageBox
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Get-StoredCredential'
+    
+    #>
+    
+        Param ()
+    
+        Write-Log -Type INFO -Category 'Program run' -Name 'Get Box Credential' -Message 'Start Get Box Credential' -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Credential' -Message 'Get Box Credential status : ' -NotDisplay
+    
+        Try {
+            $Password = Get-StoredCredential -Type 'Generic' -AsCredentialObject
+            $Password = $Password | Where-Object {($_.UserName -match "Admin") -and ($null -eq $_.SecurePassword) -and ($_.persist -eq 'session')}
+            
+            If ($Password) {
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Credential' -Message 'Successful' -NotDisplay
+                $Password | Select-Object -Property UserName,TargetName,Comment,LastWritten,Persist,Password | Out-GridView -Title "Admin Box Password Stored in Windows Credantial Management :" -Wait
+            }
+            Else {
+                $Password = 'None password was found, please set it, before to Get it'
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Credential' -Message $Password
+                $null = Show-WindowsFormDialogBox -Title 'Program run - Get Box Credential' -Message "Actual box Password stored in Windows Credential Manager : $Password" -InfoIcon
+            }
+        }
+        Catch {
+            Write-Log -Type WARNING -Category 'Program run' -Name 'Get Box Credential' -Message "Failed, due to : $($_.ToString())"
+        }
+    
+        Write-Log -Type INFO -Category 'Program run' -Name 'Get Box Credential' -Message 'Start Get Box Credential' -NotDisplay
+}
+
 #endregion Windows Credential Manager
 
 #region Windows Form Dialog Box
+
+#region User Input Box
+
+# Used only to get user's 1 input
+function Show-WindowsFormDialogBoxInuput {
+
+    <#
+    .SYNOPSIS
+        To display a Standard System Windows Forms MessageBox with user input
+    
+    .DESCRIPTION
+        To display a Standard System Windows Forms MessageBox with user input
+    
+    .PARAMETER LabelMessageText
+        Text to display in the System Windows Forms MessageBox before user input field
+    
+    .PARAMETER MainFormTitle
+        This is the text display in the header of the message box
+    
+    .PARAMETER OkButtonText
+        Text to display to validate user input
+    
+    .PARAMETER CancelButtonText
+        Text to display to cancel user input
+    
+    .PARAMETER DefaultValue
+        Value set by default in the input field
+    
+    .EXAMPLE
+        Show-WindowsFormDialogBoxInuput -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
+    
+    .INPUTS
+        $MainFormTitle
+        $LabelMessageText
+        $OkButtonText
+        $CancelButtonText
+    
+    .OUTPUTS
+        Standard System Windows Forms MessageBox with user input
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Get-HostStatus', 'Get-PortStatus'
+    
+    #>
+    
+        Param (
+            [Parameter(Mandatory=$True)]
+            [string]$MainFormTitle,
+    
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText,
+    
+            [Parameter(Mandatory=$True)]
+            [string]$OkButtonText,
+    
+            [Parameter(Mandatory=$True)]
+            [string]$CancelButtonText,
+    
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue
+        )
+        
+        $MainFormSizeX = 330
+        $MainFormSizeY = 250
+        
+        $LabelMessageSizeX = 300
+        $LabelMessageSizeY = 80
+        
+        $TextBoxSizeX = 100
+        $TextBoxSizeY = 40
+        
+        $OkButtonSizeX = 75
+        $OkButtonSizeY = 25
+        
+        $CancelButtonSizeX = 75
+        $CancelButtonSizeY = 25
+        
+        $LabelMessageLocationX = 20
+        $LabelMessageLocationY = 40
+        
+        $TextBoxLocationX = 20
+        $TextBoxLocationY = $LabelMessageLocationY + $LabelMessageSizeY
+        
+        $OkButtonLocationX = 85
+        $OkButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
+        
+        $CancelButtonLocationX = $OkButtonLocationX + $OkButtonSizeX + 10
+        $CancelButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
+        
+        $MainForm = New-Object System.Windows.Forms.Form
+        $MainForm.Text = $MainFormTitle
+        $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
+        $MainForm.StartPosition = 'CenterScreen'
+        
+        $LabelMessage = New-Object System.Windows.Forms.Label
+        $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+        $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage.Text = $LabelMessageText
+        $MainForm.Controls.Add($LabelMessage)
+        
+        $TextBox = New-Object System.Windows.Forms.TextBox
+        $TextBox.Location = New-Object System.Drawing.Point($TextBoxLocationX,$TextBoxLocationY)
+        $TextBox.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox.Text = $DefaultValue # Prefield value
+        $MainForm.Controls.Add($TextBox)
+        
+        $OkButton = New-Object System.Windows.Forms.Button
+        $OkButton.Location = New-Object System.Drawing.Point($OkButtonLocationX,$OkButtonLocationY)
+        $OkButton.Size = New-Object System.Drawing.Size($OkButtonSizeX,$OkButtonSizeY)
+        $OkButton.Text = $OkButtonText
+        $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $MainForm.AcceptButton = $OkButton
+        $MainForm.Controls.Add($OkButton)
+        
+        $CancelButton = New-Object System.Windows.Forms.Button
+        $CancelButton.Location = New-Object System.Drawing.Point($CancelButtonLocationX,$CancelButtonLocationY)
+        $CancelButton.Size = New-Object System.Drawing.Size($CancelButtonSizeX,$CancelButtonSizeY)
+        $CancelButton.Text = $CancelButtonText
+        $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $MainForm.CancelButton = $CancelButton
+        $MainForm.Controls.Add($CancelButton)
+        
+        $MainForm.Topmost = $true
+        $MainForm.Add_Shown({$TextBox.Select()})
+        
+        If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            Return $TextBox.Text
+        }
+        Else {
+            $global:TriggerDialogBox = 1
+        }
+}
+
+# Used only to get user's 5 inputs
+function Show-WindowsFormDialogBox8Inuput {
+
+    <#
+    .SYNOPSIS
+        To display a Standard System Windows Forms MessageBox with user inputs
+    
+    .DESCRIPTION
+        To display a Standard System Windows Forms MessageBox with user inputs
+    
+    .PARAMETER LabelMessageTextx
+        Text to display in the System Windows Forms MessageBox before user input field
+    
+    .PARAMETER DefaultValuex
+        Value set by default in the input field
+    
+        .PARAMETER MainFormTitle
+        This is the text display in the header of the message box
+    
+    .PARAMETER OkButtonText
+        Text to display to validate user input
+    
+    .PARAMETER CancelButtonText
+        Text to display to cancel user input
+    
+    .EXAMPLE
+        Show-WindowsFormDialogBox8Inuput -MainFormTitle "Please complete this form :" -LabelMessageText0 "PhoneNumber :" -DefaultValue0 "+33102030405" -LabelMessageText1 "Prefixe :" -DefaultValue1 "+33" -LabelMessageText2 "Number :" -DefaultValue2 "0102030405" -LabelMessageText3 "Name :" -DefaultValue3 "DUPONT" -LabelMessageText4 "SurName :" -DefaultValue4 "Dupont" -LabelMessageText5 "Description :" -DefaultValue5 "This is the desciption of the contact" -LabelMessageText6 "Category :" -DefaultValue6 "Family / Friend / Others" -LabelMessageText7 "Type :" -DefaultValue7 "Mobile / Fixe" -OkButtonText "OK" -CancelButtonText "Cancel"
+    
+    .INPUTS
+        $MainFormTitle
+        $LabelMessageText0
+        $LabelMessageText1
+        $LabelMessageText2
+        $LabelMessageText3
+        $LabelMessageText4
+        $LabelMessageText5
+        $LabelMessageText6
+        $LabelMessageText7
+        $DefaultValue0
+        $DefaultValue1
+        $DefaultValue2
+        $DefaultValue3
+        $DefaultValue4
+        $DefaultValue5
+        $DefaultValue6
+        $DefaultValue7
+        $OkButtonText
+        $CancelButtonText
+    
+    .OUTPUTS
+        Standard System Windows Forms MessageBox with user inputs
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Add-NewReferentialContact'
+    
+    #>
+    
+        Param (
+            [Parameter(Mandatory=$True)]
+            [string]$MainFormTitle,
+
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText0,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue0,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText1,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue1,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText2,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue2,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText3,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue3,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText4,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue4,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText5,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue5,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText6,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue6,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$LabelMessageText7,
+            
+            [Parameter(Mandatory=$False)]
+            [string]$DefaultValue7,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$OkButtonText,
+            
+            [Parameter(Mandatory=$True)]
+            [string]$CancelButtonText
+        )
+        
+        $MainFormSizeX = 260
+        $MainFormSizeY = 600
+        
+        $LabelMessageSizeX = 300
+        $LabelMessageSizeY = 30
+        
+        $TextBoxSizeX = 200
+        $TextBoxSizeY = 40
+        
+        $OkButtonSizeX = 75
+        $OkButtonSizeY = 25
+        
+        $CancelButtonSizeX = 75
+        $CancelButtonSizeY = 25
+        
+        $LabelMessage0LocationX = 20
+        $LabelMessage0LocationY = 20
+        
+        $TextBox0LocationX = $LabelMessage0LocationX
+        $TextBox0LocationY = $LabelMessage0LocationY + $LabelMessageSizeY
+        
+        $LabelMessage1LocationX = $LabelMessage0LocationX
+        $LabelMessage1LocationY = $TextBox0LocationY + $LabelMessageSizeY
+        
+        $TextBox1LocationX = $LabelMessage0LocationX
+        $TextBox1LocationY = $LabelMessage1LocationY + $LabelMessageSizeY
+        
+        $LabelMessage2LocationX = $LabelMessage0LocationX
+        $LabelMessage2LocationY = $TextBox1LocationY + $LabelMessageSizeY
+        
+        $TextBox2LocationX = $LabelMessage0LocationX
+        $TextBox2LocationY = $LabelMessage2LocationY + $LabelMessageSizeY
+        
+        $LabelMessage3LocationX = $LabelMessage0LocationX
+        $LabelMessage3LocationY = $TextBox2LocationY + $LabelMessageSizeY
+        
+        $TextBox3LocationX = $LabelMessage0LocationX
+        $TextBox3LocationY = $LabelMessage3LocationY + $LabelMessageSizeY
+        
+        $LabelMessage4LocationX = $LabelMessage0LocationX
+        $LabelMessage4LocationY = $TextBox3LocationY + $LabelMessageSizeY
+        
+        $TextBox4LocationX = $LabelMessage0LocationX
+        $TextBox4LocationY = $LabelMessage4LocationY + $LabelMessageSizeY
+        
+        $LabelMessage5LocationX = $LabelMessage0LocationX
+        $LabelMessage5LocationY = $TextBox4LocationY + $LabelMessageSizeY
+        
+        $TextBox5LocationX = $LabelMessage0LocationX
+        $TextBox5LocationY = $LabelMessage5LocationY + $LabelMessageSizeY
+        
+        $LabelMessage6LocationX = $LabelMessage0LocationX
+        $LabelMessage6LocationY = $TextBox5LocationY + $LabelMessageSizeY
+        
+        $TextBox6LocationX = $LabelMessage0LocationX
+        $TextBox6LocationY = $LabelMessage6LocationY + $LabelMessageSizeY
+        
+        $LabelMessage7LocationX = $LabelMessage0LocationX
+        $LabelMessage7LocationY = $TextBox6LocationY + $LabelMessageSizeY
+        
+        $TextBox7LocationX = $LabelMessage0LocationX
+        $TextBox7LocationY = $LabelMessage7LocationY + $LabelMessageSizeY
+        
+        $OkButtonLocationX = $LabelMessage0LocationX
+        $OkButtonLocationY = $TextBox7LocationY + $TextBoxSizeY
+        
+        $CancelButtonLocationX = $OkButtonLocationX + $OkButtonSizeX + 10
+        $CancelButtonLocationY = $TextBox7LocationY + $TextBoxSizeY
+        
+        $MainForm = New-Object System.Windows.Forms.Form
+        $MainForm.Text = $MainFormTitle
+        $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
+        $MainForm.StartPosition = 'CenterScreen'
+        
+        $LabelMessage0 = New-Object System.Windows.Forms.Label
+        $LabelMessage0.Location = New-Object System.Drawing.Point($LabelMessage0LocationX,$LabelMessage0LocationY)
+        $LabelMessage0.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage0.Text = $LabelMessageText0
+        $MainForm.Controls.Add($LabelMessage0)
+        
+        $TextBox0 = New-Object System.Windows.Forms.TextBox
+        $TextBox0.Location = New-Object System.Drawing.Point($TextBox0LocationX,$TextBox0LocationY)
+        $TextBox0.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox0.Text = $DefaultValue0 # Prefield value
+        $MainForm.Controls.Add($TextBox0)
+        
+        $LabelMessage1 = New-Object System.Windows.Forms.Label
+        $LabelMessage1.Location = New-Object System.Drawing.Point($LabelMessage1LocationX,$LabelMessage1LocationY)
+        $LabelMessage1.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage1.Text = $LabelMessageText1
+        $MainForm.Controls.Add($LabelMessage1)
+        
+        $TextBox1 = New-Object System.Windows.Forms.TextBox
+        $TextBox1.Location = New-Object System.Drawing.Point($TextBox1LocationX,$TextBox1LocationY)
+        $TextBox1.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox1.Text = $DefaultValue1 # Prefield value
+        $MainForm.Controls.Add($TextBox1)
+        
+        $LabelMessage2 = New-Object System.Windows.Forms.Label
+        $LabelMessage2.Location = New-Object System.Drawing.Point($LabelMessage2LocationX,$LabelMessage2LocationY)
+        $LabelMessage2.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage2.Text = $LabelMessageText2
+        $MainForm.Controls.Add($LabelMessage2)
+        
+        $TextBox2 = New-Object System.Windows.Forms.TextBox
+        $TextBox2.Location = New-Object System.Drawing.Point($TextBox2LocationX,$TextBox2LocationY)
+        $TextBox2.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox2.Text = $DefaultValue2 # Prefield value
+        $MainForm.Controls.Add($TextBox2)
+        
+        $LabelMessage3 = New-Object System.Windows.Forms.Label
+        $LabelMessage3.Location = New-Object System.Drawing.Point($LabelMessage3LocationX,$LabelMessage3LocationY)
+        $LabelMessage3.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage3.Text = $LabelMessageText3
+        $MainForm.Controls.Add($LabelMessage3)
+        
+        $TextBox3 = New-Object System.Windows.Forms.TextBox
+        $TextBox3.Location = New-Object System.Drawing.Point($TextBox3LocationX,$TextBox3LocationY)
+        $TextBox3.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox3.Text = $DefaultValue3 # Prefield value
+        $MainForm.Controls.Add($TextBox3)
+        
+        $LabelMessage4 = New-Object System.Windows.Forms.Label
+        $LabelMessage4.Location = New-Object System.Drawing.Point($LabelMessage4LocationX,$LabelMessage4LocationY)
+        $LabelMessage4.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage4.Text = $LabelMessageText4
+        $MainForm.Controls.Add($LabelMessage4)
+        
+        $TextBox4 = New-Object System.Windows.Forms.TextBox
+        $TextBox4.Location = New-Object System.Drawing.Point($TextBox4LocationX,$TextBox4LocationY)
+        $TextBox4.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox4.Text = $DefaultValue4 # Prefield value
+        $MainForm.Controls.Add($TextBox4)
+        
+        $LabelMessage5 = New-Object System.Windows.Forms.Label
+        $LabelMessage5.Location = New-Object System.Drawing.Point($LabelMessage5LocationX,$LabelMessage5LocationY)
+        $LabelMessage5.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage5.Text = $LabelMessageText5
+        $MainForm.Controls.Add($LabelMessage5)
+        
+        $TextBox5 = New-Object System.Windows.Forms.TextBox
+        $TextBox5.Location = New-Object System.Drawing.Point($TextBox5LocationX,$TextBox5LocationY)
+        $TextBox5.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox5.Text = $DefaultValue5 # Prefield value
+        $MainForm.Controls.Add($TextBox5)
+        
+        $LabelMessage6 = New-Object System.Windows.Forms.Label
+        $LabelMessage6.Location = New-Object System.Drawing.Point($LabelMessage6LocationX,$LabelMessage6LocationY)
+        $LabelMessage6.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage6.Text = $LabelMessageText6
+        $MainForm.Controls.Add($LabelMessage6)
+        
+        $TextBox6 = New-Object System.Windows.Forms.TextBox
+        $TextBox6.Location = New-Object System.Drawing.Point($TextBox6LocationX,$TextBox6LocationY)
+        $TextBox6.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox6.Text = $DefaultValue6 # Prefield value
+        $MainForm.Controls.Add($TextBox6)
+        
+        $LabelMessage7 = New-Object System.Windows.Forms.Label
+        $LabelMessage7.Location = New-Object System.Drawing.Point($LabelMessage7LocationX,$LabelMessage7LocationY)
+        $LabelMessage7.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+        $LabelMessage7.Text = $LabelMessageText7
+        $MainForm.Controls.Add($LabelMessage7)
+        
+        $TextBox7 = New-Object System.Windows.Forms.TextBox
+        $TextBox7.Location = New-Object System.Drawing.Point($TextBox7LocationX,$TextBox7LocationY)
+        $TextBox7.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
+        $TextBox7.Text = $DefaultValue7 # Prefield value
+        $MainForm.Controls.Add($TextBox7)
+        
+        $OkButton = New-Object System.Windows.Forms.Button
+        $OkButton.Location = New-Object System.Drawing.Point($OkButtonLocationX,$OkButtonLocationY)
+        $OkButton.Size = New-Object System.Drawing.Size($OkButtonSizeX,$OkButtonSizeY)
+        $OkButton.Text = $OkButtonText
+        $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+        $MainForm.AcceptButton = $OkButton
+        $MainForm.Controls.Add($OkButton)
+        
+        $CancelButton = New-Object System.Windows.Forms.Button
+        $CancelButton.Location = New-Object System.Drawing.Point($CancelButtonLocationX,$CancelButtonLocationY)
+        $CancelButton.Size = New-Object System.Drawing.Size($CancelButtonSizeX,$CancelButtonSizeY)
+        $CancelButton.Text = $CancelButtonText
+        $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+        $MainForm.CancelButton = $CancelButton
+        $MainForm.Controls.Add($CancelButton)
+        
+        $MainForm.Topmost = $true
+        $MainForm.Add_Shown({$TextBox0.Select()})
+        $MainForm.Add_Shown({$TextBox1.Select()})
+        $MainForm.Add_Shown({$TextBox2.Select()})
+        $MainForm.Add_Shown({$TextBox3.Select()})
+        $MainForm.Add_Shown({$TextBox4.Select()})
+        $MainForm.Add_Shown({$TextBox5.Select()})
+        $MainForm.Add_Shown({$TextBox6.Select()})
+        $MainForm.Add_Shown({$TextBox7.Select()})
+        
+        If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            Return [PSCustomObject]@{
+                PhoneNumber = $TextBox0.Text
+                Prefixe     = $TextBox1.Text
+                Number      = $TextBox2.Text
+                Name        = $TextBox3.Text
+                Surname     = $TextBox4.Text
+                Description = $TextBox5.Text
+                Category    = $TextBox6.Text
+                Type        = $TextBox7.Text
+            }
+        }
+        Else {
+            $global:TriggerDialogBox = 1
+        }
+}
+
+#endregion User Input Box
+
+#region User Display Box
 
 # Used only to display default Windows Form Dialog Box
 function Show-WindowsFormDialogBox {
@@ -508,7 +1037,7 @@ function Show-WindowsFormDialogBox {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Show-BoxCredential', 'Get-HostStatus', 'Get-PortStatus', 'Switch-Info', 'Stop-Program', 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-BackupList'
+    Linked to function(s): 'Show-BoxCredential', 'Get-HostStatus', 'Get-PortStatus', 'Switch-Info', 'Stop-Program', 'Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan', 'Get-BBOXBackupList'
 
 #>
 
@@ -551,137 +1080,6 @@ function Show-WindowsFormDialogBox {
     Return $Answer
 }
 
-# Used only to get user's input
-function Show-WindowsFormDialogBoxInuput {
-
-<#
-.SYNOPSIS
-    To display a Standard System Windows Forms MessageBox with user input
-
-.DESCRIPTION
-    To display a Standard System Windows Forms MessageBox with user input
-
-.PARAMETER LabelMessageText
-    Text to display in the System Windows Forms MessageBox before user input field
-
-.PARAMETER MainFormTitle
-    This is the text display in the header of the message box
-
-.PARAMETER OkButtonText
-    Text to display to validate user input
-
-.PARAMETER CancelButtonText
-    Text to display to cancel user input
-
-.PARAMETER DefaultValue
-    Value set by default in the input field
-
-.EXAMPLE
-    Show-WindowsFormDialogBoxInuput -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
-
-.INPUTS
-    $MainFormTitle
-    $LabelMessageText
-    $OkButtonText
-    $CancelButtonText
-
-.OUTPUTS
-    Standard System Windows Forms MessageBox with user input
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Get-HostStatus', 'Get-PortStatus'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
-
-        [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
-
-        [Parameter(Mandatory=$True)]
-        [string]$OkButtonText,
-
-        [Parameter(Mandatory=$True)]
-        [string]$CancelButtonText,
-
-        [Parameter(Mandatory=$False)]
-        [string]$DefaultValue
-    )
-    
-    $MainFormSizeX = 330
-    $MainFormSizeY = 250
-    
-    $LabelMessageSizeX = 300
-    $LabelMessageSizeY = 80
-    
-    $TextBoxSizeX = 100
-    $TextBoxSizeY = 40
-    
-    $OkButtonSizeX = 75
-    $OkButtonSizeY = 25
-    
-    $CancelButtonSizeX = 75
-    $CancelButtonSizeY = 25
-    
-    $LabelMessageLocationX = 20
-    $LabelMessageLocationY = 40
-    
-    $TextBoxLocationX = 20
-    $TextBoxLocationY = $LabelMessageLocationY + $LabelMessageSizeY
-    
-    $OkButtonLocationX = 85
-    $OkButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
-    
-    $CancelButtonLocationX = $OkButtonLocationX + $OkButtonSizeX + 10
-    $CancelButtonLocationY = $TextBoxLocationY + $TextBoxSizeY
-    
-    $MainForm = New-Object System.Windows.Forms.Form
-    $MainForm.Text = $MainFormTitle
-    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
-    $MainForm.StartPosition = 'CenterScreen'
-    
-    $LabelMessage = New-Object System.Windows.Forms.Label
-    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
-    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
-    $LabelMessage.Text = $LabelMessageText
-    $MainForm.Controls.Add($LabelMessage)
-    
-    $TextBox = New-Object System.Windows.Forms.TextBox
-    $TextBox.Location = New-Object System.Drawing.Point($TextBoxLocationX,$TextBoxLocationY)
-    $TextBox.Size = New-Object System.Drawing.Size($TextBoxSizeX,$TextBoxSizeY)
-    $TextBox.Text = $DefaultValue # Prefield value
-    $MainForm.Controls.Add($TextBox)
-    
-    $OkButton = New-Object System.Windows.Forms.Button
-    $OkButton.Location = New-Object System.Drawing.Point($OkButtonLocationX,$OkButtonLocationY)
-    $OkButton.Size = New-Object System.Drawing.Size($OkButtonSizeX,$OkButtonSizeY)
-    $OkButton.Text = $OkButtonText
-    $OkButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
-    $MainForm.AcceptButton = $OkButton
-    $MainForm.Controls.Add($OkButton)
-    
-    $CancelButton = New-Object System.Windows.Forms.Button
-    $CancelButton.Location = New-Object System.Drawing.Point($CancelButtonLocationX,$CancelButtonLocationY)
-    $CancelButton.Size = New-Object System.Drawing.Size($CancelButtonSizeX,$CancelButtonSizeY)
-    $CancelButton.Text = $CancelButtonText
-    $CancelButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-    $MainForm.CancelButton = $CancelButton
-    $MainForm.Controls.Add($CancelButton)
-    
-    $MainForm.Topmost = $true
-    $MainForm.Add_Shown({$TextBox.Select()})
-    
-    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        Return $TextBox.Text
-    }
-    Else {
-        $global:TriggerDialogBox = 1
-    }
-}
-
 # Used only to force user to make a choice between two options none is "Cancel"
 function Show-WindowsFormDialogBox2Choices {
 
@@ -718,7 +1116,7 @@ function Show-WindowsFormDialogBox2Choices {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-WANDiagsAllActiveSessions'
+    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-BBOXWANDiagsAllActiveSessions'
 
 #>
 
@@ -946,7 +1344,7 @@ function Show-WindowsFormDialogBox3Choices {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-WANDiagsAllActiveSessions'
+    Linked to function(s): 'Switch-OpenExportFolder', 'Switch-DisplayFormat', 'Switch-ExportFormat', 'Switch-OpenHTMLReport', 'Get-PhoneLineID', 'Get-BBOXWANDiagsAllActiveSessions'
 
 #>
 
@@ -1326,9 +1724,326 @@ function Show-WindowsFormDialogBox4ChoicesCancel {
     }
 }
 
+# Used only to force user to make a choice between four options where one is "Cancel"
+function Show-WindowsFormDialogBox5ChoicesCancel {
+
+<#
+.SYNOPSIS
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between five options where one is "Cancel"
+
+.DESCRIPTION
+    To display a Standard System Windows Forms MessageBox to force user to make a choice between five options where one is "Cancel"
+
+.PARAMETER LabelMessageText
+    Text to display in the System Windows Forms MessageBox
+
+.PARAMETER MainFormTitle
+    This is the text display in the header of the message box
+
+.PARAMETER FirstOptionButtonText
+    Text to display to validate user action 1
+
+.PARAMETER SecondOptionButtonText
+    Text to display to validate user action 2
+
+.PARAMETER ThirdOptionButtonText
+    Text to display to validate user action 3
+
+.PARAMETER FourOptionButtonText
+    Text to display to validate user action 4
+
+.PARAMETER FiveOptionButtonText
+    Text to display to cancel action
+
+.EXAMPLE
+    Show-WindowsFormDialogBox5ChoicesCancel -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Action 1" -SecondOptionButtonText "Action 2" -ThirdOptionButtonText "Action 3" -FourOptionButtonText "Action 4" -FiveOptionButtonText "Cancel"
+
+.INPUTS
+    $MainFormTitle
+    $LabelMessageText
+    $FirstOptionButtonText
+    $SecondOptionButtonText
+    $ThirdOptionButtonText
+    $FourOptionButtonText
+    $FiveOptionButtonText
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox with bouton user action
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '',
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [string]$MainFormTitle,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$LabelMessageText,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$FirstOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$SecondOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$ThirdOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$FourOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$FiveOptionButtonText
+    )   
+    
+    $MainFormSizeX = 480
+    $MainFormSizeY = 200
+    
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 90
+    
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 20
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
+    
+    $ThirdOptionButtonSizeX = 75
+    $ThirdOptionButtonSizeY = 25
+    
+    $FourOptionButtonSizeX = 75
+    $FourOptionButtonSizeY = 25
+    
+    $FiveOptionButtonSizeX = 75
+    $FiveOptionButtonSizeY = 25
+    
+    $FirstOptionButtonLocationX = 20
+    $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
+    $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $ThirdOptionButtonLocationX = $SecondOptionButtonLocationX + $SecondOptionButtonSizeX + 10
+    $ThirdOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $FourOptionButtonLocationX = $ThirdOptionButtonLocationX + $ThirdOptionButtonSizeX + 10
+    $FourOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $FiveOptionButtonLocationX = $FourOptionButtonLocationX + $FourOptionButtonSizeX + 10
+    $FiveOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $MainForm = New-Object System.Windows.Forms.Form
+    $MainForm.Text = $MainFormTitle
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
+    $MainForm.StartPosition = 'CenterScreen'
+    
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
+    $FirstOptionButton = New-Object System.Windows.Forms.Button
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
+    $FirstOptionButton.Text = $FirstOptionButtonText
+    $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.AcceptButton = $FirstOptionButton
+    $MainForm.Controls.Add($FirstOptionButton)
+    
+    $SecondOptionButton = New-Object System.Windows.Forms.Button
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
+    $SecondOptionButton.Text = $SecondOptionButtonText
+    $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $SecondOptionButton
+    $MainForm.Controls.Add($SecondOptionButton)
+    
+    $ThirdOptionButton = New-Object System.Windows.Forms.Button
+    $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
+    $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
+    $ThirdOptionButton.Text = $ThirdOptionButtonText
+    $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $ThirdOptionButton
+    $MainForm.Controls.Add($ThirdOptionButton)
+    
+    $FourOptionButton = New-Object System.Windows.Forms.Button
+    $FourOptionButton.Location = New-Object System.Drawing.Point($FourOptionButtonLocationX,$FourOptionButtonLocationY)
+    $FourOptionButton.Size = New-Object System.Drawing.Size($FourOptionButtonSizeX,$FourOptionButtonSizeY)
+    $FourOptionButton.Text = $FourOptionButtonText
+    $FourOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $FourOptionButton
+    $MainForm.Controls.Add($FourOptionButton)
+    
+    $FiveOptionButton = New-Object System.Windows.Forms.Button
+    $FiveOptionButton.Location = New-Object System.Drawing.Point($FiveOptionButtonLocationX,$FiveOptionButtonLocationY)
+    $FiveOptionButton.Size = New-Object System.Drawing.Size($FiveOptionButtonSizeX,$FiveOptionButtonSizeY)
+    $FiveOptionButton.Text = $FiveOptionButtonText
+    $FiveOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $MainForm.CancelButton = $FiveOptionButton
+    $MainForm.Controls.Add($FiveOptionButton)
+    
+    $MainForm.Topmost = $true
+    
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $MainForm.ActiveControl.Text
+    }
+    Else {
+        Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+    }
+}
+
+#endregion User Display Box
+
 #endregion Windows Form Dialog Box
 
-#region Main functions use as part of '.\Box-Administration.ps1' script and 'Box-Module.psm1' module
+#region Program
+
+# Used only to stop and quit the Program
+Function Stop-Program {
+
+<#
+.SYNOPSIS
+    To stop and quit the Program
+
+.DESCRIPTION
+    To stop and quit the Program
+
+.EXAMPLE
+    Stop-ChromeDriver -Context User
+    Stop-ChromeDriver -Context System
+
+.INPUTS
+    $Context
+    Only 2 value possible :
+    - User (If the user enter wrong value or settings)
+    - System (If something wrong when system working)
+
+.OUTPUTS
+    Stop All ChromeDriver and StandAlone Google Chrome Processes
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-Box', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$False)]
+        [ValidateSet("User","System")]
+        $Context,
+        
+        [Parameter(Mandatory=$False)]
+        $ErrorMessage,
+        
+        [Parameter(Mandatory=$False)]
+        $Reason
+    )
+    
+    Switch ($Context) {
+        
+        User    {Write-Log -Type VALUE -Category 'Program Stop' -Name 'Action asked' -Message 'Cancelled by user'
+                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to User cancelled action `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -InfoIcon
+                }
+        System  {Write-Log -Type ERROR -Category 'Program Stop' -Name 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
+                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to : $ErrorMessage -Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
+                }
+        Default {Write-Log -Type ERROR -Category 'Program Stop' -Name 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
+                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
+                }
+    }
+    
+    <#If ($Null -ne $global:ChromeDriver) {
+        
+        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'Start Stop Chrome Driver' -NotDisplay
+        Stop-ChromeDriver
+        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'End Stop Chrome Driver' -NotDisplay
+    }#>
+    
+    Start-Sleep $global:SleepChromeDriverNavigation
+    Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+    $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+    Write-Log -Type INFONO -Category 'Program Stop' -Name 'Program Stop' -Message 'Detailed Log file is available here : '
+    Write-Log -Type VALUE -Category 'Program Stop' -Name 'Program Stop' -Message $Current_Log_File
+    Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Don't forget to close the log files before to launch again the program"
+    Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Else the program failed to start the next time"
+    Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'Program Closed' -NotDisplay
+    Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'End Program' -NotDisplay
+    
+    Stop-Transcript -ErrorAction Stop
+    
+    Exit
+}
+
+# Used only to unistall the Program
+Function Uninstall-Program {
+
+    <#
+    .SYNOPSIS
+        To uninstall the Program
+    
+    .DESCRIPTION
+        To uninstall the Program
+    
+    .EXAMPLE
+        Uninstall-Program
+    
+    .INPUTS
+        User Action
+    
+    .OUTPUTS
+        - Stop All ChromeDriver and StandAlone Google Chrome Processes
+        - Remove registred credentials
+        - Unistall Modules (BOX-Module.psm1 & TUN.CredentialManager) with Admin Rights
+        - Remove Chrome Driver registry path
+        - Remove All files
+        - Remove Logs (Stop-Transcript)
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-Box', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+    
+        Param ()
+        
+        # Stop All ChromeDriver and StandAlone Google Chrome Processes
+        Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+        $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+        Write-Log -Type INFONO -Category 'Program Stop' -Name 'Program Stop' -Message 'Detailed Log file is available here : '
+        Write-Log -Type VALUE -Category 'Program Stop' -Name 'Program Stop' -Message $Current_Log_File
+        Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Don't forget to close the log files before to launch again the program"
+        Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Else the program failed to start the next time"
+        Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'Program Closed' -NotDisplay 
+        
+        # Remove Stored Credential
+        Remove-StoredCredential -Target 'AdminBBox' -ErrorAction Continue
+        Remove-StoredCredential -Target 'AdminFREEBox' -ErrorAction Continue
+        
+        # Remove / Uninstall Modules
+        remove-module -Name BOX-Module -ErrorAction Continue
+        remove-module -Name TUN.CredentialManager -ErrorAction Continue
+        Uninstall-TUNCredentialManager -ModuleName 'TUN.CredentialManager' -ErrorAction Continue
+        
+        # Stop-Transcript Logs
+        Stop-Transcript -ErrorAction Continue
+        
+        #Remove All Files
+        #Remove-Item -Path $PSScriptRoot -Recurse -Force -ErrorAction Continue
+        Get-Childitem -Path $PSScriptRoot -Recurse | Remove-Item -Force -Confirm:$false
+        Write-Host "Uninstallation finished" -ForegroundColor Green
+        Write-Host "Please remove manually the root foler of the program : $PSScriptRoot" -ForegroundColor Yellow
+        Pause
+        Exit
+}
 
 # Clean folder content
 Function Remove-FolderContent {
@@ -1372,24 +2087,24 @@ Function Remove-FolderContent {
     
     $FolderPath = "$FolderRoot\$FolderName\*"
     
-    Write-Log -Type INFO -Name 'Program run - Clean folder content' -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Clean folder content' -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
     
     If (Test-Path -Path $FolderPath) {
         
-        Write-Log -Type INFONO -Name 'Program run - Clean folder content' -Message "Cleaning `"$FolderPath`" folder content Status : " -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Clean folder content' -Message "Cleaning `"$FolderPath`" folder content Status : " -NotDisplay
         Try {
             $Null = Remove-Item -Path $FolderPath -Recurse -Exclude $global:TranscriptFileName
-            Write-Log -Type VALUE -Name 'Program run - Clean folder content' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Clean folder content' -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Name 'Program run - Clean folder content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
+            Write-Log -Type ERROR -Category 'Program run' -Name 'Clean folder content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
         }
     }
     Else {
-         Write-Log -Type INFONO -Name 'Program run - Clean folder content' -Message "`"$FolderPath`" folder state : " -NotDisplay
-         Write-Log -Type VALUE -Name 'Program run - Clean folder content' -Message 'Do no exist' -NotDisplay
+         Write-Log -Type INFONO -Category 'Program run' -Name 'Clean folder content' -Message "`"$FolderPath`" folder state : " -NotDisplay
+         Write-Log -Type VALUE -Category 'Program run' -Name 'Clean folder content' -Message 'Do no exist' -NotDisplay
     }
-    Write-Log -Type INFO -Name 'Program run - Clean folder content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Clean folder content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
 }
 
 # Clean All folder content
@@ -1442,11 +2157,11 @@ Function Remove-FolderContentAll {
                 Remove-FolderContent -FolderRoot $FolderRoot -FolderName $FolderName -ErrorAction SilentlyContinue
             }
             Catch {
-                Write-Log -Type ERROR -Name 'Program run - Clean folders content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category 'Program run' -Name 'Clean folders content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
             }
         }
         
-        Write-Log -Type INFO -Name 'Program run - Clean folders content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
+        Write-Log -Type INFO -Category 'Program run' -Name 'Clean folders content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
 }
 
 # Test and create folder if not yet existing
@@ -1498,27 +2213,27 @@ Function Test-FolderPath {
     
     $FolderName = ($FolderName.Split('\'))[-1]
     
-    Write-Log -Type INFO -Name 'Program initialisation - Program Folders check' -Message "Start folder check : $FolderName" -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Program Folders check' -Message "Folder : $FolderPath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Program Folders check' -Message "State : " -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Folders check' -Message "Start folder check : $FolderName" -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Folders check' -Message "Folder : $FolderPath" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Program Folders check' -Message "State : " -NotDisplay
     
     If (-not (Test-Path -Path $FolderPath)) {
         
-        Write-Log -Type WARNING -Name 'Program initialisation - Program Folders check' -Message "Doesn't exists" -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Program Folders check' -Message "Creation folder : $FolderPath , status : " -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Program Folders check' -Message "Doesn't exists" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Program Folders check' -Message "Creation folder : $FolderPath , status : " -NotDisplay
         Try {
             $Null = New-Item -Path $FolderRoot -Name $FolderName -ItemType Directory -Force
-            Write-Log -Type VALUE -Name 'Program initialisation - Program Folders check' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Program Folders check' -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Name 'Program initialisation - Program Folders check' -Message "Failed, `"$FolderPath`" folder can't be created due to : $($_.ToString())"
+            Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Program Folders check' -Message "Failed, `"$FolderPath`" folder can't be created due to : $($_.ToString())"
             Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason "The current folder : $FolderPath , can not be created" -ErrorAction Stop
         }
     }
     Else {
-        Write-Log -Type VALUE -Name 'Program initialisation - Program Folders check' -Message 'Already exists' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Program Folders check' -Message 'Already exists' -NotDisplay
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Program Folders check' -Message "End folder check : $FolderName" -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Folders check' -Message "End folder check : $FolderName" -NotDisplay
 }
 
 # Test and create file if not yet existing
@@ -1570,27 +2285,27 @@ Function Test-FilePath {
     
     $FileName = ($FileName.Split('\'))[-1]
     
-    Write-Log -Type INFO -Name 'Program initialisation - Program Files check' -Message "Start file check : $FileName" -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Program Files check' -Message "File : $FilePath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Program Files check' -Message "State : " -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Files check' -Message "Start file check : $FileName" -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Files check' -Message "File : $FilePath" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Program Files check' -Message "State : " -NotDisplay
     
     If (-not (Test-Path -Path $FilePath)) {
     
-        Write-Log -Type WARNING -Name 'Program initialisation - Program Files check' -Message "Doesn't exists" -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Program Files check' -Message "Creation file status : " -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Program Files check' -Message "Doesn't exists" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Program Files check' -Message "Creation file status : " -NotDisplay
         Try {
             $Null = New-Item -Path $FileRoot -Name $FileName -ItemType File -Force
-            Write-Log -Type VALUE -Name 'Program initialisation - Program Files check' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Program Files check' -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Name 'Program initialisation - Program Files check' -Message "Failed, `"$FilePath`" file can't be created due to : $($_.ToString())"
+            Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Program Files check' -Message "Failed, `"$FilePath`" file can't be created due to : $($_.ToString())"
             Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason "The file : $FilePath can nott be created" -ErrorAction Stop
         }
     }
     Else {
-        Write-Log -Type VALUE -Name 'Program initialisation - Program Files check' -Message 'Already exists' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Program Files check' -Message 'Already exists' -NotDisplay
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Program Files check' -Message "End file check : $FileName" -NotDisplay
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Program Files check' -Message "End file check : $FileName" -NotDisplay
 }
 
 # Import Program and Box Actions available
@@ -1623,17 +2338,31 @@ function Import-Referential {
     
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$ReferentialPath
+        [String]$ReferentialPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$LogCategory,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$LogName
     )
+    
+    Write-Log -Type INFO -Category $LogCategory -Name $LogName -Message 'Start Referentiel Importation' -NotDisplay
+    Write-Log -Type INFO -Category $LogCategory -Name $LogName -Message 'Importing Referentiel from : ' -NotDisplay
+    Write-Log -Type VALUE -Category $LogCategory -Name $LogName -Message "$ReferentialPath" -NotDisplay
+    Write-Log -Type INFONO -Category $LogCategory -Name $LogName -Message "Importing Referentiel Status : " -NotDisplay
     
     Try {
         $Actions = Import-Csv -Path $ReferentialPath -Delimiter ';' -Encoding utf8 -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $LogCategory -Name $LogName -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message "Failed. Referentiel Actions can't be imported, due to : $($_.ToString())"
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'The Referentiel with actions can not be imported' -ErrorAction Stop
+        Write-Log -Type ERROR -Category $LogCategory -Name $LogName -Message "Failed. Referentiel can't be imported, due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'The Referentiel can not be imported, due to : $($_.ToString())' -ErrorAction Stop
     }
+    
+    Write-Log -Type INFO -Category $LogCategory -Name $LogName -Message 'End Referentiel Importation' -NotDisplay
+    
     Return $Actions
 }
 
@@ -1876,11 +2605,11 @@ function Export-ModuleHelp {
     }
     
     # Get all function associated to the module
-    $ModuleDetails = get-Module -Name BOX-module
+    $ModuleDetails = Get-Module -Name BOX-module
     
     $Array1 = @()
     
-    $(get-Module -Name BOX-module).ExportedCommands | ForEach-Object {
+    $(Get-Module -Name BOX-module).ExportedCommands | ForEach-Object {
         $_.GetEnumerator() | ForEach-Object {
             
             $line1 = New-Object -TypeName PSObject
@@ -1905,6 +2634,237 @@ function Export-ModuleHelp {
     
     $Date = Get-Date -Format yyyyMMdd-hhmmss
     $Array | Export-Csv -Path "$ExportFolderFullPath\$Date-DetailsModule-$ModuleFileName.csv" -Force -Encoding utf8 -Delimiter ';' -NoTypeInformation
+}
+
+#region Load user Json file configuration management
+
+Function Get-JSONSettingsCurrentUserContent {
+
+<#
+.SYNOPSIS
+    Load current user Json file configuration management
+
+.DESCRIPTION
+    Load current user Json file configuration management
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Get-JSONSettingsCurrentUserContent
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Current User Settings loaded
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param(    )
+
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Start Json Current User Settings Importation' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Json Current User Settings Importation Status : ' -NotDisplay
+    Try {
+        $global:JSONSettingsCurrentUserContent = Get-Content -Path $global:JSONSettingsCurrentUserFileNamePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $global:DisplayFormat           = $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat
+        $global:ExportFormat            = $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat
+        $global:OpenExportFolder        = $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder
+        $global:OpenHTMLReport          = $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport
+        $global:ResolveDnsName          = $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName
+        $global:TriggerExportFormat     = $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat
+        $global:TriggerDisplayFormat    = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
+        $global:TriggerOpenHTMLReport   = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
+        $global:TriggerOpenExportFolder = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder
+        $global:SiteOldRemotePort       = $global:JSONSettingsCurrentUserContent.Site.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsCurrentUserContent.Site.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
+        
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Successful' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message "Failed, to import Json Current User Settings file, due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file import has failed' -ErrorAction Stop
+    }
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
+}
+
+Function Get-JSONSettingsDefaultUserContent {
+
+<#
+.SYNOPSIS
+    Load default user Json file configuration management
+
+.DESCRIPTION
+    Load default user Json file configuration management
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Get-JSONSettingsdefaultUserContent
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Default User Settings loaded
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param(    )
+
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Start Json Default User Settings Importation' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Json Default User Settings Importation Status : '
+    Try {
+        $global:JSONSettingsDefaultUserContent = Get-Content -Path $global:JSONSettingsDefaultUserFileNamePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
+        $global:DisplayFormat           = $global:JSONSettingsDefaultUserContent.DisplayFormat.DisplayFormat
+        $global:ExportFormat            = $global:JSONSettingsDefaultUserContent.ExportFormat.ExportFormat
+        $global:OpenExportFolder        = $global:JSONSettingsDefaultUserContent.OpenExportFolder.OpenExportFolder
+        $global:OpenHTMLReport          = $global:JSONSettingsDefaultUserContent.OpenHTMLReport.OpenHTMLReport
+        $global:ResolveDnsName          = $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName
+        $global:TriggerExportFormat     = $global:JSONSettingsDefaultUserContent.Trigger.ExportFormat
+        $global:TriggerDisplayFormat    = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
+        $global:TriggerOpenHTMLReport   = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
+        $global:TriggerOpenExportFolder = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFolder
+        $global:SiteOldRemotePort       = $global:JSONSettingsDefaultUserContent.Site.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsDefaultUserContent.Site.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsDefaultUserContent.Site.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsDefaultUserContent.Site.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsDefaultUserContent.Site.CurrentRemotePort
+        
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Successful'
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message "Failed, to import Json Default User Settings file, due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Default User Settings file import has failed' -ErrorAction Stop
+    }
+    Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'End Json Default User Settings Importation' -NotDisplay
+}
+
+#endregion Json file configuration management
+
+#region Reset User Json Configuration files
+Function Reset-CurrentUserProgramConfiguration {
+
+<#
+.SYNOPSIS
+    Reset User Json Configuration files
+
+.DESCRIPTION
+    Reset User Json Configuration files
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Reset-CurrentUserProgramConfiguration
+
+.INPUTS
+    None
+
+.OUTPUTS
+    Current User Program Configuration is reset
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): '', ''
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param(    )
+    
+    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
+    Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
+    Try {
+        Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force
+        Start-Sleep -Seconds $global:SleepDefault
+        Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Successful' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file reset has failed' -ErrorAction Stop
+    }
+    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
+
+    If (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath) {
+
+        Get-JSONSettingsCurrentUserContent
+    }
+    Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFileNamePath) {
+        
+        Get-JSONSettingsDefaultUserContent
+    }
+    Else {
+        Write-Log -Type WARNING -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
+        Write-Log -Type INFO -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user settings configuration file has failed' -ErrorAction Stop
+    }
+}
+#endregion Reset User Json Configuration files
+
+#endregion Program
+
+#region Chrome Driver / Google Chrome
+
+# Used only to detect Google Chrome and Chrome Driver version Online
+Function Get-LastestStableChromeVersionOnline {
+
+    <#
+    .SYNOPSIS
+        To Get Lastest Stable Chrome version
+    
+    .DESCRIPTION
+        To Get Lastest Stable Chrome version
+    
+    .PARAMETER ChromeDriverLastStableVersionUrl
+        This is the url to get the last online version of Chrome Driver and Google Chrome
+    
+    .EXAMPLE
+        Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl 'https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE'
+    
+    .INPUTS
+    Web Url
+    
+    .OUTPUTS
+        Lastest Stable Chrome version
+        $global:ChromeDriverLastStableVersion
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to script(s): '.\Box-Administration.psm1'
+    #>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$ChromeDriverLastStableVersionUrl
+    )
+    
+    # Get Chrome Driver Version in the Default Chrome Driver folder
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Get Lastest Stable Chrome Version Online' -Message 'Google Chrome/Driver lastest version found : ' -NotDisplay
+    
+    Try {
+        $global:ChromeDriverLastStableVersion = Invoke-WebRequest -Uri $ChromeDriverLastStableVersionUrl -SkipCertificateCheck -SkipHeaderValidation -AllowUnencryptedAuthentication -AllowInsecureRedirect -ConnectionTimeoutSeconds 30 -OperationTimeoutSeconds 30 -RetryIntervalSec 2 -Method Get
+
+        Write-Log -Type VALUE  -Category 'Program initialisation' -Name 'Get Lastest Stable Chrome Version Online' -Message $global:ChromeDriverLastStableVersion -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Get Lastest Stable Chrome Version Online' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Stop-Program -Context System -ErrorMessage 'Failed to get Chrome Driver/Google lastest Version' -Reason $($_.ToString())
+    }
 }
 
 # Used only to detect ChromeDriver version
@@ -1943,15 +2903,15 @@ Function Get-ChromeDriverVersion {
     $ChromeDriverDefaultVersion = $($ChromeDriverDefaultVersion -split " ")[1]
     
     # Get All Chrome Driver Version in Chrome Driver folder
-    Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message "Chrome Driver Version installed on device status : " -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message "Chrome Driver Version installed on device status : " -NotDisplay
     
     Try {
         $ChromeDriverVersionList = Get-childItem -Path $global:ChromeDriverRessourcesFolderNamePath <#-Exclude $global:ChromeDriverDefaultFolderName#> | Select-Object -Property Name | Sort-Object -Descending
-        Write-Log -Type VALUE -Name 'Program initialisation - Chrome Driver Version' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Failed, No Chrome Driver version was found"  -NotDisplay
-        Write-Log -Type WARNING -Name 'Program initialisation - Chrome Driver Version' -Message "Error detail : $($_.ToString())"     -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message "Failed, No Chrome Driver version was found"  -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message "Error detail : $($_.ToString())"     -NotDisplay
         $ChromeDriverVersionList    = $null
         $global:ChromeDriverVersion = $null
         $global:ChromeDriverFolder  = $null
@@ -1986,10 +2946,10 @@ Function Get-ChromeDriverVersion {
             $global:ChromeDriverFolder  = $Temp
         }
         
-        Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
-        Write-Log -Type VALUE  -Name 'Program initialisation - Chrome Driver Version' -Message $global:ChromeDriverVersion -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Chrome Driver Folder'  -Message 'ChromeDriver folder selected : ' -NotDisplay
-        Write-Log -Type VALUE  -Name 'Program initialisation - Chrome Driver Folder'  -Message $global:ChromeDriverFolder -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message 'ChromeDriver version selected : ' -NotDisplay
+        Write-Log -Type VALUE  -Category 'Program initialisation' -Name 'Chrome Driver Version' -Message $global:ChromeDriverVersion -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Chrome Driver Folder'  -Message 'ChromeDriver folder selected : ' -NotDisplay
+        Write-Log -Type VALUE  -Category 'Program initialisation' -Name 'Chrome Driver Folder'  -Message $global:ChromeDriverFolder -NotDisplay
     }
     Else {
         $global:TriggerExitSystem = 1
@@ -2031,15 +2991,15 @@ Function Get-GoogleChromeVersion {
         $GoogleChromeDefaultVersion = $(Get-ItemProperty -Path $global:GoogleChromeDefaultSetupFileNamePath).VersionInfo.FileVersion
         
         # Get All Google Chrome Version in Google Chrome folder
-        Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message "Google Chrome Version installed on device status : " -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Google Chrome Version' -Message "Google Chrome Version installed on device status : " -NotDisplay
         
         Try {
             $GoogleChromeVersionList = Get-childItem -Path $global:GoogleChromeRessourcesFolderNamePath <#-Exclude $global:GoogleChromeDefaultFolderName#> | Select-Object -Property Name | Sort-Object -Descending
-            Write-Log -Type VALUE -Name 'Program initialisation - Google Chrome Version' -Message "Successful" -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Google Chrome Version' -Message "Successful" -NotDisplay
         }
         Catch {
-            Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Version' -Message "Failed, No Google Chrome version was found"  -NotDisplay
-            Write-Log -Type WARNING -Name 'Program initialisation - Google Chrome Version' -Message "Error detail : $($_.ToString())"     -NotDisplay
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Google Chrome Version' -Message "Failed, No Google Chrome version was found"  -NotDisplay
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Google Chrome Version' -Message "Error detail : $($_.ToString())"     -NotDisplay
             $GoogleChromeVersionList    = $null
             $global:GoogleChromeFolder  = $null
             $global:GoogleChromeVersion = $null
@@ -2074,1514 +3034,15 @@ Function Get-GoogleChromeVersion {
                 $global:GoogleChromeFolder  = $Temp
             }
             
-            Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Version' -Message 'GoogleChrome version selected : ' -NotDisplay
-            Write-Log -Type VALUE  -Name 'Program initialisation - Google Chrome Version' -Message $global:GoogleChromeVersion -NotDisplay
-            Write-Log -Type INFONO -Name 'Program initialisation - Google Chrome Folder'  -Message 'GoogleChrome folder selected : ' -NotDisplay
-            Write-Log -Type VALUE  -Name 'Program initialisation - Google Chrome Folder'  -Message $global:GoogleChromeFolder -NotDisplay
+            Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Google Chrome Version' -Message 'GoogleChrome version selected : ' -NotDisplay
+            Write-Log -Type VALUE  -Category 'Program initialisation' -Name 'Google Chrome Version' -Message $global:GoogleChromeVersion -NotDisplay
+            Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Google Chrome Folder'  -Message 'GoogleChrome folder selected : ' -NotDisplay
+            Write-Log -Type VALUE  -Category 'Program initialisation' -Name 'Google Chrome Folder'  -Message $global:GoogleChromeFolder -NotDisplay
         }
         Else {
             $global:TriggerExitSystem = 1
         }
 }
-
-# Used only to detect Google Chrome and Chrome Driver version Online
-Function Get-LastestStableChromeVersionOnline {
-
-    <#
-    .SYNOPSIS
-        To Get Lastest Stable Chrome version
-    
-    .DESCRIPTION
-        To Get Lastest Stable Chrome version
-    
-    .PARAMETER ChromeDriverLastStableVersionUrl
-        This is the url to get the last online version of Chrome Driver and Google Chrome
-    
-    .EXAMPLE
-        Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl 'https://getwebdriver.com/chromedriver/api/LATEST_RELEASE_STABLE'
-    
-    .INPUTS
-    Web Url
-    
-    .OUTPUTS
-        Lastest Stable Chrome version
-        $global:ChromeDriverLastStableVersion
-    
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to script(s): '.\Box-Administration.psm1'
-    #>
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$ChromeDriverLastStableVersionUrl
-    )
-    
-    # Get Chrome Driver Version in the Default Chrome Driver folder
-    Write-Log -Type INFONO -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'Google Chrome/Driver lastest version found : ' -NotDisplay
-    
-    Try {
-        $global:ChromeDriverLastStableVersion = Invoke-WebRequest -Uri $ChromeDriverLastStableVersionUrl -SkipCertificateCheck -SkipHeaderValidation -AllowUnencryptedAuthentication -AllowInsecureRedirect -ConnectionTimeoutSeconds 30 -OperationTimeoutSeconds 30 -RetryIntervalSec 2 -Method Get
-
-        Write-Log -Type VALUE  -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message $global:ChromeDriverLastStableVersion -NotDisplay
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message "Failed, due to : $($_.ToString())" -NotDisplay
-        Stop-Program -Context System -ErrorMessage 'Failed to get Chrome Driver/Google lastest Version' -Reason $($_.ToString())
-    }
-}
-
-# Used only to define Box connexion type
-Function Get-ConnexionType {
-
-<#
-.SYNOPSIS
-    To define Box connexion type
-
-.DESCRIPTION
-    To define Box connexion type
-
-.PARAMETER TriggerLANNetwork
-    Define Box connexion type
-
-.EXAMPLE
-    Get-ConnexionType -TriggerLANNetwork 0
-    Get-ConnexionType -TriggerLANNetwork 1
-
-.INPUTS
-    $TriggerLANNetwork
-
-.OUTPUTS
-    $ConnexionType
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Show-WindowsFormDialogBox3ChoicesCancel', 'Show-WindowsFormDialogBox2ChoicesCancel'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$TriggerLANNetwork
-    )
-    
-    Switch ($TriggerLANNetwork) {
-    
-        '1'        {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
-        
-        '0'        {$ConnexionTypeChoice = $global:ValuesLANNetworkRemote;Break}
-        
-        Default    {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "How do you want to connect to the $global:BoxType ?" -NotDisplay
-
-    $ConnexionType = ''
-    While ($ConnexionType -notmatch $ConnexionTypeChoice) {
-        
-        Switch ($TriggerLANNetwork) {
-            
-            '1'        {Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
-                        $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
-                        Break
-                    }
-            
-            '0'        {Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message '(R) Remotly / (Q) Quit the Program' -NotDisplay
-                        $ConnexionType = Show-WindowsFormDialogBox2ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'R' -SecondOptionButtonText 'Q'
-                        Break
-                    }
-            
-            Default    {Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
-                        $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
-                        Break
-                    }
-        }
-    }
-     
-    Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "Connexion Type chosen by user : $ConnexionType" -NotDisplay
-    
-    Return $ConnexionType
-}
-
-# Used only to check if external Box DNS is online 
-Function Get-HostStatus {
-
-<#
-.SYNOPSIS
-    To check if external Box DNS is online
-
-.DESCRIPTION
-    To check if external Box DNS is online
-
-.PARAMETER UrlRoot
-    This is the Root DNS/url to connect to the Box web interface
-
-.EXAMPLE
-    Get-HostStatus -UrlRoot "mybox.bytel.fr"
-    Get-HostStatus -UrlRoot "exemple.com"
-
-.INPUTS
-    $UrlRoot
-
-.OUTPUTS
-    Box Host Status
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Test-Connection', 'Show-WindowsFormDialogBox', 'Set-ValueToJSONFile'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param ()
-    
-    If ($global:BoxType -eq "Freebox") {
-        
-        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText 'OK' -CancelButtonText 'Cancel' -DefaultValue $DefaultValue
-        Return $UrlRoot
-    }
-    
-    Else {
-
-        If (-not [string]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteCurrentLocalUrl
-        }
-        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteOldRemoteUrl
-        }
-        Else {
-            $DefaultValue = $global:DefaultLocalUrl
-        }
-        
-        $BoxDnsStatus = $null
-        While ($null -eq $BoxDnsStatus) {
-            
-            $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText 'OK' -CancelButtonText 'Cancel' -DefaultValue $DefaultValue
-            Write-Log -Type INFONO -Name 'Program run - Check Host' -Message "Host `"$UrlRoot`" status : " -NotDisplay
-            
-            If ($global:TriggerDialogBox -eq 1) {
-                
-                Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'User Cancel the action' -NotDisplay
-                Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
-                $UrlRoot = $null
-                Return $UrlRoot
-                Break
-            }
-            
-            If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
-                
-                Try {
-                    $BoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
-                }
-                
-                Catch {
-                    Write-Log -Type ERROR -Name 'Program run - Check Host' -Message "Failed to resolve / Access to : $UrlRoot, due to : $($_.ToString())"
-                    #$global:TriggerExitSystem = 1
-                }
-                
-                If ($BoxDnsStatus -eq $true) {
-                    
-                    Write-Log -Type VALUE -Name 'Program run - Check Host' -Message 'Online' -NotDisplay
-                    $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:SiteCurrentRemoteUrl
-                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
-                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-                    Return $UrlRoot
-                    Break
-                }
-                Else {
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message 'Offline' -NotDisplay
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You are connected to internet"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- You enter a valid DNS address or IP address"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
-                    Write-Log -Type WARNING -Name 'Program run - Check Host' -Message "- If you use a proxy, that do not block the connection to your public dyndns"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns" -WarnIcon
-                    $BoxDnsStatus = $null
-                    $UrlRoot = $null
-                }
-            }
-            Else {
-                Write-Log -Type WARNING -Name "Program run - Check Host" -Message "This field can't be empty or null"
-                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "This field can't be empty or null" -WarnIcon
-                $BoxDnsStatus = $null
-                $UrlRoot = $null
-            }
-        }
-    }
-}
-
-# Used only to check if external Box Port is open
-Function Get-PortStatus {
-
-<#
-.SYNOPSIS
-    To check if external Box Port is open
-
-.DESCRIPTION
-    To check if external Box Port is open
-
-.PARAMETER UrlRoot
-    This is the Root DNS/url to connect to the Box web interface
-
-.PARAMETER Port
-    This is the port to check if open or not
-
-.EXAMPLE
-    Get-HostStatus -UrlRoot "exemple.com" -Port "8560"
-    Get-HostStatus -UrlRoot "exemple.com" -Port "80"
-
-.INPUTS
-    $UrlRoot
-    $Port
-
-.OUTPUTS
-    $Port
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Show-WindowsFormDialogBox', 'Test-NetConnection', 'Set-ValueToJSONFile'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot
-    )
-
-    If ($global:BoxType -eq "Freebox") {
-        
-        [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel' -DefaultValue $global:DefaultRemotePort
-    }
-    Else {
-        
-        If (-not [string]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteCurrentRemotePort
-        }
-        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteOldRemotePort
-        }
-        Else {
-            $DefaultValue = $global:DefaultRemotePort
-        }
-        
-        $PortStatus = $null
-        While ([string]::IsNullOrEmpty($PortStatus) -or [string]::IsNullOrEmpty($Port)) {
-            
-            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText 'Ok' -CancelButtonText 'Cancel' -DefaultValue $DefaultValue
-            Write-Log -Type INFONO -Name 'Program run - Check Port' -Message "Port `"$Port`" status : " -NotDisplay
-            
-            If ($global:TriggerDialogBox -eq 1) {
-                
-                Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'User Cancel the action' -NotDisplay
-                Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
-                Break
-            }
-            
-            If (($Port -ge 1) -and ($Port -le 65535)) {
-                
-                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
-                Write-Log -Type VALUE -Name 'Program run - Check Port' -Message $PortStatus.TcpTestSucceeded -NotDisplay
-                
-                If ($PortStatus.TcpTestSucceeded -eq $true) {
-                    
-                    Write-Log -Type VALUE -Name 'Program run - Check Port' -Message 'Opened' -NotDisplay
-                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:SiteCurrentRemotePort
-                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
-                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-                    Return $Port
-                    Break
-                }
-                Else {
-                    
-                    If ([string]::IsNullOrEmpty($global:SiteOldRemotePort)) {
-                        $OldRemotePort = $global:SiteOldRemotePort
-                    }
-                    Else {
-                        $OldRemotePort = $global:DefaultRemotePort
-                    }
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'Closed' -NotDisplay
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- You enter a valid port number"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- None Firewall rule(s) block this port ($global:BoxUrlFirewall)"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
-                    Write-Log -Type WARNING -Name 'Program run - Check Port' -Message "- For remember you use the port : $OldRemotePort the last time"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number between 1 and 65535`n- None Firewall rule(s) block this port ($global:BoxUrlFirewall)`n- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- For remember you use the port : $OldRemotePort the last time" -WarnIcon
-                    $Port = $null
-                    $PortStatus = $null
-                }
-            }
-            Else {
-                Write-Log -Type WARNING -Name 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565'
-                Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565' -WarnIcon
-                $Port = $null
-                $PortStatus = $null
-            }
-        }
-    }
-}
-
-# Used only to get Box LAN Switch Port State
-Function Get-LanPortState {
-
-<#
-.SYNOPSIS
-    To get Box LAN Switch Port State
-
-.DESCRIPTION
-    To get Box LAN Switch Port State
-
-.PARAMETER LanPortState
-    This is the switch port number to get the state
-
-.EXAMPLE
-    Get-LanPortState -LanPortState 1
-    Get-LanPortState -LanPortState 2
-    Get-LanPortState -LanPortState 3
-    Get-LanPortState -LanPortState 4
-
-.INPUTS
-    $LanPortState
-
-.OUTPUTS
-    $State
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Get-DeviceFullLog'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$LanPortState
-    )
-    
-    Switch ($LanPortState) {
-    
-        0          {$State = "Disable";Break}
-        1          {$State = "Enable";Break}
-        2          {$State = "Enable";Break}
-        3          {$State = "Enable";Break}
-        4          {$State = "Enable";Break}
-        Default    {$State = "Unknow";Break}
-    }
-    
-    Return $State
-}
-
-# Used only to connect to BBox Web Interface
-Function Connect-BBox {
-
-<#
-.SYNOPSIS
-    To connect to BBox Web interface
-
-.DESCRIPTION
-    To connect to BBox Web interface
-
-.PARAMETER UrlAuth
-    This is the url use to login to the BBox web interface
-
-.PARAMETER UrlHome
-    This is the main page of BBox web interface
-
-.PARAMETER Password
-    This is the user password to authentificate to Box web interface
-    
-.EXAMPLE
-    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr"      -UrlHome "https://mabbox.bytel.fr/index.html"      -Password "Password"
-    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr:8560" -UrlHome "https://mabbox.bytel.fr:8560/index.html" -Password "Password"
-    Connect-BBOX -UrlAuth "https://exemple.com:80"       -UrlHome "https://exemple.com:80/index.html"       -Password "Password"
-
-.INPUTS
-    $UrlAuth
-    $UrlHome
-    $Password
-
-.OUTPUTS
-    User authentificated to the Box Web Interface
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlAuth,
-
-        [Parameter(Mandatory=$True)]
-        [String]$UrlHome,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Password
-    )
-    
-    # Open Web Site Home Page 
-    $global:ChromeDriver.Navigate().GoToURL($UrlAuth)
-    Start-Sleep $global:SleepChromeDriverNavigation
-    
-    # Enter the password to connect (# Methods to find the input textbox for the password)
-    $global:ChromeDriver.FindElementByName("password").SendKeys("$Password") 
-    Start-Sleep $global:SleepDefault
-    
-    # Tic checkBox "Stay Connect" (# Methods to find the input checkbox for stay connect)
-    $global:ChromeDriver.FindElementByClassName('cb').Click()
-    Start-Sleep $global:SleepDefault
-    
-    # Click on the connect button
-    $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
-    Start-Sleep $global:SleepDefault
-
-    If ($global:ChromeDriver.Url -ne $UrlHome) {
-        Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : Wrong Password or connection timeout"
-        Stop-Program -Context System -ErrorMessage 'Authentification can not be done' -Reason 'Authentification can not be done' -ErrorAction Stop
-    }
-    
-    <#
-    $LoginParameters = @{
-        Uri             = $UrlAuth
-        SessionVariable = 'Session'
-        Method          = 'POST'
-        Body            = @{
-        Password        = $Password
-        }
-    }
-     
-    $LoginResponse = Invoke-WebRequest @LoginParameters
-
-    If ($LoginResponse.StatusCode -ne '200') {
-        Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password or connection timeout'
-        Stop-Program -Context System -ErrorMessage 'Authentification can not be done' -Reason 'Authentification can not be done' -ErrorAction Stop
-    }
-    Else {
-        Write-Log value -Name 'Program run - ChromeDriver Authentification' -Message 'Successful'
-    }
-    #>
-}
-
-# Used only to connect to FREEBOX Web Interface
-Function Connect-FREEBOX {
-    
-<#
-.SYNOPSIS
-    To connect to Box Web interface
-
-.DESCRIPTION
-    To connect to Box Web interface
-
-.PARAMETER UrlAuth
-    This is the url use to login to the Box web interface
-
-.PARAMETER UrlHome
-    This is the main page of Box web interface
-
-.PARAMETER Password
-    This is the user password to authentificate to Box web interface
-    
-.EXAMPLE
-    Connect-BOX -UrlAuth "https://192.168.0.254"      -UrlHome "https://192.168.0.254/index.html"      -Password "Password"
-    Connect-BOX -UrlAuth "https://192.168.0.254:8560" -UrlHome "https://192.168.0.254:8560/index.html" -Password "Password"
-    Connect-BOX -UrlAuth "https://exemple.com:80"     -UrlHome "https://exemple.com:80/index.html"     -Password "Password"
-
-.INPUTS
-    $UrlAuth
-    $UrlHome
-    $Password
-
-.OUTPUTS
-    User authentificated to the Box Web Interface
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlAuth,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlHome,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Password
-    )
-    
-    # Open Web Site Home Page 
-    $global:ChromeDriver.Navigate().GoToURL($UrlAuth)
-    Start-Sleep $global:SleepDefault
-
-    # Enter the password to connect (# Methods to find the input textbox for the password)
-    $global:ChromeDriver.FindElementByClassName("password").SendKeys("$Password") 
-    Start-Sleep $global:SleepDefault
-    
-    # Click on the connect button
-    $global:ChromeDriver.FindElementByClassName("submit-btn").Submit()
-    Start-Sleep $global:SleepChromeDriverLoading
-
-    <#"If ($global:ChromeDriver.Url -ne $UrlHome) {
-        Write-Log ERROR -Name 'Program run - ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password or connection timeout'
-        Stop-Program -Context System -ErrorAction Stop
-    }#>
-}
-
-# Used only to get information from API page content
-Function Get-BoxInformation {
-
-<#
-.SYNOPSIS
-    To get information from API page content
-
-.DESCRIPTION
-    To get information from API page content
-
-.PARAMETER UrlToGo
-    This is the url that you want to collect data
-
-.EXAMPLE
-    Get-BoxInformation -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log"
-    Get-BoxInformation -UrlToGo "https://exemple.com:8560/api/v1/device/log"
-    Get-BoxInformation -UrlToGo "https://exemple.com:80/api/v1/device/log"
-
-.INPUTS
-    UrlToGo
-
-.OUTPUTS
-    PSCustomObject = $Json
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-ErrorCode', 'ConvertFrom-Json'
-    linked to many functions in the module : '.\Box-Modules.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Start retrieve informations requested" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Get informations requested from url : $UrlToGo" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Request status :" -NotDisplay
-    
-    If ($global:PreviousUrlToGo -notcontains $UrlToGo) {
-        
-        $global:PreviousUrlToGo = $UrlToGo
-        
-        If (($global:TriggerAuthentification -eq 1) -or ($UrlToGo -match $global:APINameExclusionsChrome)) {
-        
-            Try {
-                # Go to the web page to get information we need
-                $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-                Write-Log -Type INFO -Name 'Program run - Get Information' -Message 'Successful' -NotDisplay
-            }
-            Catch {
-                Write-Log -Type ERROR -Name 'Program run - Get Information' -Message "Failed, due to : $($_.ToString())"
-                Write-Log -Type ERROR -Name 'Program run - Get Information' -Message "Please check your local/internet network connection"
-                Return "0"
-                Break
-            }
-            
-            Write-Log -Type INFO -Name 'Program run - Get Information' -Message "End retrieve informations requested" -NotDisplay
-            Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "Start convert data from Html to plaintxt format" -NotDisplay
-            Write-Log -Type INFONO -Name "Program run - Convert HTML" -Message "HTML Conversion status : " -NotDisplay
-            
-            Try {
-                # Get Web page Content
-                $Html = $global:ChromeDriver.PageSource
-                # Convert $Html To Text
-                $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-                Write-Log -Type VALUE -Name "Program run - Convert HTML" -Message 'Successful' -NotDisplay
-            }
-            Catch {
-                Write-Log -Type ERROR -Name "Program run - Convert HTML" -Message "Failed to convert to HTML, due to : $($_.ToString())"
-                Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "End convert data from Html to plaintxt format" -NotDisplay
-                Return "0"
-                Break
-            }
-            Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "End convert data from Html to plaintxt format" -NotDisplay
-            Try {
-                # Convert $Plaintxt as JSON to array
-                $Global:Json = $Plaintxt | ConvertFrom-Json -ErrorAction Stop
-                Write-Log -Type VALUE -Name "Program run - Convert JSON" -Message 'Successful' -NotDisplay
-            }
-            Catch {
-                Write-Log -Type ERROR -Name "Program run - Convert JSON" -Message "Failed - Due to : $($_.ToString())"
-                Return "0"
-                Break
-            }
-            Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
-            
-            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
-                
-                Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "Start get API error code" -NotDisplay
-                Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API Error Code : "
-                
-                Try {
-                    $ErrorCode = Get-ErrorCode -Json $Global:Json
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
-                    Return $ErrorCode.String()
-                    Break
-                }
-                Catch {
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message $Global:Json -NotDisplay
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
-                    Return $null
-                }
-                
-                Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API Error Code" -NotDisplay
-            }
-            Else {
-                Return $Global:Json
-            }
-        }
-        Else {
-        
-            Try {
-                # Get Web page Content
-                $Response = Invoke-WebRequest -Uri $UrlToGo -AllowUnencryptedAuthentication -SkipCertificateCheck -SkipHeaderValidation -AllowInsecureRedirect -ConnectionTimeoutSeconds 30 -OperationTimeoutSeconds 30 -RetryIntervalSec 1 -Method Get
-                Write-Log -Type INFO -Name 'Program run - Get Information' -Message 'Successful' -NotDisplay
-            }
-            Catch {
-                
-                Write-Log -Type ERROR -Name 'Program run - Get Information' -Message "Failed, due to : $($_.ToString())"
-            }
-            
-            Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
-            Write-Log -Type INFONO -Name "Program run - Convert JSON" -Message "JSON Conversion status : " -NotDisplay
-            
-            Try {
-                # Convert $Plaintxt as JSON to array
-                $Global:Json = $($Response.Content) | ConvertFrom-Json -ErrorAction Stop
-                Write-Log -Type VALUE -Name "Program run - Convert JSON" -Message 'Successful' -NotDisplay
-            }
-            Catch {
-                Write-Log -Type ERROR -Name "Program run - Convert JSON" -Message "Failed - Due to : $($_.ToString())"
-                Return "0"
-                Break
-            }
-            
-            Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
-            
-            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
-                
-                Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "Start get API error code" -NotDisplay
-                Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API Error Code : "
-                
-                Try {
-                    $ErrorCode = Get-ErrorCode -Json $Global:Json
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
-                    Return $ErrorCode.String()
-                    Break
-                }
-                Catch {
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message $Global:Json -NotDisplay
-                    Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
-                    Return $null
-                }
-                
-                Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End get API Error Code" -NotDisplay
-            }
-            Else {
-                Return $Global:Json
-            }
-        }
-    }
-    Else {
-        Write-Log -Type VALUE -Name 'Program run - Get Information' -Message "Data already loaded in cache" -NotDisplay
-        $global:PreviousUrlToGo = $UrlToGo
-        Return $Global:Json
-    }
-}
-
-# Used only to get information from API page content for FREEBOX
-Function Get-FREEBOXInformation {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    Write-Log -Type INFO -Name "Program run - Get Information" -Message "Start retrieving informations requested" -NotDisplay
-    Write-Log -Type INFO -Name "Program run - Get Information" -Message "Get informations requested from url : $UrlToGo" -NotDisplay
-    Try {
-        # Go to the web page to get information we need
-        $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-        Write-Log -Type INFO -Name "Program run - Get Information" -Message "Successsful" -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name "Program run - Get Information" -Message "Failed - Due to : $($_.ToString())"
-        Write-Host "Please check your local/internet network connection" -ForegroundColor Yellow
-        Return "0"
-        Break
-    }
-    Write-Log -Type INFO -Name "Program run - Get Information" -Message "End retrieving informations requested" -NotDisplay
-
-    Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "Start converting data from Html to plaintxt format" -NotDisplay
-    Write-Log -Type INFONO -Name "Program run - Convert HTML" -Message "HTML Conversion status : " -NotDisplay
-    Try {
-        # Get Web page Content
-        $Html = $global:ChromeDriver.PageSource
-        
-        # Convert $Html To Text
-        $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-        
-        Write-Log -Type VALUE -Name "Program run - Convert HTML" -Message "Successful" -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name "Program run - Convert HTML" -Message "Failed to convert to HTML, due to : $($_.ToString())"
-        Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "End converting data from Html to plaintxt format" -NotDisplay
-        Return "0"
-        Break
-    }
-    Write-Log -Type INFO -Name "Program run - Convert HTML" -Message "End converting data from Html to plaintxt format" -NotDisplay
-        
-    Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
-    Write-Log -Type INFONO -Name "Program run - Convert JSON" -Message "JSON Conversion status : " -NotDisplay
-    Try {
-        # Convert $Plaintxt as JSON to array
-        $Json = $Plaintxt | ConvertFrom-Json
-        Write-Log -Type VALUE -Name "Program run - Convert JSON" -Message "Successful" -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name "Program run - Convert JSON" -Message "Failed - Due to : $($_.ToString())"
-        Return "0"
-    }
-    Write-Log -Type INFO -Name "Program run - Convert JSON" -Message "End converting data from plaintxt to Json format" -NotDisplay
-    
-    If ($Json.exception) {
-        
-        Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "Start getting API error code" -NotDisplay
-        Write-Log -Type INFONO -Name "Program run - Get API Error Code" -Message "API error code : "
-        Try {
-            $ErrorCode = Get-ErrorCode -Json $Json -ErrorAction Stop
-            Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "$ErrorCode"
-            Return $ErrorCode
-        }
-        Catch {
-            Write-Log -Type ERROR -Name "Program run - Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
-        }
-
-        Write-Log -Type INFO -Name "Program run - Get API Error Code" -Message "End getting API error code" -NotDisplay
-    }
-    Else {
-        Return $Json
-    }
-}
-
-# Used only to convert HTML page to TXT
-Function ConvertFrom-HtmlToText {
-
-<#
-.SYNOPSIS
-    Convert HTML page to TXT
-
-.DESCRIPTION
-    Convert HTML page to TXT
-
-.PARAMETER $Html
-    This is the HTML code content from the Web API content
-
-.EXAMPLE
-    ConvertFrom-HtmlToText -Html $Html
-
-.INPUTS
-    $Html
-
-.OUTPUTS
-    $Html
-
-.NOTES
-    Author : Winston - 2010/09/21
-    Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
-    Linked to function(s): 'Get-BoxInformation', 'Update-ChromeDriver'
-
-#>
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [System.String]$Html
-    )
-    
-    # remove line breaks, replace with spaces
-    $Html = $Html -replace "(`r|`n|`t)", ' '
-    # write-verbose "removed line breaks: `n`n$Html`n"
-    
-    # remove invisible content
-    @('head', 'style', 'script', 'object', 'embed', 'applet', 'noframes', 'noscript', 'noembed') | Foreach-object {
-    $Html = $Html -replace "<$_[^>]*?>.*?</$_>", ''
-    }
-    # write-verbose "removed invisible blocks: `n`n$Html`n"
-    
-    # Condense extra whitespace
-    $Html = $Html -replace "( )+", ' '
-    # write-verbose "condensed whitespace: `n`n$Html`n"
-    
-    # Add line breaks
-    @('div','p','blockquote','h[1-9]') | Foreach-object { $Html = $Html -replace "</?$_[^>]*?>.*?</$_>", ("`n" + '$0' )} 
-    # Add line breaks for self-closing tags
-    @('div','p','blockquote','h[1-9]','br') | Foreach-object { $Html = $Html -replace "<$_[^>]*?/>", ('$0' + "`n")} 
-    # write-verbose "added line breaks: `n`n$Html`n"
-    
-    #strip tags 
-    $Html = $Html -replace "<[^>]*?>", ''
-    # write-verbose "removed tags: `n`n$Html`n"
-    
-    # replace common entities
-    @( 
-    @("&amp;bull;", " * "),
-    @("&amp;lsaquo;", "<"),
-    @("&amp;rsaquo;", ">"),
-    @("&amp;(rsquo|lsquo);", "'"),
-    @("&amp;(quot|ldquo|rdquo);", '"'),
-    @("&amp;trade;", "(tm)"),
-    @("&amp;frasl;", "/"),
-    @("&amp;(quot|#34|#034|#x22);", '"'),
-    @('&amp;(amp|#38|#038|#x26);', "&amp;"),
-    @("&amp;(lt|#60|#060|#x3c);", "<"),
-    @("&amp;(gt|#62|#062|#x3e);", ">"),
-    @('&amp;(copy|#169);', "(c)"),
-    @("&amp;(reg|#174);", "(r)"),
-    @("&amp;nbsp;", ' '),
-    @("&amp;(.{2,6});", '')
-    ) | Foreach-object { $Html = $Html -replace $_[0], $_[1] }
-    # write-verbose "replaced entities: `n`n$Html`n"
-    
-    Return $Html
-}
-
-# Used only to Set value(s) to JSON File
-Function Set-ValueToJSONFile {
-
-<#
-.SYNOPSIS
-    To set value(s) to JSON File
-
-.DESCRIPTION
-    To set value(s) to JSON File
-
-.PARAMETER JSONFileContent
-    This is settings to be set to the JSON file
-
-.PARAMETER JSONFileContentPath
-    This is JSON file path where Settings will be saved
-
-.EXAMPLE
-    Set-ValueToJSONFile JSONFileContent @{} -JSONFileContentPath "C:\Temp\File.json"
-
-.INPUTS
-    $JSONFileContent
-    $JSONFileContentPath
-
-.OUTPUTS
-    Settings saved to JSON file
-    Write in logs files
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Get-HostStatus', 'Get-PortStatus', 'Switch-DisplayFormat', 'Switch-OpenExportFolder', 'Switch-OpenHTMLReport', 'Export-HTMLReport', 'Switch-ExportFormat', 'Set-TriggerOpenExportFolder', 'Export-GlobalOutputData'
-    Linked to script(s) : .\BBox-Administration.ps1
-
-#>
-    
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$JSONFileContent,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JSONFileContentPath
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Save Settings to JSON File' -Message "Start Save Settings to JSON File" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Save Settings to JSON File' -Message "Try to save settings to JSON File : $JSONFileContentPath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Save Settings to JSON File' -Message "Save Settings to JSON File Status : " -NotDisplay
-    Try {
-        $JSONFileContent | ConvertTo-Json -ErrorAction Continue | Out-File -FilePath $JSONFileContentPath -Encoding unicode -Force -ErrorAction Continue
-        Write-Log -Type VALUE -Name 'Program run - Save Settings to JSON File' -Message "Successful" -NotDisplay
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program run - Save Settings to JSON File' -Message "Failed, due to : $($_.ToString())" -NotDisplay
-    }
-    Write-Log -Type INFO -Name 'Program run - Save Settings to JSON File' -Message "End Save Settings to JSON File" -NotDisplay
-}
-
-# Used only to select function to get data from Box web API or do actions
-Function Switch-Info {
-
-<#
-.SYNOPSIS
-    To select function to get data from Box web API or do actions
-
-.DESCRIPTION
-    To select function to get data from Box web API or do actions
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
-    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://exemple.com:8560/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
-    Switch-Info -Label "GET-DEVICEFLOG" -UrlToGo "https://exemple.com:80/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
-
-.INPUTS
-    $Label
-    $UrlToGo
-    $APIName
-    $Mail
-    $JournalPath
-    $GitHubUrlSite
-
-.OUTPUTS
-    $FormatedData
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-BoxConfigTestingProgram', ''
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$Label,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Mail,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$GitHubUrlSite
-    )
-    
-        Switch ($Label) {
-            
-            # Error Code 
-            Get-ErrorCode        {$FormatedData = Get-ErrorCode -UrlToGo $UrlToGo;Break}
-            
-            Get-ErrorCodeTest    {$FormatedData = Get-ErrorCodeTest -UrlToGo $UrlToGo;Break}
-            
-            # API Version 
-            Get-APIVersion       {$FormatedData = Get-APIVersion -UrlToGo $UrlToGo;Break}
-            
-            # Contact 
-            Get-Contact          {$FormatedData = Get-Contact -UrlToGo $UrlToGo;Break}
-            
-            # Call Log
-            Get-Calllog          {$FormatedData = Get-Calllog -UrlToGo $UrlToGo;Break}
-            
-            # Airties
-            Get-Airties          {$FormatedData = Get-Airties -UrlToGo $UrlToGo;Break}
-            
-            Get-AirtiesL         {$FormatedData = Get-AirtiesLANmode -UrlToGo $UrlToGo;Break}
-            
-            # Backup
-            GET-CONFIGSL         {$FormatedData = Get-BackupList -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            # DHCP
-            GET-DHCP             {$FormatedData = Get-DHCP -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-DHCPC            {$FormatedData = Get-DHCPClients -UrlToGo $UrlToGo;Break}
-            
-            GET-DHCPCID          {$FormatedData = Get-DHCPClientsID -UrlToGo $UrlToGo;Break}
-            
-            GET-DHCPAO           {$FormatedData = Get-DHCPActiveOptions -UrlToGo $UrlToGo;Break}
-            
-            GET-DHCPO            {$FormatedData = Get-DHCPOptions -UrlToGo $UrlToGo;Break}
-            
-            GET-DHCPOID          {$FormatedData = Get-DHCPOptionsID -UrlToGo $UrlToGo;Break}
-            
-            Get-DHCPSTBO         {$FormatedData = Get-DHCPSTBOptions -UrlToGo $UrlToGo;Break}
-            
-            Get-DHCPv6PFD        {$FormatedData = Get-DHCPv6PrefixDelegation -UrlToGo $UrlToGo;Break}
-
-            Get-DHCPv6O          {$FormatedData = Get-DHCPv6Options -UrlToGo $UrlToGo;Break}
-            
-            # DNS
-            GET-DNSS             {$FormatedData = Get-DNSStats -UrlToGo $UrlToGo;Break}
-            
-            # DEVICE
-            GET-DEVICE           {$FormatedData = Get-Device -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-DEVICELOG        {$FormatedData = Get-DeviceLog -UrlToGo $UrlToGo;Break}
-
-            GET-DEVICEFLOG       {$FormatedData = Get-DeviceFullLog -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICEFTLOG      {$FormatedData = Get-DeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICECHLOG      {$FormatedData = Get-DeviceConnectionHistoryLog -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICECHLOGID    {$FormatedData = Get-DeviceConnectionHistoryLogID -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICEC          {$FormatedData = Get-DeviceCpu -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICEM          {$FormatedData = Get-DeviceMemory -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICELED        {$FormatedData = Get-DeviceLED -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICES          {$FormatedData = Get-DeviceSummary -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICET          {$FormatedData = Get-DeviceToken -UrlToGo $UrlToGo;Break}
-            
-            SET-DEVICER          {Set-DeviceReboot -UrlToGo $UrlToGo;Break}
-            
-            SET-DEVICEFR         {Set-DeviceResetFactory -UrlToGo $UrlToGo;Break}
-            
-            # DYNDNS
-            GET-DYNDNS           {$FormatedData = Get-DYNDNS -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-DYNDNSPL         {$FormatedData = Get-DYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-DYNDNSC          {$FormatedData = Get-DYNDNSClient -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-DYNDNSCID        {$FormatedData = Get-DYNDNSClientID -UrlToGo $UrlToGo;Break}
-
-            # FIREWALL
-            GET-FIREWALL         {$FormatedData = Get-FIREWALL -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-FIREWALLR        {$FormatedData = Get-FIREWALLRules -UrlToGo $UrlToGo;Break}
-            
-            GET-FIREWALLRID      {$FormatedData = Get-FIREWALLRulesID -UrlToGo $UrlToGo;Break}
-            
-            GET-FIREWALLGM       {$FormatedData = Get-FIREWALLGamerMode -UrlToGo $UrlToGo;Break}
-            
-            GET-FIREWALLPR       {$FormatedData = Get-FIREWALLPingResponder -UrlToGo $UrlToGo;Break}
-            
-            Get-FIREWALLv6R      {$FormatedData = Get-FIREWALLv6Rules -UrlToGo $UrlToGo;Break}
-            
-            GET-FIREWALLv6RID    {$FormatedData = Get-FIREWALLv6RulesID -UrlToGo $UrlToGo;Break}
-            
-            Get-FIREWALLv6L      {$FormatedData = Get-FIREWALLv6Level -UrlToGo $UrlToGo;Break}
-            
-            # API
-            GET-APIRM            {$FormatedData = Get-APIRessourcesMap -UrlToGo $UrlToGo;Break}
-            
-            # HOST
-            Get-HOSTSDTH         {$FormatedData = Get-HOSTSDownloadThreshold -UrlToGo $UrlToGo;Break}
-            
-            GET-HOSTS            {$FormatedData = Get-HOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-HOSTSID          {$FormatedData = Get-HOSTSID -UrlToGo $UrlToGo;Break}
-            
-            Get-HOSTSW           {$FormatedData = Get-HOSTSWireless -UrlToGo $UrlToGo;Break}
-            
-            GET-HOSTSME          {$FormatedData = Get-HOSTSME -UrlToGo $UrlToGo;Break}
-            
-            Get-HOSTSL           {$FormatedData = Get-HOSTSLite -UrlToGo $UrlToGo;Break}
-            
-            Get-HOSTSP           {$FormatedData = Get-HOSTSPAUTH -UrlToGo $UrlToGo;Break}
-            
-            # LAN
-            Get-LANIPC           {$FormatedData = Get-LANIPConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            Get-LANIPSC          {$FormatedData = Get-LANIPSwitchConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-LANS             {$FormatedData = Get-LANStats -UrlToGo $UrlToGo;Break}
-            
-            GET-LANPS            {$FormatedData = Get-LANPortStats -UrlToGo $UrlToGo;Break}
-            
-            GET-LANA             {$FormatedData = Get-LANAlerts -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            # NAT
-            GET-NAT              {$FormatedData = Get-NAT -UrlToGo $UrlToGo;Break}
-            
-            GET-NATDMZ           {$FormatedData = Get-NATDMZ -UrlToGo $UrlToGo;Break}
-            
-            GET-NATR             {$FormatedData = Get-NATRules -UrlToGo $UrlToGo;Break}
-            
-            GET-NATRID           {$FormatedData = Get-NATRulesID -UrlToGo $UrlToGo;Break}
-            
-            # Parental Control
-            GET-PARENTALCONTROL  {$FormatedData = Get-ParentalControl -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-PARENTALCONTROLS {$FormatedData = Get-ParentalControlScheduler -UrlToGo $UrlToGo;Break}
-            
-            GET-PARENTALCONTROLSR{$FormatedData = Get-ParentalControlSchedulerRules -UrlToGo $UrlToGo;Break}
-            
-            # PROFILE
-            GET-PROFILEC         {$FormatedData = Get-ProfileConsumption -UrlToGo $UrlToGo;Break}
-            
-            # REMOTE
-            GET-REMOTEPWOL       {$FormatedData = Get-REMOTEProxyWOL -UrlToGo $UrlToGo;Break}
-            
-            # SERVICES
-            GET-SERVICES         {$FormatedData = Get-SERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            # IP TV
-            GET-IPTV             {$FormatedData = Get-IPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-IPTVD            {$FormatedData = Get-IPTVDiags -UrlToGo $UrlToGo;Break}
-            
-            # NOTIFICATION
-            GET-NOTIFICATION     {$FormatedData = Get-NOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-NOTIFICATIONCA   {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
-            
-            GET-NOTIFICATIONCC   {$FormatedData = Get-NOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
-            
-            GET-NOTIFICATIONCE   {$FormatedData = Get-NOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
-            
-            GET-NOTIFICATIONA    {$FormatedData = Get-NOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
-            
-            GET-NOTIFICATIONC    {$FormatedData = Get-NOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
-            
-            GET-NOTIFICATIONE    {$FormatedData = Get-NOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
-            
-            # UPNP IGD
-            GET-UPNPIGD          {$FormatedData = Get-UPNPIGD -UrlToGo $UrlToGo;Break}
-            
-            GET-UPNPIGDR         {$FormatedData = Get-UPNPIGDRules -UrlToGo $UrlToGo;Break}
-            
-            # USB
-            GET-DEVICEUSBP       {$FormatedData = Get-DeviceUSBPrinter -UrlToGo $UrlToGo;Break}
-            
-            GET-DEVICEUSBD       {$FormatedData = Get-DeviceUSBDevices -UrlToGo $UrlToGo;Break}
-            
-            GET-USBS             {$FormatedData = Get-USBStorage -UrlToGo $UrlToGo;Break}
-            
-            # VOIP
-            GET-VOIP             {$FormatedData = Get-VOIP -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-VOIPDC            {$FormatedData = Get-VOIPDiagConfig -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPDL            {$FormatedData = Get-VOIPDiagLine -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPDU           {$FormatedData = Get-VOIPDiagUSB -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPDH           {$FormatedData = Get-VOIPDiagHost -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPS            {$FormatedData = Get-VOIPScheduler -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPSR           {$FormatedData = Get-VOIPSchedulerRules -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPCL           {$FormatedData = Get-VOIPCallLogLine -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPCLPN         {$FormatedData = Get-VOIPCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPCLS          {$FormatedData = Get-VOIPCallLogLineXSummary -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPFCL          {$FormatedData = Get-VOIPFullCallLogLine -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPFCLPN        {$FormatedData = Get-VOIPFullCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPFCLS         {$FormatedData = Get-VOIPFullCallLogLineXSummary -UrlToGo $UrlToGo;Break}
-            
-            GET-VOIPALN          {$FormatedData = Get-VOIPAllowedListNumber -UrlToGo $UrlToGo;Break}
-            
-            # CPL
-            GET-CPL              {$FormatedData = Get-CPL -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            GET-CPLDL            {$FormatedData = Get-CPLDeviceList -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            # WAN
-            GET-WANAC             {$FormatedData = Get-WANAutowanConfig -UrlToGo $UrlToGo;Break}
-            
-            GET-WANAP             {$FormatedData = Get-WANAutowanProfiles -UrlToGo $UrlToGo;Break}
-            
-            GET-WAND             {$FormatedData = Get-WANDiags -UrlToGo $UrlToGo;Break}
-            
-            GET-WANDS            {$FormatedData = Get-WANDiagsSessions -UrlToGo $UrlToGo;Break}
-
-            GET-WANDSHAS         {$FormatedData = Get-WANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo;Break}
-            
-            Get-WANDAAS          {$FormatedData = Get-WANDiagsAllActiveSessions -UrlToGo $UrlToGo;Break}
-
-            Get-WANDAASH         {$FormatedData = Get-WANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo;Break}
-            
-            GET-WANFS            {$FormatedData = Get-WANFTTHStats -UrlToGo $UrlToGo;Break}
-            
-            GET-WANIP            {$FormatedData = Get-WANIP -UrlToGo $UrlToGo;Break}
-            
-            GET-WANIPS           {$FormatedData = Get-WANIPStats -UrlToGo $UrlToGo;Break}
-            
-            Get-WANXDSL          {$FormatedData = Get-WANXDSL -UrlToGo $UrlToGo;Break}
-
-            Get-WANXDSLS         {$FormatedData = Get-WANXDSLStats -UrlToGo $UrlToGo;Break}
-
-            Get-WANSFF           {$FormatedData = Get-WANSFF -UrlToGo $UrlToGo;Break}
-            
-            # WIRELESS
-            Get-WIRELESS         {$FormatedData = Get-WIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            Get-WIRELESSSTD      {$FormatedData = Get-WIRELESSSTANDARD -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESS24       {$FormatedData = Get-WIRELESS24Ghz -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESS24S      {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESS5        {$FormatedData = Get-WIRELESS5Ghz -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESS5S       {$FormatedData = Get-WIRELESSStats -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSACL      {$FormatedData = Get-WIRELESSACL -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSACLR     {$FormatedData = Get-WIRELESSACLRules -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSACLRID   {$FormatedData = Get-WIRELESSACLRulesID -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSWPS      {$FormatedData = GET-WIRELESSWPS -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSFBNH     {$FormatedData = Get-WIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            #GET-WIRELESSFSM      {$FormatedData = Get-WIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSS        {$FormatedData = Get-WIRELESSScheduler -UrlToGo $UrlToGo;Break}
-            
-            GET-WIRELESSSR       {$FormatedData = Get-WIRELESSSchedulerRules -UrlToGo $UrlToGo;Break}
-            
-            Get-WIRELESSR        {$FormatedData = Get-WIRELESSRepeater -UrlToGo $UrlToGo;Break}
-            
-            Get-WIRELESSVBSTB    {$FormatedData = Get-WIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo;Break}
-            
-            Get-WIRELESSVBR      {$FormatedData = Get-WIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo;Break}
-            
-            # SUMMARY
-            Get-SUMMARY          {$FormatedData = Get-SUMMARY -UrlToGo $UrlToGo;Break}
-            
-            # USERSAVE
-            Get-USERSAVE         {$FormatedData = Get-USERSAVE -UrlToGo $UrlToGo -APIName $APIName;Break}
-            
-            # PasswordRecoveryVerify
-            GET-PASSRECOVERV     {$FormatedData = Get-PasswordRecoveryVerify -UrlToGo $UrlToGo;Break}
-            
-            # BoxJournal
-            Get-BoxJournal       {$FormatedData = Get-BoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath;Break}
-            
-            # Export Program files Number
-            Export-PFC           {$FormatedData = Export-ProgramFilesCount -FolderRoot $PSScriptRoot;Break}
-            
-            # Remove-FolderContent
-            Remove-FCAll         {$FormatedData = Remove-FolderContentAll -FolderRoot $PSScriptRoot -FoldersName $APIName;Break}
-            
-            Remove-FCLogs        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCExportCSV   {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCExportJSON  {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCJournal     {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCJBC         {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCReport      {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            Remove-FCH           {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
-            
-            # DisplayFormat
-            Switch-DF            {$FormatedData = Switch-DisplayFormat;Break}
-            
-            # ExportFormat
-            Switch-EF            {$FormatedData = Switch-ExportFormat;Break}
-            
-            # OpenExportFormat
-            SWITCH-OEF           {$FormatedData = Switch-OpenExportFolder;Break}
-            
-            # OpenHTMLReport
-            Switch-OHR           {$FormatedData = Switch-OpenHTMLReport;Break}
-            
-            # Switch Resolved Dns Name
-            Switch-RDN           {$FormatedData = Switch-ResolveDnsName;Break}
-            
-            # RemoveBoxWindowsPasswordManager
-            Remove-BoxC          {$FormatedData = Remove-BoxCredential;Break}
-            
-            # ShowBoxWindowsPasswordManager
-            Show-BoxC            {$FormatedData = Show-BoxCredential;Break}
-            
-            # SetBoxWindowsPasswordManager
-            Add-BoxC             {$FormatedData = Add-BoxCredential;Break}
-            
-            # Reset-CurrentUserProgramConfiguration
-            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
-            
-            # Export-ModuleFunction
-            Export-MFS           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport}
-            
-            Export-MFD           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport}
-            
-            Export-MFSD          {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport}
-            
-            # Export-ModuleHelp
-            Export-MH            {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath}
-            
-            # Exit
-            Q                    {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
-            
-            # Quit/Close Program
-            Stop-Program         {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
-            
-            # Uninstall Program
-            Uninstall-Program    {Uninstall-Program -ErrorAction Stop;Break}
-            
-            # Default
-            Default              {Write-log WARNING -Name 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
-                                  Show-WindowsFormDialogBox -Title 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
-                                  $FormatedData = 'Program'
-                                  Break
-                                 }
-        }
-    
-        Return $FormatedData
-}
-
-# Used only to stop and quit the Program
-Function Stop-Program {
-
-<#
-.SYNOPSIS
-    To stop and quit the Program
-
-.DESCRIPTION
-    To stop and quit the Program
-
-.EXAMPLE
-    Stop-ChromeDriver -Context User
-    Stop-ChromeDriver -Context System
-
-.INPUTS
-    $Context
-    Only 2 value possible :
-    - User (If the user enter wrong value or settings)
-    - System (If something wrong when system working)
-
-.OUTPUTS
-    Stop All ChromeDriver and StandAlone Google Chrome Processes
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-Box', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$False)]
-        [ValidateSet("User","System")]
-        $Context,
-        
-        [Parameter(Mandatory=$False)]
-        $ErrorMessage,
-        
-        [Parameter(Mandatory=$False)]
-        $Reason
-    )
-    
-    Switch ($Context) {
-        
-        User    {Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Cancelled by user'
-                 $null = Show-WindowsFormDialogBox -Title 'Stop Program' -Message "Program exiting due to User cancelled action `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -InfoIcon
-                }
-        System  {Write-Log -Type ERROR -Name 'Stop Program' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
-                 $null = Show-WindowsFormDialogBox -Title 'Stop Program' -Message "Program exiting due to : $ErrorMessage -Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
-                }
-        Default {Write-Log -Type ERROR -Name 'Stop Program' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
-                 $null = Show-WindowsFormDialogBox -Title 'Stop Program' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
-                }
-    }
-    
-    <#If ($Null -ne $global:ChromeDriver) {
-        
-        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'Start Stop Chrome Driver' -NotDisplay
-        Stop-ChromeDriver
-        Write-Log -Type INFO -Name 'Stop Chrome Driver' -Message 'End Stop Chrome Driver' -NotDisplay
-    }#>
-    
-    Start-Sleep $global:SleepChromeDriverNavigation
-    Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
-    $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-    Write-Log -Type INFONO -Name 'Stop Program' -Message 'Detailed Log file is available here : '
-    Write-Log -Type VALUE -Name 'Stop Program' -Message $Current_Log_File
-    Write-Log -Type WARNING -Name 'Stop Program' -Message "Don't forget to close the log files before to launch again the program"
-    Write-Log -Type WARNING -Name 'Stop Program' -Message "Else the program failed to start the next time"
-    Write-Log -Type INFO -Name 'Stop Program' -Message 'Program Closed' -NotDisplay 
-    
-    Stop-Transcript -ErrorAction Stop
-    Exit
-}
-
-# Used only to unistall the Program
-Function Uninstall-Program {
-
-    <#
-    .SYNOPSIS
-        To uninstall the Program
-    
-    .DESCRIPTION
-        To uninstall the Program
-    
-    .EXAMPLE
-        Uninstall-Program
-    
-    .INPUTS
-        
-    
-    .OUTPUTS
-        - Stop All ChromeDriver and StandAlone Google Chrome Processes
-        - Remove registred credentials
-        - Unistall Modules (BOX-Module.psm1 & TUN.CredentialManager) with Admin Rights
-        - Remove Chrome Driver registry path
-        - Remove All files
-        - Remove Logs (Stop-Transcript)
-    
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to function(s): 'Write-Log', 'Show-WindowsFormDialogBox', 'Stop-ChromeDriver','Import-TUNCredentialManager', 'Show-WindowsFormDialogBox2Choices', 'Show-WindowsFormDialogBox2ChoicesCancel', 'Show-WindowsFormDialogBox3Choices', 'Show-WindowsFormDialogBox3ChoicesCancel', 'Test-FolderPath', 'Test-FilePath', 'Get-HostStatus', 'Get-PortStatus', 'Connect-Box', 'Switch-Info', 'Get-JSONSettingsCurrentUserContent', 'Get-JSONSettingsDefaultUserContent', 'Reset-CurrentUserProgramConfiguration'
-        Linked to script(s): '.\Box-Administration.psm1'
-    
-    #>
-    
-        Param ()
-        
-        # Stop All ChromeDriver and StandAlone Google Chrome Processes
-        Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
-        $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-        Write-Log -Type INFONO -Name 'Stop Program' -Message 'Detailed Log file is available here : '
-        Write-Log -Type VALUE -Name 'Stop Program' -Message $Current_Log_File
-        Write-Log -Type WARNING -Name 'Stop Program' -Message "Don't forget to close the log files before to launch again the program"
-        Write-Log -Type WARNING -Name 'Stop Program' -Message "Else the program failed to start the next time"
-        Write-Log -Type INFO -Name 'Stop Program' -Message 'Program Closed' -NotDisplay 
-        
-        # Remove Stored Credential
-        Remove-StoredCredential -Target 'AdminBBox' -ErrorAction Continue
-        Remove-StoredCredential -Target 'AdminFREEBox' -ErrorAction Continue
-        
-        # Remove / Unistal Modules
-        remove-module -Name BOX-Module -ErrorAction Continue
-        remove-module -Name TUN.CredentialManager -ErrorAction Continue
-        Uninstall-TUNCredentialManager -ModuleName 'TUN.CredentialManager' -ErrorAction Continue
-        
-        # Stop-Transcript Logs
-        Stop-Transcript -ErrorAction Continue
-        
-        #Remove All Files
-        #Remove-Item -Path $PSScriptRoot -Recurse -Force -ErrorAction Continue
-        Get-Childitem -Path $PSScriptRoot -Recurse | Remove-Item -Force -Confirm:$false
-        Write-Host "Uninstallation finished" -ForegroundColor Green
-        Write-Host "Please remove manually the root foler of the program : $PSScriptRoot" -ForegroundColor Yellow
-        Pause
-        Exit
-}
-
-#endregion Main functions use as part of '.\Box-Administration.ps1' script and 'Box-Module.psm1' module
-
-#region ChromeDriver 
 
 # Used only to Start ChromeDriver
 Function Start-ChromeDriver {
@@ -3766,15 +3227,15 @@ Function Update-ChromeDriver {
         $DestinationPath             = $global:ChromeDriverDefaultFolderNamePath
         $ChromeDriverDownloadPathUrl = "$global:ChromeDriverDownloadPathUrl/$Global:ChromeDriverLastStableVersion/win32/$global:ChromeDriverDownloadFileName"
         
-        Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver version status : ' -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message 'ChromeDriver version status : ' -NotDisplay
         
         $global:ChromeDriverVersion = $Global:ChromeDriverLastStableVersion
         $global:ChromeDriverFolder  = $global:ChromeDriverDefaultFolderNamePath
         
-        Write-Log -Type WARNING -Name 'Program initialisation - Update ChromeDriver' -Message 'Need to be updated' -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message 'Need to be updated' -NotDisplay
         
         # Navigate to Chrome Driver Version choosen
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Access to Chrome Driver download Page for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Access to Chrome Driver download Page for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
         $Files = @(
             @{
                 Uri     = $ChromeDriverDownloadPathUrl
@@ -3783,7 +3244,7 @@ Function Update-ChromeDriver {
         )
         
         # Start setup file downloading
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Start to Chrome Driver download version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Start to Chrome Driver download version : $Global:ChromeDriverLastStableVersion" -NotDisplay
         $Jobs = @()
         
         Foreach ($File in $Files) {
@@ -3793,7 +3254,7 @@ Function Update-ChromeDriver {
             }
         }
         
-        Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Download Chrome Driver Status : " -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Download Chrome Driver Status : " -NotDisplay
         
         Wait-Job -Job $Jobs
         
@@ -3801,19 +3262,19 @@ Function Update-ChromeDriver {
             Receive-Job -Job $Job
         }
         
-        Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "Successful" -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "End to download Chrome Driver version : $Global:ChromeDriverLastStableVersion" -NotDisplay                
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Successful" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "End to download Chrome Driver version : $Global:ChromeDriverLastStableVersion" -NotDisplay                
         
         # Unzip new Chrome driver version to destination
-        Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to Chrome Driver repository for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Update ChromeDriver' -Message "Unzip archive to Chrome Driver repository status : " -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Unzip archive to Chrome Driver repository for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Unzip archive to Chrome Driver repository status : " -NotDisplay
         Try {
             Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
             Start-Sleep -Seconds $global:SleepChromeDriverUnzip
             
             Move-Item -Path "$DestinationPath\chromedriver-win32\*" -Destination $DestinationPath -Force
             Start-Sleep -Seconds $global:SleepChromeDriverUnzip
-            Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message "Successful" -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Successful" -NotDisplay
             Start-Sleep -Seconds $global:SleepDefault
             
             # Copy chrome Driver DLL
@@ -3822,17 +3283,17 @@ Function Update-ChromeDriver {
             Start-Sleep -Seconds $global:SleepDefault
             
             # Remove the downloaded source
-            Write-Log -Type INFO -Name 'Program initialisation - Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
+            Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Remove source file : $SourceFile" -NotDisplay
             Remove-Item -Path $SourceFile -Force -ErrorAction Stop
             Remove-Item -Path "$DestinationPath\chromedriver-win32\" -Force -ErrorAction Stop
-            Write-Log -Type VALUE -Name 'Program initialisation - Update ChromeDriver' -Message 'ChromeDriver is up to date' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message 'ChromeDriver is up to date' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Failed, due to : $($_.tostring())"
+            Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Failed, due to : $($_.tostring())"
         }
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Update ChromeDriver' -Message "Update failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Update ChromeDriver' -Message "Update failed, due to : $($_.ToString())" -NotDisplay
         $global:TriggerExitSystem = 1
     }
 }
@@ -3876,15 +3337,15 @@ Function Update-GoogleChrome {
         $DestinationPath             = $global:GoogleChromeDefaultFolderNamePath
         $GoogleChromeDownloadHomeUrl = "$global:GoogleChromeDownloadHomeUrl/$Global:ChromeDriverLastStableVersion/win32/$global:GoogleChromeDownloadFileName"
         
-        Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message 'Google Chrome version status : ' -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message 'Google Chrome version status : ' -NotDisplay
         
         $global:GoogleChromeVersion = $Global:ChromeDriverLastStableVersion
         $global:GoogleChromeFolder  = $global:ChromeDriverDefaultFolderNamePath
             
-        Write-Log -Type WARNING -Name 'Program initialisation - Update Google Chrome' -Message 'Need to be updated' -NotDisplay
+        Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Update Google Chrome' -Message 'Need to be updated' -NotDisplay
         
         # Navigate to Google Chrome Version choosen
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Access to Google Chrome download Page for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Access to Google Chrome download Page for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
         $Files = @(
             @{
                 Uri     = $GoogleChromeDownloadHomeUrl
@@ -3893,7 +3354,7 @@ Function Update-GoogleChrome {
         )
         
         # Navigate to the main Google Chrome Page
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Access to Google Chrome download Page : $GoogleChromeDownloadHomeUrl" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Access to Google Chrome download Page : $GoogleChromeDownloadHomeUrl" -NotDisplay
         $Jobs = @()
         
         Foreach ($File in $Files) {
@@ -3904,8 +3365,8 @@ Function Update-GoogleChrome {
         }
         
         # Start setup file downloading
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Start to download Google Chrome version : $Global:ChromeDriverLastStableVersion" -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message "Download Google Chrome Status : " -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Start to download Google Chrome version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Download Google Chrome Status : " -NotDisplay
         
         Wait-Job -Job $Jobs
         
@@ -3913,1986 +3374,40 @@ Function Update-GoogleChrome {
             Receive-Job -Job $Job
         }                
         
-        Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message "Successful" -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "End to download Google Chrome version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Successful" -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "End to download Google Chrome version : $Global:ChromeDriverLastStableVersion" -NotDisplay
         
         # Unzip new Google Chrome version to destination
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Unzip archive to Google Chrome repository for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Update Google Chrome' -Message "Unzip archive to Google Chrome repository status : " -NotDisplay
+        Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Unzip archive to Google Chrome repository for version : $Global:ChromeDriverLastStableVersion" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Unzip archive to Google Chrome repository status : " -NotDisplay
         Try {
             Expand-Archive -Path $SourceFile -DestinationPath $DestinationPath -Force -ErrorAction Stop -WarningAction Stop
             Start-Sleep -Seconds $global:SleepChromeDriverUnzip
             Move-Item -Path "$DestinationPath\chrome-win32\*" -Destination $DestinationPath -Force
             Start-Sleep -Seconds $global:SleepChromeDriverUnzip
-            Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message "Successful" -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Successful" -NotDisplay
             
             # Remove the downloaded source
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message "Remove source file : $SourceFile" -NotDisplay
+            Write-Log -Type INFO -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Remove source file : $SourceFile" -NotDisplay
             Remove-Item -Path $SourceFile -Force -ErrorAction Stop
             Remove-Item -Path "$DestinationPath\chrome-win32\" -Force -ErrorAction Stop
-            Write-Log -Type VALUE -Name 'Program initialisation - Update Google Chrome' -Message 'Google Chrome is up to date' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Update Google Chrome' -Message 'Google Chrome is up to date' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Name 'Program initialisation - Update Google Chrome' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+            Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Failed, due to : $($_.tostring())" -NotDisplay
         }
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Update Google Chrome' -Message "Update failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type ERROR -Category 'Program initialisation' -Name 'Update Google Chrome' -Message "Update failed, due to : $($_.ToString())" -NotDisplay
         $global:TriggerExitSystem = 1
     }
 }
 
-#endregion ChromeDriver
+#endregion Chrome Driver / Google Chrome
 
-#region Refresh WIRELESS Frequency Neighborhood Scan
+#region Common functions
 
-# Used only to Refresh WIRELESS Frequency Neighborhood Scan
-function Start-RefreshWIRELESSFrequencyNeighborhoodScan {
-
-<#
-.SYNOPSIS
-    To Refresh WIRELESS Frequency Neighborhood Scan
-
-.DESCRIPTION
-    To Refresh WIRELESS Frequency Neighborhood Scan
-
-.PARAMETER APIName
-    Indicate the API name associated to wireless scan result
-
-.PARAMETER UrlToGo
-    Indicate the url to start the wireless scan
-
-.EXAMPLE
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
-
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
-
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
-
-.INPUTS
-    $APIName
-    $UrlToGo
-
-.OUTPUTS
-    Wireless scan neighborhood done
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Format-Date1970', 'Get-WIRELESSFrequencyNeighborhoodScan'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Start WIRELESS Frequency Neighborhood scan' -NotDisplay
-    
-    # Get information from Box API and last scan date
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
-    $Lastscan = $Json.lastscan
-    
-    Write-Log -Type INFONO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'WIRELESS Frequency Neighborhood Lastscan : ' -NotDisplay
-    
-    If ($Lastscan -eq 0) {
-        
-        Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Never' -NotDisplay
-    }
-    Else {
-        Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message $(Format-Date1970 -Seconds $Lastscan) -NotDisplay
-    }
-    
-    $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("$global:APIVersion/$APIName",'diagnostic.html')))
-    Start-Sleep -Seconds $global:SleepDefault
-    
-    Switch ($APIName) {
-        
-        wireless/24/neighborhood {($global:ChromeDriver.FindElementsByClassName('scan24') | Where-Object -Property text -eq 'Scanner').click();Break}
-            
-        wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName('scan5') | Where-Object -Property text -eq 'Scanner').click();Break}
-    }
-    
-    If ($global:TriggerExportConfig -eq $false) {
-        
-        Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Be careful, the scan can temporary suspend your Wi-Fi network'
-        Write-Log -Type WARNING -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? : ' -NotDisplay
-        
-        While ($ActionState -notmatch "Y|N") {
-                
-            #$ActionState = Read-Host "Do you want to continue ? (Y) Yes / (N) No"
-            $ActionState = Show-WindowsFormDialogBox -Title 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? (Y) Yes / (N) No' -YesNo
-            Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message "Action chosen by user : $ActionState" -NotDisplay
-        }
-    }
-    Else {
-        $ActionState = 'Y'
-    }
-
-    If ($ActionState[0] -eq 'Y') {
-        
-        # addd
-        Try {
-            ($global:ChromeDriver.FindElementsByClassName('cta-1') | Where-Object -Property text -eq 'Rafraîchir').click()
-            Start-Sleep -Seconds $global:SleepDefault
-            ($global:ChromeDriver.FindElementsByClassName('cta-2') | Where-Object -Property text -eq 'OK').click()
-        }
-        Catch {
-            ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq 'OK').click()
-        }
-        
-        Write-Log -Type INFONO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Refresh WIRELESS Frequency Neighborhood scan : ' -NotDisplay
-        Start-Sleep -Seconds $global:SleepRefreshWIRELESSFrequencyNeighborhoodScan
-        Write-Log -Type VALUE -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Ended' -NotDisplay
-    }
-    Write-Log -Type INFO -Name 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
-}
-
-# Used only to Refresh WIRELESS Frequency Neighborhood Scan ID
-Function Get-WIRELESSFrequencyNeighborhoodScan {
-
-<#
-.SYNOPSIS
-    To Refresh WIRELESS Frequency Neighborhood Scan ID
-
-.DESCRIPTION
-    To Refresh WIRELESS Frequency Neighborhood Scan ID
-
-.PARAMETER APIName
-    Indicate the API name associated to wireless scan result
-
-.PARAMETER UrlToGo
-    Indicate the url to start the wireless scan
-
-.EXAMPLE
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
-
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
-
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
-
-.INPUTS
-    $APIName
-    $UrlToGo
-
-.OUTPUTS
-    $FormatedData
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-WIRELESSFrequencyNeighborhoodScanID'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName
-    )
-    
-    Start-RefreshWIRELESSFrequencyNeighborhoodScan -APIName $APIName -UrlToGo $UrlToGo
-    $FormatedData = @()
-    $FormatedData = Get-WIRELESSFrequencyNeighborhoodScanID -UrlToGo $UrlToGo
-    
-    Return $FormatedData
-}
-
-#endregion Refresh WIRELESS Frequency Neighborhood Scan
-
-#endregion GLOBAL
-
-#region Load user Json file configuration management
-
-Function Get-JSONSettingsCurrentUserContent {
-
-<#
-.SYNOPSIS
-    Load current user Json file configuration management
-
-.DESCRIPTION
-    Load current user Json file configuration management
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Get-JSONSettingsCurrentUserContent
-
-.INPUTS
-    None
-
-.OUTPUTS
-    Current User Settings loaded
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param(    )
-
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Start Json Current User Settings Importation' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Json Current User Settings Importation Status : ' -NotDisplay
-    Try {
-        $global:JSONSettingsCurrentUserContent = Get-Content -Path $global:JSONSettingsCurrentUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        $global:DisplayFormat           = $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat
-        $global:ExportFormat            = $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat
-        $global:OpenExportFolder        = $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder
-        $global:OpenHTMLReport          = $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport
-        $global:ResolveDnsName          = $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName
-        $global:TriggerExportFormat     = $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat
-        $global:TriggerDisplayFormat    = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
-        $global:TriggerOpenHTMLReport   = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
-        $global:TriggerOpenExportFolder = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder
-        $global:SiteOldRemotePort       = $global:JSONSettingsCurrentUserContent.Site.OldRemotePort
-        $global:SiteOldRemoteUrl        = $global:JSONSettingsCurrentUserContent.Site.OldRemoteUrl
-        $global:SiteCurrentLocalUrl     = $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl
-        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
-        $global:SiteCurrentRemotePort   = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
-        
-        Write-Log -Type VALUE -Name 'Program initialisation - Json Current User Settings Importation' -Message 'Successful' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Json Current User Settings Importation' -Message "Failed, to import Json Current User Settings file, due to : $($_.ToString())"
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file import has failed' -ErrorAction Stop
-    }
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
-}
-
-Function Get-JSONSettingsDefaultUserContent {
-
-<#
-.SYNOPSIS
-    Load default user Json file configuration management
-
-.DESCRIPTION
-    Load default user Json file configuration management
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Get-JSONSettingsdefaultUserContent
-
-.INPUTS
-    None
-
-.OUTPUTS
-    Default User Settings loaded
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Reset-CurrentUserProgramConfiguration'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param(    )
-
-    Write-Log -Type INFO -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Start Json Default User Settings Importation' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Json Default User Settings Importation Status : '
-    Try {
-        $global:JSONSettingsDefaultUserContent = Get-Content -Path $global:JSONSettingsDefaultUserFilePath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        $global:DisplayFormat           = $global:JSONSettingsDefaultUserContent.DisplayFormat.DisplayFormat
-        $global:ExportFormat            = $global:JSONSettingsDefaultUserContent.ExportFormat.ExportFormat
-        $global:OpenExportFolder        = $global:JSONSettingsDefaultUserContent.OpenExportFolder.OpenExportFolder
-        $global:OpenHTMLReport          = $global:JSONSettingsDefaultUserContent.OpenHTMLReport.OpenHTMLReport
-        $global:ResolveDnsName          = $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName
-        $global:TriggerExportFormat     = $global:JSONSettingsDefaultUserContent.Trigger.ExportFormat
-        $global:TriggerDisplayFormat    = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
-        $global:TriggerOpenHTMLReport   = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
-        $global:TriggerOpenExportFolder = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFolder
-        $global:SiteOldRemotePort       = $global:JSONSettingsDefaultUserContent.Site.OldRemotePort
-        $global:SiteOldRemoteUrl        = $global:JSONSettingsDefaultUserContent.Site.OldRemoteUrl
-        $global:SiteCurrentLocalUrl     = $global:JSONSettingsDefaultUserContent.Site.CurrentLocalUrl
-        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsDefaultUserContent.Site.CurrentRemoteUrl
-        $global:SiteCurrentRemotePort   = $global:JSONSettingsDefaultUserContent.Site.CurrentRemotePort
-        
-        Write-Log -Type VALUE -Name 'Program initialisation - Json Default User Settings Importation' -Message 'Successful'
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Json Default User Settings Importation' -Message "Failed, to import Json Default User Settings file, due to : $($_.ToString())"
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Default User Settings file import has failed' -ErrorAction Stop
-    }
-    Write-Log -Type INFO -Name 'Program initialisation - Json Default User Settings Importation' -Message 'End Json Default User Settings Importation' -NotDisplay
-}
-
-#endregion Json file configuration management
-
-#region Reset User Json Configuration files
-Function Reset-CurrentUserProgramConfiguration {
-
-<#
-.SYNOPSIS
-    Reset User Json Configuration files
-
-.DESCRIPTION
-    Reset User Json Configuration files
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Reset-CurrentUserProgramConfiguration
-
-.INPUTS
-    None
-
-.OUTPUTS
-    Current User Program Configuration is reset
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): '', ''
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param(    )
-    
-    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
-    Try {
-        Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force
-        Start-Sleep -Seconds $global:SleepDefault
-        Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Successful' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file reset has failed' -ErrorAction Stop
-    }
-    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
-
-    If (Test-Path -Path $global:JSONSettingsCurrentUserFilePath) {
-
-        Get-JSONSettingsCurrentUserContent
-    }
-    Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFilePath) {
-        
-        Get-JSONSettingsDefaultUserContent
-    }
-    Else {
-        Write-Log -Type WARNING -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
-        Write-Log -Type INFO -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user settings configuration file has failed' -ErrorAction Stop
-    }
-}
-#endregion Reset User Json Configuration files
-
-#region Manage Output Display after data export
-
-# Used only to change Display Format
-Function Switch-DisplayFormat {
-
-<#
-.SYNOPSIS
-    To change Display Format
-
-.DESCRIPTION
-    To change Display Format
-
-.PARAMETER 
-    Switch-DisplayFormat
-
-.EXAMPLE
-    
-
-.INPUTS
-    User choice
-
-.OUTPUTS
-    HTML or Table format
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-GlobalOutputData', 'Show-WindowsFormDialogBox2Choices', 'Switch-Info', 'Set-ValueToJSONFile'
-
-#>
-
-    Param(  )
-    
-    # Choose Display Format : HTML or Table
-    Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'Start data display format' -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
-    $global:DisplayFormat = ''
-    
-    While ($global:DisplayFormat[0] -notmatch $global:ValuesDisplayFormat) {
-        
-        #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display Format' -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
-        
-        Switch ($Temp) {
-                
-            H    {$global:DisplayFormat = 'H';Break}
-            T    {$global:DisplayFormat = 'T';Break}
-        }
-    }
-    
-    Write-Log -Type VALUE -Name 'Program run - Choose Display Format' -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Display Format' -Message 'End data display format' -NotDisplay
-    
-    $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat = $global:DisplayFormat
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-}
-
-# Used only to change Open Export Folder
-Function Switch-OpenExportFolder {
-
-<#
-.SYNOPSIS
-    To change Open Export Folder
-
-.DESCRIPTION
-    To change Open Export Folder
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Switch-OpenExportFolder
-
-.INPUTS
-    User choice
-
-.OUTPUTS
-    Open or not export folder
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Show-WindowsFormDialogBox2Choices', 'Switch-Info', 'Export-toCSV', "'xport-toJSON', "Export-BoxConfiguration', 'Export-BoxConfigTestingProgram', 'Export-GlobalOutputData', 'Set-ValueToJSONFile'
-
-#>
-
-    Param ()
-    
-    # Choose Open Export Folder : Y (Yes) or N (No)
-    Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder at each export (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
-    $global:OpenExportFolder = ""
-    
-    While ($global:OpenExportFolder[0] -notmatch $global:ValuesOpenExportFolder) {
-            
-        #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
-        
-        Switch ($Temp) {
-                
-            Y    {$global:OpenExportFolder = 'Y';Break}
-            N    {$global:OpenExportFolder = 'N';Break}
-        }
-    }
-    
-    Write-Log -Type VALUE -Name 'Program run - Choose Open Export Folder' -Message "Value Choosen : $global:OpenExportFolder" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Open Export Folder' -Message 'End switch Open Export Folder' -NotDisplay
-    
-    $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder = $global:OpenExportFolder
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-}
-
-# Used only to open or not HTML Report
-Function Switch-OpenHTMLReport {
-
-<#
-.SYNOPSIS
-    To open or not HTML Report
-
-.DESCRIPTION
-    To open or not HTML Report
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Switch-OpenHTMLReport
-
-.INPUTS
-    User choice
-
-.OUTPUTS
-    HTML report will be open or not
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-HTMLReport', 'Open-HTMLReport', 'Switch-info', 'Set-ValueToJSONFile'
-
-#>
-
-    Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
-    $global:OpenHTMLReport = ''
-    
-    While ($global:OpenHTMLReport[0] -notmatch $global:ValuesOpenHTMLReport) {
-        
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Open HTML Report' -LabelMessageText "Do you want to open HTML Report at each time ? :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'        
-        
-        Switch ($Temp) {
-                
-            Y    {$global:OpenHTMLReport = 'Y';Break}
-            N    {$global:OpenHTMLReport = 'N';Break}
-        }
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Switch Open HTML Report' -Message 'End Switch Open HTML Report' -NotDisplay
-    
-    $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport = $global:OpenHTMLReport
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-}
-
-# Used only to change Display Format
-Function Switch-ResolveDnsName {
-
-    <#
-    .SYNOPSIS
-        To allow or not to Resolve Dns Name from an IP Address
-    
-    .DESCRIPTION
-        To allow or not to Resolve Dns Name from an IP Address
-    
-    .PARAMETER 
-        user answer/Action
-    
-    .EXAMPLE
-        Switch-ResolveDnsName
-    
-    .INPUTS
-        User choice
-    
-    .OUTPUTS
-        Enable to resolve an IP address to a hostname
-    
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to function(s): ''
-    
-    #>
-    
-        Param(  )
-        
-        # Switch Resolve Dns Name : Yes or No
-        Write-Log -Type INFO -Name 'Program run - Switch Resolve Dns Name' -Message 'Start Switch Resolve Dns Name' -NotDisplay
-        Write-Log -Type INFO -Name 'Program run - Switch Resolve Dns Name' -Message "Please choose if you want to resolve IP Address to DNS Hostname (Can be changed later) : (Y) Yes or (N) No" -NotDisplay
-        $global:ResolveDnsName = ''
-        
-        While ($global:ResolveDnsName[0] -notmatch $global:ValuesResolveDnsName) {
-            
-            #$Temp = Read-Host "Enter your choice"
-            $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Resolve Dns Name' -LabelMessageText "Please choose if you want to resolve IP Address to DNS Hostname or not (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
-            
-            Switch ($Temp) {
-                    
-                Y    {$global:ResolveDnsName = 'Y';Break}
-                N    {$global:ResolveDnsName = 'N';Break}
-            }
-        }
-        
-        Write-Log -Type VALUE -Name 'Program run - Switch Resolve Dns Name' -Message "Value Choosen : $global:ResolveDnsName" -NotDisplay
-        Write-Log -Type INFO -Name 'Program run - Switch Resolve Dns Name' -Message 'End Switch Resolve Dns Name' -NotDisplay
-        
-        $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName = $global:ResolveDnsName
-        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-}
-
-# Used only to format display result function user choice
-Function Format-DisplayResult {
-
-<#
-.SYNOPSIS
-    To format display result function user choice
-
-.DESCRIPTION
-    To format display result function user choice
-
-.PARAMETER FormatedData
-    Data were already format and will be displayed
-
-.PARAMETER APIName
-    Title report name or Title the Out-GridView Window
-
-.PARAMETER Description
-    Description of the report
-
-.PARAMETER ReportType
-    Report type can be : Table or List
-
-.PARAMETER ReportPath
-    Path of the report folder
-
-.PARAMETER Exportfile
-    Full path of export file
-
-.EXAMPLE
-    Format-DisplayResult -FormatedData $FormatedData -APIName "device/log" -Description "Device log" -ReportType "Table" -ReportPath "C:\Windows\Report" -Exportfile "C:\Windows\Report\device-log.csv"
-
-.INPUTS
-    $FormatedData
-    $APIName
-    $Description
-    $ReportType
-    $ReportPath
-    $Exportfile
-
-.OUTPUTS
-    Result is Displayed in HTML or in table under Out-Gridview
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-GlobalOutputData', 'Export-HTMLReport', 'Out-GridviewDisplay', 'Open-HTMLReport'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Description,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ReportType,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ReportPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-    Switch ($global:DisplayFormat) {
-        
-        'H' {# Display result by HTML Report
-             Export-HTMLReport -DataReported $FormatedData -ReportTitle "$global:BoxType Configuration Report - $APIName" -ReportType $ReportType -ReportPath $ReportPath -ReportFileName $Exportfile -HTMLTitle "$global:BoxType Configuration Report" -ReportPrecontent $APIName -Description $Description
-             Break
-            }
-        
-        'T' {# Display result by Out-Gridview
-             Out-GridviewDisplay -FormatedData $FormatedData -APIName $APIName -Description $Description
-             Break
-            }
-    }
-    Write-Log -Type INFO -Name 'Program run - Display Result' -Message 'End display result' -NotDisplay
-}
-
-# Used only to export result to CSV File
-Function Export-toCSV {
-
-<#
-.SYNOPSIS
-    To export result to CSV File
-
-.DESCRIPTION
-    To export result to CSV File
-
-.PARAMETER FormatedData
-    This is the data you want to export to the csv file
-
-.PARAMETER APIName
-    This is the name of the API where data are retrived
-
-.PARAMETER ExportCSVPath
-    This is the folder path of the Export CSV folder
-
-.PARAMETER Exportfile
-    This is the name of the export CSV File (Include file extention)
-
-.EXAMPLE
-    Export-toCSV -FormatedData "$FormatedData" -APIName "Device\log" -ExportCSVPath "C:\ExportFolder" -Exportfile "Device-log.csv"
-
-.INPUTS
-    $FormatedData
-    $APIName
-    $ExportCSVPath
-    $Exportfile
-
-.OUTPUTS
-    Csv File
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Format-ExportResult'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportCSVPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message 'Start export result as CSV' -NotDisplay
-    
-    Try {
-        # Define Export file path
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $DateShort = $(Get-Date -UFormat %Y%m%d)
-        Test-FolderPath -FolderRoot "$ExportCSVPath\$global:BoxType" -FolderPath "$ExportCSVPath\$global:BoxType\$DateShort" -FolderName $DateShort
-        $ExportPath = "$ExportCSVPath\$global:BoxType\$DateShort\$Date-$Exportfile.csv"
-        $FormatedData | Export-Csv -Path $ExportPath -Encoding unicode -Delimiter ";" -NoTypeInformation -Force        
-        Write-Log -Type INFONO -Name 'Program run - Export Result CSV' -Message 'CSV Data have been exported to : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program run - Export Result CSV' -Message $ExportPath -NotDisplay
-        
-        Open-ExportFolder -WriteLogName 'Program run - Export Result CSV' -ExportFolderPath $ExportCSVPath
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program run - Export Result CSV' -Message "Failed, to export data to : `"$ExportPath`", due to : $($_.ToString())"
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Export Result CSV' -Message 'End export result as CSV' -NotDisplay
-}
-
-# Used only to export result to JSON File
-Function Export-toJSON {
-
-<#
-.SYNOPSIS
-    To export result to JSON File
-
-.DESCRIPTION
-    To export result to JSON File
-
-.PARAMETER FormatedData
-    This is the data you want to export to the JSON file
-
-.PARAMETER APIName
-    This is the name of the API where data are retrived
-
-.PARAMETER ExportJSONPath
-    This is the folder path of the Export JSON folder
-
-.PARAMETER Exportfile
-    This is the name of the export JSON File (Include file extention)
-
-.EXAMPLE
-    Export-toJSON -FormatedData "$FormatedData" -APIName "Device\log" -ExportJSONPath "C:\ExportFolder" -Exportfile "Device-log.json"
-
-.INPUTS
-    $FormatedData
-    $APIName
-    $ExportJSONPath
-    $Exportfile
-
-.OUTPUTS
-    JSON File
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Format-ExportResult'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportJSONPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-     Write-Log -Type INFO -Name 'Program run - Export Result JSON' -Message 'Start export result as JSON' -NotDisplay
-     
-     Try {
-        # Define Export file path
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $DateShort = $(Get-Date -UFormat %Y%m%d)
-        Test-FolderPath -FolderRoot "$ExportJSONPath\$global:BoxType" -FolderPath "$ExportJSONPath\$global:BoxType\$DateShort" -FolderName $DateShort
-        $FullPath = "$ExportJSONPath\$global:BoxType\$DateShort\$Date-$Exportfile.json"
-        $FormatedData | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
-        Write-Log -Type INFONO -Name 'Program run - Export Result JSON' -Message 'JSON Data have been exported to : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program run - Export Result JSON' -Message $FullPath -NotDisplay
-        
-        Open-ExportFolder -WriteLogName 'Program run - Export Result JSON' -ExportFolderPath $ExportJSONPath
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program run - Export Result JSON' -Message "Failed to export data to : `"$FullPath`", due to : $($_.ToString())"
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Export Result JSON' -Message 'End export result as JSON' -NotDisplay
-}
-
-# Used only to create HTML Report
-Function Export-HTMLReport {
-
-<#
-.SYNOPSIS
-    To create HTML Report
-
-.DESCRIPTION
-    To create HTML Report
-
-.PARAMETER DataReported
-    This is the array data that display in the body html report
-
-.PARAMETER ReportType
-    This is the type of the report that are available
-    Validated values :
-    - Table
-    - List
-
-.PARAMETER ReportTitle
-    This is the Main Title of the report in the tab in the web browser
-
-.PARAMETER ReportPath
-    This is the folder path where HTML report are saved
-
-.PARAMETER ReportFileName
-    This is the name of the HTLM report file
-
-.PARAMETER HTMLTitle
-    This is the Main Title of the report
-
-.PARAMETER ReportPrecontent
-    This is the short description of the report
-
-.PARAMETER Description
-    This is the description of the report
-
-.EXAMPLE
-    Export-HTMLReport -DataReported "$DataReported" -ReportType "List" -ReportTitle "Report of data" -ReportPath "C:\Report" -ReportFileName "Report.html" -HTMLTitle "Main Data Reporting" -ReportPrecontent "Subtitle / Subcategory" -Description "This is the main data to report"
-    Export-HTMLReport -DataReported "$DataReported" -ReportType "Table" -ReportTitle "Report of data" -ReportPath "C:\Report" -ReportFileName "Report.html" -HTMLTitle "Main Data Reporting" -ReportPrecontent "Subtitle / Subcategory" -Description "This is the main data to report"
-
-.INPUTS
-    $DataReported
-    $ReportType
-    $ReportTitle
-    $ReportPath
-    $ReportFileName
-    $HTMLTitle
-    $ReportPrecontent
-    $Description
-
-.OUTPUTS
-    HTML Report Created
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Format-DisplayResult', 'Switch-OpenHTMLReport', 'Switch-OpenExportFolder', 'Open-HTMLReport', 'ConvertTo-Html', 'Open-ExportFolder', 'Set-ValueToJSONFile'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$False)]
-        [Array]$DataReported,
-        
-        [Parameter(Mandatory=$True)]
-        [ValidateSet('List','Table')]
-        [String]$ReportType,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ReportTitle,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ReportPath,
-
-        [Parameter(Mandatory=$True)]
-        [String]$ReportFileName,
-
-        [Parameter(Mandatory=$True)]
-        [String]$HTMLTitle,
-
-        [Parameter(Mandatory=$True)]
-        [String]$ReportPrecontent,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Description
-    )
-    
-    $Date = $(Get-Date -Format yyyyMMdd-HHmmss)
-    $DateShort = $(Get-Date -UFormat %Y%m%d)
-    $FullReportPath = "$ReportPath\$global:BoxType\$DateShort\$Date-$ReportFileName.html"
-    Test-FolderPath -FolderRoot "$ReportPath\$global:BoxType" -FolderPath "$ReportPath\$global:BoxType\$DateShort" -FolderName $DateShort
-    
-    If ($DataReported) {
-    
-        $HTML = $null
-        $Title = "<h1>$HTMLTitle</h1>"
-        $PreContent = "<h2> API Name : $ReportPrecontent </h2> Description : $Description<br/><br/>"
-        $header = @("<style>
-                        h1 {
-                            font-family: Arial, Helvetica, sans-serif;
-                            color: #e68a00;
-                            font-size: 28px;
-                        }
-
-                        h2 {
-                            font-family: Arial, Helvetica, sans-serif;
-                            color: #000099;
-                            font-size: 16px;
-                        }
-
-                        table {
-                            font-size: 12px;
-                            border: 0px; 
-                            font-family: Arial, Helvetica, sans-serif;
-                        }
-                        
-                        td {
-                            padding: 4px;
-                            margin: 0px;
-                            border: 0;
-                        }
-                        
-                        th {
-                            background: #395870;
-                            background: linear-gradient(#49708f, #293f50);
-                            color: #fff;
-                            font-size: 11px;
-                            text-transform: uppercase;
-                            padding: 10px 15px;
-                            vertical-align: middle;
-                        }
-
-                        tbody tr:nth-child(even) {
-                            background: #f0f0f2;
-                        }
-
-                        CreationDate {
-                            font-family: Arial, Helvetica, sans-serif;
-                            color: #ff3300;
-                            font-size: 12px;
-                        }
-                    </style>
-                ")
-        
-        $Date = $(Get-Date -Format yyyy/MM/dd-HH:mm:ss)
-        $ReportAuthor = "Report generated from : $env:COMPUTERNAME, by : $env:USERNAME, at : $Date (Local Time)."
-        $HTML = ConvertTo-Html -Body "$Title $PreContent $($DataReported | ConvertTo-Html -As $ReportType)" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
-        
-        Write-Log -Type INFO -Name 'Program run - Export HTML Report' -Message 'Start export HTML report' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Export HTML Report' -Message 'Export HTML report status : ' -NotDisplay
-        
-        Try {
-            $HTML | Out-File -FilePath $FullReportPath -Force -Encoding unicode
-            Write-Log -Type VALUE -Name 'Program run - Export HTML Report' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Export HTML Report' -Message 'HTML Report has been exported to : '
-            Write-Log -Type VALUE -Name 'Program run - Export HTML Report' -Message $FullReportPath
-            Open-HTMLReport -Path $FullReportPath
-        }
-        Catch {
-            Write-Log -Type WARNING -Name 'Program run - Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to $($_.tostring())" -NotDisplay
-        }
-        
-        Write-Log -Type INFO -Name 'Program run - Export HTML Report' -Message 'End export HTML report' -NotDisplay
-        
-        If ($global:TriggerOpenHTMLReport -eq 0) {
-            
-            $global:TriggerOpenHTMLReport = Switch-OpenHTMLReport
-            $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport = $global:TriggerOpenHTMLReport
-            Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-        }
-        
-        Open-ExportFolder -WriteLogName 'Program run - Export Result HTML' -ExportFolderPath $ReportPath
-    }
-    Else {
-        Write-Log -Type WARNING -Name 'Program run - Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to : there is not data to export/Display" -NotDisplay
-    }
-}
-
-# Used only to Switch Export Format
-Function Switch-ExportFormat {
-
-<#
-.SYNOPSIS
-    To Switch Export Format
-
-.DESCRIPTION
-    To Switch Export Format
-
-.PARAMETER 
-    
-
-.EXAMPLE
-    Switch-ExportFormat
-
-.INPUTS
-    User Choice
-
-.OUTPUTS
-    Export format is define to CSV or JSON
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-Info', 'Export-GlobalOutputData', 'Set-ValueToJSONFile'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    # Choose Export Format : CSV or JSON
-    Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Start data export format' -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
-    $global:ExportFormat = ''
-
-    While ($global:ExportFormat[0] -notmatch $global:ValuesExportFormat) {
-        
-        #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Export Result' -LabelMessageText "Please choose an export format (Can be changed later) :`n- (C) CSV`n- (J) JSON" -FirstOptionButtonText 'C' -SecondOptionButtonText 'J'
-            
-        Switch ($Temp) {
-            
-            C    {$global:ExportFormat = 'C';Break}
-            J    {$global:ExportFormat = 'J';Break}
-        }
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
-    Write-Log -Type INFO -Name 'Program run - Choose Export Result' -Message 'End data export format' -NotDisplay
-    
-    $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat = $global:ExportFormat
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-}
-
-# Used only to format export result function user choice
-Function Format-ExportResult {
-
-<#
-.SYNOPSIS
-    To format export result function user choice
-
-.DESCRIPTION
-    To format export result function user choice
-
-.PARAMETER FormatedData
-    Data you want to export
-
-.PARAMETER APIName
-    API path use to get data to export
-
-.PARAMETER ExportCSVPath
-    Path Folder for CSV file
-
-.PARAMETER ExportJSONPath
-    Path Folder for JSON file
-
-.PARAMETER Exportfile
-    Export file Name
-
-.EXAMPLE
-    Format-ExportResult -FormatedData "$FormatedData" -APIName "" -ExportCSVPath "" -ExportJSONPath "" -Exportfile ""
-
-.INPUTS
-    $global:ExportFormat
-    $FormatedData
-    $APIName
-    $ExportCSVPath
-    $ExportJSONPath
-    $Exportfile
-
-.OUTPUTS
-    Data exported to CSV or JSON file depending of : $global:ExportFormat value
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-GlobalOutputData', 'Export-toCSV', 'Export-toJSON'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$False)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportCSVPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportJSONPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Exportfile
-    )
-    
-    Switch ($global:ExportFormat) {
-        
-        'C' {# Export result to CSV
-             Export-toCSV -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile;Break
-            }
-        'J' {# Export result to JSON
-             Export-toJSON -FormatedData $FormatedData -APIName $APIName -ExportJSONPath $ExportJSONPath -Exportfile $Exportfile;Break
-            }
-    }
-}
-
-# Used only to allow to open export folder
-Function Set-TriggerOpenExportFolder {
-
-<#
-.SYNOPSIS
-    To set TriggerOpenExportFolder 
-
-.DESCRIPTION
-    To open TriggerOpenExportFolder
-
-.PARAMETER None
-    None
-
-.EXAMPLE
-    Set-TriggerOpenExportFolder
-
-.INPUTS
-    User input from Windows form dialogue box
-
-.OUTPUTS
-    Open Export Folder Trigger is set
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Open-ExportFolder', 'Export-BoxConfiguration', 'Set-ValueToJSONFile'
-
-#>
-
-    Param ()
-    
-    If ($global:TriggerOpenExportFolder -eq 0) {
-        
-        $global:TriggerOpenExportFolder = Switch-OpenExportFolder
-        $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-    }
-}
-
-# Used only to open HTML Report
-Function Open-HTMLReport {
-
-<#
-.SYNOPSIS
-    To open HTML Report
-
-.DESCRIPTION
-    To open HTML Report
-
-.PARAMETER Path
-    This is the full path of the HTML file to open
-
-.EXAMPLE
-    Open-HTMLReport -Path "C:\HTMLReportFolder\ReportHTML.html"
-
-.INPUTS
-    $Path
-
-.OUTPUTS
-    HTML report openned
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-HTMLReport'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$Path
-    )
-    
-    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
-    Write-Log -Type INFONO -Name "Program run - Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
-    
-    If ($global:OpenHTMLReport -eq "Y") {
-        
-        Try {
-            Invoke-Item -Path $Path
-            Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name $WriteLogName -Message "Opening HTML Report : "
-            Write-Log -Type VALUE -Name $WriteLogName -Message $Path
-        }
-        Catch {
-            Write-Log -Type WARNING -Name "Program run - Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
-        }
-    }
-    Else {
-        Write-Log -Type VALUE -Name "Program run - Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
-    }
-    
-    Write-Log -Type INFO -Name "Program run - Open HTML Report" -Message "End Open HTML Report" -NotDisplay
-}
-
-# Used only to open Export Folder
-Function Open-ExportFolder {
-
-<#
-.SYNOPSIS
-    To open Export Folder
-
-.DESCRIPTION
-    To open Export Folder
-
-.PARAMETER WriteLogName
-    This is the log categorie link the action and folder to open
-
-.PARAMETER ExportFolderPath
-    This is the full path of the Export Folder to open
-
-.EXAMPLE
-    Open-ExportFolder -WriteLogName "This is the log categorie" -ExportFolderPath "C:\Temp"
-
-.INPUTS
-    $WriteLogName
-    $ExportFolderPath
-
-.OUTPUTS
-    Export Folder openned
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-toCSV', 'Export-toJSON', 'Export-HTMLReport', 'Export-BoxConfigTestingProgram', 'Set-TriggerOpenExportFolder', Export-BoxConfiguration
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$WriteLogName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportFolderPath
-    )
-    
-    Set-TriggerOpenExportFolder
-    
-    $DateShort = Get-Date -Format yyyyMMdd
-    $ExportFolderPath = "$ExportFolderPath\$global:BoxType\$DateShort"
-    
-    If ($global:OpenExportFolder -eq 'Y') {
-        Write-Log -Type INFONO -Name $WriteLogName -Message "Opening folder : "
-        Write-Log -Type VALUE -Name $WriteLogName -Message $ExportFolderPath
-        Invoke-Item -Path $ExportFolderPath
-    }
-}
-
-# Used only to Out-Gridview Display
-Function Out-GridviewDisplay {
-
-<#
-.SYNOPSIS
-    To Out-Gridview Display
-
-.DESCRIPTION
-    To Out-Gridview Display
-
-.PARAMETER FormatedData
-    Data you want to be displayed by out-gridview 
-
-.PARAMETER APIName
-    This is the name of API where data have been obtained
-
-.PARAMETER Description
-    This is the description of data have been collected by the API Name
-
-.EXAMPLE
-    Out-GridviewDisplay -FormatedData "$FormatedData" -APIName "device/log" - "Get log"
-
-.INPUTS
-    $FormatedData
-    $APIName
-    $Description
-
-.OUTPUTS
-    Data displayed by out-gridview
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Format-DisplayResult'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Description
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Out-Gridview Display' -Message 'Start Out-Gridview Display' -NotDisplay
-    $FormatedData | Out-GridView -Title $Description -Wait
-    Write-Log -Type INFO -Name 'Program run - Out-Gridview Display' -Message 'End Out-Gridview Display' -NotDisplay
-}
-
-#endregion Manage Output Display
-
-#region Export data (All functions below are used only on powershell script : ".\Box-Administration.ps1")
-
-# Used only to export Full Box Configuration to CSV/JSON files
-function Export-BoxConfiguration {
-
-<#
-.SYNOPSIS
-    To export Full Box Configuration to CSV/JSON files
-
-.DESCRIPTION
-    To export Full Box Configuration to CSV/JSON files
-
-.PARAMETER APISName
-    This is the list of API name that based to collect data
-
-.PARAMETER UrlRoot
-    This is the root API url that API name are based to collect data
-
-.PARAMETER JSONFolderPath
-    This is the folder path use for JSON export file
-
-.PARAMETER CSVFolderPath
-    This is the folder path use for CSV export file
-
-.PARAMETER GitHubUrlSite
-    This is the url of the Github Project
-
-.PARAMETER JournalPath
-    This is the path of the folder use to store Box Journal
-
-.PARAMETER Mail
-    This is the mail address of the developper
-
-.EXAMPLE
-    Export-BoxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -JSONFolderPath "C:\Export\JSON" CSVFolderPath "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
-    Export-BoxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -JSONFolderPath "C:\Export\JSON" CSVFolderPath "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
-
-.INPUTS
-    $APISName
-    $UrlRoot
-    $JSONFolderPath
-    $CSVFolderPath
-    $GitHubUrlSite
-    $JournalPath
-    $Mail
-
-.OUTPUTS
-    Data exported to csv and json files
-
-.NOTES
-    Author : @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-OpenExportFolder', 'Get-BoxInformation', 'Open-ExportFolder'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [Array]$APISName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JSONFolderPath,
-
-        [Parameter(Mandatory=$True)]
-        [String]$CSVFolderPath,
-
-        [Parameter(Mandatory=$True)]
-        [String]$ReportPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$GitHubUrlSite,
-
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath,
-
-        [Parameter(Mandatory=$True)]
-        [String]$Mail
-    ) 
-    
-    Foreach ($APIName in $APISName) {
-        
-        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
-        
-        # Get information from Box API
-        Write-Log -Type INFO -Name 'Program run - Get Information' -Message "Get $($APIName.Label) configuration ..."
-        $Json = Get-BoxInformation -UrlToGo $UrlToGo
-        
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $DateShort = $(Get-Date -UFormat %Y%m%d)
-        
-        # Export result as JSON file
-        Test-FolderPath -FolderRoot "$JSONFolderPath\$global:BoxType" -FolderPath "$JSONFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
-        
-        $ExportPathJson = "$JSONFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).json"
-        Write-Log -Type INFO -Name 'Program run - Export Box Configuration To JSON' -Message 'Start Export Box Configuration To JSON' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Export Box Configuration To JSON' -Message 'Export Box Configuration To JSON status : ' -NotDisplay
-        
-        Try {
-            $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $ExportPathJson -Force
-            Write-Log -Type VALUE -Name 'Program run - Export Box Configuration To JSON' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Export Box Configuration To JSON' -Message 'Export configuration to : '
-            Write-Log -Type VALUE -Name 'Program run - Export Box Configuration To JSON' -Message $ExportPathJson
-        }
-        Catch {
-            Write-Log -Type WARNING -Name 'Program run - Export Box Configuration To JSON' -Message "Failed, due to $($_.tostring())"
-        }
-        
-        Write-Log -Type INFO -Name 'Program run - Export Box Configuration To JSON' -Message 'End Export Box Configuration To JSON' -NotDisplay
-        
-        # Export result as CSV file
-        Test-FolderPath -FolderRoot "$CSVFolderPath\$global:BoxType" -FolderPath "$CSVFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
-        $FormatedData = Switch-Info -Label $APIName.label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
-        
-        If (-not ([string]::IsNullOrEmpty($FormatedData))) {
-        
-            Write-Log -Type INFO -Name 'Program run - Export Box Configuration To CSV' -Message 'Start Export Box Configuration To CSV' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Export Box Configuration To CSV' -Message 'Export Box Configuration To CSV status : ' -NotDisplay 
-            $ExportPathCSV = "$CSVFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).csv"   
-            
-            Try {
-                $FormatedData | Export-Csv -Path $ExportPathCSV -Encoding unicode -Force -Delimiter ";" -NoTypeInformation
-                Write-Log -Type VALUE -Name 'Program run - Export Box Configuration To CSV' -Message 'Successful' -NotDisplay
-                Write-Log -Type INFONO -Name 'Program run - Export Box Configuration To CSV' -Message 'Export configuration to : '
-                Write-Log -Type VALUE -Name 'Program run - Export Box Configuration To CSV' -Message $ExportPathCSV
-            }
-            Catch {
-                Write-Log -Type WARNING -Name 'Program run - Export Box Configuration To CSV' -Message "Failed, due to $($_.tostring())"
-            }
-            
-            Write-Log -Type INFO -Name 'Program run - Export Box Configuration To CSV' -Message 'End Export Box Configuration To CSV' -NotDisplay
-        }
-        
-        # Export result as HTML file
-        $Json = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
-        Export-HTMLReport -DataReported $Json -ReportType $APIName.ReportType -ReportTitle "$global:BoxType Configuration Report - $($APIName.APIName)" -ReportPath $ReportPath -ReportFileName $APIName.ExportFile -HTMLTitle "$global:BoxType Configuration Report" -ReportPrecontent $APIName.APIName -Description $APIName.Description
-    }
-
-    # Open Export Folder
-    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To JSON' -ExportFolderPath $JSONFolderPath
-    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To CSV' -ExportFolderPath $CSVFolderPath
-}
-
-# Used only to export Full Box Configuration to JSON files to test the program
-function Export-BoxConfigTestingProgram {
-
-<#
-.SYNOPSIS
-    To export Full Box Configuration to JSON files to test the program
-
-.DESCRIPTION
-    To export Full Box Configuration to JSON files to test the program
-
-.PARAMETER APISName
-    This is the list of API name that based to collect data
-
-.PARAMETER UrlRoot
-    This is the root API url that API name are based to collect data
-
-.PARAMETER OutputFolder
-    This is the folder path use for export files
-
-.PARAMETER GitHubUrlSite
-    This is the url of the Github Project
-
-.PARAMETER JournalPath
-    This is the path of the folder use to store Box Journal
-
-.PARAMETER Mail
-    This is the mail address of the developper
-
-.EXAMPLE
-    Export-BoxConfigTestingProgram -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
-    Export-BoxConfigTestingProgram -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
-
-.INPUTS
-    $APISName
-    $UrlRoot
-    $OutputFolder
-    $GitHubUrlSite
-    $JournalPath
-    $Mail
-
-.OUTPUTS
-    Data exported to json files
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        
-        [Parameter(Mandatory=$True)]
-        [Array]$APISName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlRoot,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Mail,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$OutputFolder,
-
-        [Parameter(Mandatory=$True)]
-        [String]$GitHubUrlSite
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'Start Testing Program'
-    
-    Foreach ($APIName in $APISName) {
-        
-        Write-Log -Type INFONO -Name 'Program run - Testing Program' -Message 'Tested action : '
-        Write-Log -Type VALUE -Name 'Program run - Testing Program' -Message $($APIName.Label)   
-        
-        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
-        
-        # Get information from Box API
-        $FormatedData = @()
-        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
-        
-        # Export result as CSV file
-        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
-        $DateShort = $(Get-Date -UFormat %Y%m%d)
-        
-        If ($APIName.ExportFile -and $FormatedData) {
-            
-            Test-FolderPath -FolderRoot "$OutputFolder\$global:BoxType" -FolderPath "$OutputFolder\$global:BoxType\$DateShort" -FolderName $DateShort
-            Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'Start Export Box Configuration To CSV' -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Testing Program' -Message 'Export Box Configuration To CSV status : ' -NotDisplay
-            
-            Try {
-                $FullPath = "$OutputFolder\$global:BoxType\$DateShort\$Date-$($APIName.ExportFile).csv"
-                $FormatedData | Export-Csv -Path $FullPath -Encoding unicode -Force -NoTypeInformation -Delimiter ";" -ErrorAction Continue
-                Write-Log -Type VALUE -Name 'Program run - Testing Program' -Message 'Successful' -NotDisplay
-                Write-Log -Type INFONO -Name 'Program run - Testing Program' -Message 'Export configuration to : '
-                Write-Log -Type VALUE -Name 'Program run - Testing Program' -Message $FullPath
-            }
-            Catch {
-                Write-Log -Type WARNING -Name 'Program run - Testing Program' -Message "Failed, due to $($_.tostring())"
-            }
-            
-            Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'End Export Box Configuration To CSV' -NotDisplay
-        }
-        Else {
-            Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'No data were found, export cant be possible' -NotDisplay
-        }
-    }
-    
-    Open-ExportFolder -WriteLogName 'Program run - Testing Program' -ExportFolderPath $OutputFolder
-    
-    Write-Log -Type INFO -Name 'Program run - Testing Program' -Message 'End Testing Program'
-}
-
-# Used only to export Box Journal
-Function Get-BoxJournal {
-
-<#
-.SYNOPSIS
-    To export Box Journal
-
-.DESCRIPTION
-    To export Box Journal
-
-.PARAMETER UrlToGo
-    This is the url to get data from the journal
-
-.PARAMETER JournalPath
-    This is the full path of the export file for the journal
-
-.EXAMPLE
-    Get-BoxJournal -UrlToGo "https://mabbox.bytel.fr/log.html" -JournalPath "C:\Journal\Journal.csv"
-    Get-BoxJournal -UrlToGo "https://mabbox.bytel.fr:8560/log.html" -JournalPath "C:\Journal\Journal.csv"
-
-.INPUTS
-    $UrlToGo
-    $JournalPath
-
-.OUTPUTS
-    Journal exported to CSV file
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-Info'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$JournalPath
-    )
-        
-    # Loading Journal Home Page
-    $UrlToGo = $UrlToGo -replace $global:APIVersion -replace ('//','/')
-    $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-    Start-Sleep $global:SleepChromeDriverLoading
-    
-    # Download Journal file from Box
-    Write-Log -Type INFO -Name 'Program run - Download Box Journal to export' -Message 'Start download Box Journal' -NotDisplay
-    Try {
-        $global:ChromeDriver.FindElementByClassName('download').click()
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message "Failed to start the download Box Journal, due to : $($_.tostring())" -NotDisplay
-    }
-    Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message "Download Journal in progress ... : "
-    
-    # Waiting end of journal's download
-    Start-Sleep $global:SleepBoxJournalDownload
-    
-    Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message 'User download folder location : ' -NotDisplay
-    Try {
-        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message $UserDownloadFolderDefault -NotDisplay
-    }
-    Catch {
-        Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
-    }
-    
-    Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message 'User download folder status : ' -NotDisplay
-    If (Test-Path -Path $UserDownloadFolderDefault) {
-        
-        Try {
-            Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message 'Exists' -NotDisplay
-            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$global:JournalName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-            $UserDownloadFileFullPath          = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
-            Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
-        }
-        Catch {
-            Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
-        }
-    }
-    Else {
-        Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message 'Unable to find user download folder' -NotDisplay
-    }
-    
-    Write-Log -Type INFO -Name 'Program run - Download Box Journal to export' -Message 'Download Box Journal status : ' -NotDisplay
-    If (-not ([string]::IsNullOrEmpty($UserDownloadFileFullPath))) {
-        
-        If (Test-Path -Path $UserDownloadFileFullPath) {
-            
-            $DateShort                   = $(Get-Date -UFormat %Y%m%d)
-            $ExportJournalFolderRootPath = "$JournalPath\$global:BoxType"
-            $ExportJournalFolderPath     = "$ExportJournalFolderRootPath\$DateShort"
-            
-            Write-Log -Type INFONO -Name 'Program run - Journal download location folder creation' -Message "Journal download location folder creation to $ExportJournalFolderPath, status : " -NotDisplay
-            If ($(Test-Path -Path $ExportJournalFolderPath) -eq $false) {
-                
-                Try {
-                    $null = New-Item -Path $ExportJournalFolderRootPath -Name $DateShort -ItemType Directory -Force -ErrorAction Stop
-                    Write-Log -Type INFO -Name 'Program run - Journal download location folder creation' -Message 'Successful' -NotDisplay
-                }
-                Catch {
-                    Write-Log -Type WARNING -Name 'Program run - Journal download location folder creation' -Message "Failed, to create folder : $ExportJournalFolderPath, due to $($_.ToString())"
-                }
-            }
-            Else {
-                Write-Log -Type INFO -Name 'Program run - Journal download location folder creation' -Message 'Already created' -NotDisplay
-            }
-            
-            $DownloadedJournalDestinationPath = "$ExportJournalFolderPath\$UserDownloadFolderDefaultFileName"
-            Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message 'Box Journal has been downloaded from : ' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
-            Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message 'Box Journal has been downloaded to : ' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message $DownloadedJournalDestinationPath -NotDisplay
-            Try {
-                # Move Journal file from Download folder to journal folder : "$PSScriptRoot\Journal"
-                Move-Item -Path $UserDownloadFileFullPath -Destination $DownloadedJournalDestinationPath -Force -ErrorAction Stop
-                Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message 'Finish' -NotDisplay
-            }
-            Catch {
-                Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
-            }
-            
-            # Export Journal data as CSV file to the correct folder
-            If (Test-path -Path $DownloadedJournalDestinationPath) {
-                
-                Try {
-                    $FormatedData = Import-Csv -Path $DownloadedJournalDestinationPath -Delimiter ';' -Encoding unicode
-                }
-                Catch {
-                    Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
-                }
-            }
-            Else {
-                $FormatedData = $null
-            }
-            
-            Write-Log -Type VALUE -Name 'Program run - Download Box Journal to export' -Message 'Successful'
-            Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message 'Box Journal has been saved to : '
-            Write-Log -Type INFONO -Name 'Program run - Download Box Journal to export' -Message "$DownloadedJournalDestinationPath"
-            Write-Log -Type INFO -Name 'Program run - Download Box Journal to export' -Message "End download Box Journal" -NotDisplay
-            Return $FormatedData
-        }
-    }
-    Else {
-        Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message 'Failed, due to time out'
-        Write-Log -Type WARNING -Name 'Program run - Download Box Journal to export' -Message 'Failed to download Journal' -NotDisplay
-        Write-Log -Type INFO -Name 'Program run - Download Box Journal to export' -Message 'End download Box Journal' -NotDisplay
-    }
-}
-
-# Used only to manage errors when there is no data to Export/Display
-Function EmptyFormatedDATA {
-
-<#
-.SYNOPSIS
-    To manage errors when there is no data to Export/Display
-
-.DESCRIPTION
-    To manage errors when there is no data to Export/Display
-
-.PARAMETER FormatedData
-    Array with data or not
-
-.EXAMPLE
-    EmptyFormatedDATA -FormatedData $FormatedData
-
-.INPUTS
-    $FormatedData
-
-.OUTPUTS
-    Write log when when there is no data to Export/Display
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Export-GlobalOutputData'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$False)]
-        [array]$FormatedData
-    )
-    
-    Write-Log -Type INFO -Name 'Program run - Display/Export Result' -Message 'Start display/export result' -NotDisplay
-    
-    Switch ($FormatedData) {
-        
-        $Null     {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
-        
-        ''        {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
-        
-        ' '       {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
-        
-        'Domain'  {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
-                
-        'Program' {Write-Log -Type INFO -Name "Program run - Display / Export Result" -Message 'No data need to be exported or displayed' -NotDisplay;Break}
-        
-        Default   {Write-Log -Type WARNING -Name "Program run - Display / Export Result" -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
-    }
-
-    Write-Log -Type INFO -Name "Program run - Export/Display Result" -Message 'End export/display result' -NotDisplay
-}
-
-# Used only to manage data Export/Display
-function Export-GlobalOutputData {
-
-<#
-.SYNOPSIS
-    To manage data Export/Display
-
-.DESCRIPTION
-    To manage data Export/Display
-
-.PARAMETER FormatedData
-    Data to export
-
-.PARAMETER APIName
-    API name (Url) used to get data
-
-.PARAMETER ExportCSVPath
-    Folder path for CSV files
-
-.PARAMETER ExportJSONPath
-    Folder path for JSON files
-
-.PARAMETER ExportFile
-    Name of the exoprt file
-
-.PARAMETER Description
-    Description base on the API Name and the associated action
-
-.PARAMETER ReportType
-    Type of the report 2 choices : Table / List
-
-.PARAMETER ReportPath
-    Folder path for report Files
-
-.EXAMPLE
-    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "Table" -ReportPath "C:\Export\Report"
-    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "List" -ReportPath "C:\Export\Report"
-
-.INPUTS
-    $FormatedData
-    $APIName
-    $ExportCSVPath
-    $ExportJSONPath
-    $ExportFile
-    $Description
-    $ReportType
-    $ReportPath
-
-.OUTPUTS
-    Data exported to CSV, JSON, HTML
-    Data display Out-GridView or HTML
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-ExportFormat', 'Switch-DisplayFormat', 'Format-ExportResult', 'Format-DisplayResult', 'EmptyFormatedDATA', 'Set-ValueToJSONFile', 'Set-ValueToJSONFile'
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$False)]
-        [array]$FormatedData,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$APIName,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$ExportCSVPath,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$ExportJSONPath,
-        
-        [Parameter(Mandatory=$False)]
-        [string]$ExportFile,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$Description,
-        
-        [Parameter(Mandatory=$False)]
-        [string]$ReportType,
-        
-        [Parameter(Mandatory=$True)]
-        [string]$ReportPath
-    )
-    
-    # Format data before choose output format
-    If (($FormatedData -notmatch $global:FormatedDataGlobalOutputDataExclusion) -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')) {
-        
-        # Choose Export format => CSV or JSON
-        If ($global:TriggerExportFormat -eq 0) {
-            
-            $global:TriggerExportFormat = Switch-ExportFormat
-            $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat = $global:TriggerExportFormat
-        }
-        
-        # Choose Display format => HTML or Table
-        If ($global:TriggerDisplayFormat -eq 0) {
-            
-            $global:TriggerDisplayFormat = Switch-DisplayFormat
-            $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat = $global:TriggerDisplayFormat
-        }
-        
-        # Choose if open export folder
-        If ($global:TriggerOpenExportFolder -eq 0) {
-            
-            $global:TriggerOpenExportFolder = Switch-OpenExportFolder
-            $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
-        }
-
-        # Save New settings set to JSON configuration file
-        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-        
-        # Apply Export Format
-        Format-ExportResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-        
-        # Apply Display Format
-        Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    }
-    Else {
-        EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    }
-}
-
-function Export-ProgramFilesCount {
-
-    <#
-    .SYNOPSIS
-        Export Files numbers generate by the program
-    
-    .DESCRIPTION
-        Export Files numbers generate by the program
-    
-    .PARAMETER FolderRoot
-        This is the root folder where files data are stored
-    
-    .EXAMPLE
-        Export-ProgramFilesCount -FolderRoot 'C:\Temp'
-
-    .INPUTS
-        $FolderRoot
-
-    .OUTPUTS
-        $Array
-
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to function(s): ''
-        Linked to script(s): ''
-    
-    #>
-    
-        Param (
-            [Parameter(Mandatory=$False)]
-            [string]$FolderRoot
-        )
-        
-        # Create array
-        $Array = @()
-        
-        $global:RessourcesFolderName = 'Ressources'
-        $FolderRoot = "D:\OneDrive\Scripting\Projets\BBOX-Administration\Version-2.7"
-        $FolderList = Get-ChildItem -Path $FolderRoot -Exclude $global:RessourcesFolderName -Directory
-        
-        Foreach ($Folder in $FolderList) {
-            
-            $FileCount = $(get-childItem -Path $Folder.FullName -Recurse).count
-            
-            $FolderLine = New-Object -TypeName PSObject
-            $FolderLine | Add-Member -Name 'Folder Name'        -MemberType Noteproperty -Value $Folder.Name
-            $FolderLine | Add-Member -Name 'Folder Path'        -MemberType Noteproperty -Value $Folder.FullName
-            $FolderLine | Add-Member -Name 'Parent Folder'      -MemberType Noteproperty -Value $Folder.Parent
-            $FolderLine | Add-Member -Name 'Folder Files count' -MemberType Noteproperty -Value $FileCount
-            
-            # Add lines to $Array
-            $Array += $FolderLine
-        
-        }
-        Return $Array
-}
-
-#endregion Export data
-
-#region Features (Functions used by functions in the PSM1 file : ".\Box-Module.psm1")
-
+# used only to Get the state
 Function Get-State {
 
 <#
@@ -5965,6 +3480,7 @@ Function Get-State {
     Return $Value
 }
 
+# used only to Get the status
 Function Get-Status {
 
 <#
@@ -6039,6 +3555,7 @@ Function Get-Status {
     Return $Value
 }
 
+# Used only to transform binary answer to Yes (1) or No (0)
 Function Get-YesNoAsk {
 
 <#
@@ -6243,7 +3760,7 @@ function Format-Date1970 {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Start-RefreshWIRELESSFrequencyNeighborhoodScan', 'Get-VOIPCallLogLineX', 'Get-VOIPFullCallLogLineX'
+    Linked to function(s): 'Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan', 'Get-VOIPCallLogLineX', 'Get-VOIPFullCallLogLineX'
     Linked to script(s): '.\Box-Administration.psm1'
 
 #>
@@ -6710,7 +4227,7 @@ Function Get-DynDnsRecordDetail {
 }
 
 # Used only to set (PUT/POST) information
-Function Set-BoxInformation {
+Function Set-BBOXInformation {
 
 <#
 .SYNOPSIS
@@ -6729,7 +4246,7 @@ Function Set-BoxInformation {
     Web request to sent to the API
 
 .EXAMPLE
-    Set-BoxInformation -UrlHome "https://mabbox.bytel.fr/login.html" -Password "password" -UrlToGo ""
+    Set-BBOXInformation -UrlHome "https://mabbox.bytel.fr/login.html" -Password "password" -UrlToGo ""
 
 .INPUTS
     $UrlHome
@@ -6757,7 +4274,7 @@ Function Set-BoxInformation {
         [String]$UrlToGo
     )
     
-    Write-Log -Type ERROR -Name 'Program run - Set Box Information' -Message "`nConnexion à la Box : "
+    Write-Log -Type ERROR -Category 'Program run' -Name 'Set Box Information' -Message "`nConnexion à la Box : "
     
     # Add path for ChromeDriver.exe to the environmental variable 
     $env:PATH += $PSScriptRoot
@@ -6783,8 +4300,8 @@ Function Set-BoxInformation {
     $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
     Start-Sleep $global:SleepChromeDriverNavigation
     
-    Write-Log -Type VALUE -Name 'Program run - Set Box Information' -Message  'OK'
-    Write-Log -Type INFO -Name 'Program run - Set Box Information' -Message  'Application des modifications souhaitées : '
+    Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message  'OK'
+    Write-Log -Type INFO -Category 'Program run' -Name 'Set Box Information' -Message  'Application des modifications souhaitées : '
     
     # Go to the web page to get information we need
     $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
@@ -6799,18 +4316,3126 @@ Function Set-BoxInformation {
     
     Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
     
-    Write-Log -Type VALUE -Name 'Program run - Set Box Information' -Message 'OK'
+    Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message 'OK'
+    
+    Return $Html
+}    
+
+# Used only to define Box connexion type
+Function Get-ConnexionType {
+
+<#
+.SYNOPSIS
+    To define Box connexion type
+
+.DESCRIPTION
+    To define Box connexion type
+
+.PARAMETER TriggerLANNetwork
+    Define Box connexion type
+
+.EXAMPLE
+    Get-ConnexionType -TriggerLANNetwork 0
+    Get-ConnexionType -TriggerLANNetwork 1
+
+.INPUTS
+    $TriggerLANNetwork
+
+.OUTPUTS
+    $ConnexionType
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-WindowsFormDialogBox3ChoicesCancel', 'Show-WindowsFormDialogBox2ChoicesCancel'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$TriggerLANNetwork
+    )
+    
+    Switch ($TriggerLANNetwork) {
+    
+        '1'        {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
+        
+        '0'        {$ConnexionTypeChoice = $global:ValuesLANNetworkRemote;Break}
+        
+        Default    {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message "How do you want to connect to the $global:BoxType ?" -NotDisplay
+
+    $ConnexionType = ''
+    While ($ConnexionType -notmatch $ConnexionTypeChoice) {
+        
+        Switch ($TriggerLANNetwork) {
+            
+            '1'        {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
+                        $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
+                        Break
+                    }
+            
+            '0'        {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(R) Remotly / (Q) Quit the Program' -NotDisplay
+                        $ConnexionType = Show-WindowsFormDialogBox2ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'R' -SecondOptionButtonText 'Q'
+                        Break
+                    }
+            
+            Default    {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
+                        $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
+                        Break
+                    }
+        }
+    }
+     
+    Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message "Connexion Type chosen by user : $ConnexionType" -NotDisplay
+    
+    Return $ConnexionType
+}
+
+# Used only to check if external Box DNS is online 
+Function Get-HostStatus {
+
+<#
+.SYNOPSIS
+    To check if external Box DNS is online
+
+.DESCRIPTION
+    To check if external Box DNS is online
+
+.PARAMETER UrlRoot
+    This is the Root DNS/url to connect to the Box web interface
+
+.EXAMPLE
+    Get-HostStatus -UrlRoot "mybox.bytel.fr"
+    Get-HostStatus -UrlRoot "exemple.com"
+
+.INPUTS
+    $UrlRoot
+
+.OUTPUTS
+    Box Host Status
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Test-Connection', 'Show-WindowsFormDialogBox', 'Set-ValueToJSONFile'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param ()
+    
+    If ($global:BoxType -eq "Freebox") {
+        
+        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+        Return $UrlRoot
+    }
+    
+    Else {
+
+        If (-not [string]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
+            $DefaultValue = $global:SiteCurrentLocalUrl
+        }
+        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
+            $DefaultValue = $global:SiteOldRemoteUrl
+        }
+        Else {
+            $DefaultValue = $global:DefaultLocalUrl
+        }
+        
+        $BoxDnsStatus = $null
+        While ($null -eq $BoxDnsStatus) {
+            
+            $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OK -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Check Host' -Message "Host `"$UrlRoot`" status : " -NotDisplay
+            
+            If ($global:TriggerDialogBox -eq 1) {
+                
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Host' -Message 'User Cancel the action' -NotDisplay
+                Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+                $UrlRoot = $null
+                Return $UrlRoot
+                Break
+            }
+            
+            If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
+                
+                Try {
+                    $BoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
+                }
+                
+                Catch {
+                    Write-Log -Type ERROR -Category 'Program run' -Name 'Check Host' -Message "Failed to resolve / Access to : $UrlRoot, due to : $($_.ToString())"
+                    #$global:TriggerExitSystem = 1
+                }
+                
+                If ($BoxDnsStatus -eq $true) {
+                    
+                    Write-Log -Type VALUE -Category 'Program run' -Name 'Check Host' -Message 'Online' -NotDisplay
+                    $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:SiteCurrentRemoteUrl
+                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
+                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+                    Return $UrlRoot
+                    Break
+                }
+                Else {
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message 'Offline' -NotDisplay
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- You are connected to internet"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- You enter a valid DNS address or IP address"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- If you use a proxy, that do not block the connection to your public dyndns"
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns" -WarnIcon
+                    $BoxDnsStatus = $null
+                    $UrlRoot = $null
+                }
+            }
+            Else {
+                Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Check Host' -Message "This field can't be empty or null"
+                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "This field can't be empty or null" -WarnIcon
+                $BoxDnsStatus = $null
+                $UrlRoot = $null
+            }
+        }
+    }
+}
+
+# Used only to check if external Box Port is open
+Function Get-PortStatus {
+
+<#
+.SYNOPSIS
+    To check if external Box Port is open
+
+.DESCRIPTION
+    To check if external Box Port is open
+
+.PARAMETER UrlRoot
+    This is the Root DNS/url to connect to the Box web interface
+
+.PARAMETER Port
+    This is the port to check if open or not
+
+.EXAMPLE
+    Get-HostStatus -UrlRoot "exemple.com" -Port "8560"
+    Get-HostStatus -UrlRoot "exemple.com" -Port "80"
+
+.INPUTS
+    $UrlRoot
+    $Port
+
+.OUTPUTS
+    $Port
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Show-WindowsFormDialogBox', 'Test-NetConnection', 'Set-ValueToJSONFile'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlRoot
+    )
+
+    If ($global:BoxType -eq "Freebox") {
+        
+        [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $global:DefaultRemotePort
+    }
+    Else {
+        
+        If (-not [string]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+            $DefaultValue = $global:SiteCurrentRemotePort
+        }
+        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+            $DefaultValue = $global:SiteOldRemotePort
+        }
+        Else {
+            $DefaultValue = $global:DefaultRemotePort
+        }
+        
+        $PortStatus = $null
+        While ([string]::IsNullOrEmpty($PortStatus) -or [string]::IsNullOrEmpty($Port)) {
+            
+            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Check Port' -Message "Port `"$Port`" status : " -NotDisplay
+            
+            If ($global:TriggerDialogBox -eq 1) {
+                
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message 'User Cancel the action' -NotDisplay
+                Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+                Break
+            }
+            
+            If (($Port -ge 1) -and ($Port -le 65535)) {
+                
+                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message $PortStatus.TcpTestSucceeded -NotDisplay
+                
+                If ($PortStatus.TcpTestSucceeded -eq $true) {
+                    
+                    Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message 'Opened' -NotDisplay
+                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:SiteCurrentRemotePort
+                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
+                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+                    Return $Port
+                    Break
+                }
+                Else {
+                    
+                    If ([string]::IsNullOrEmpty($global:SiteOldRemotePort)) {
+                        $OldRemotePort = $global:SiteOldRemotePort
+                    }
+                    Else {
+                        $OldRemotePort = $global:DefaultRemotePort
+                    }
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message 'Closed' -NotDisplay
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "Port $Port seems closed, please make sure :"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- You enter a valid port number"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- None Firewall rule(s) block this port ($global:BoxUrlFirewall)"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- For remember you use the port : $OldRemotePort the last time"
+                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number between 1 and 65535`n- None Firewall rule(s) block this port ($global:BoxUrlFirewall)`n- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- For remember you use the port : $OldRemotePort the last time" -WarnIcon
+                    $Port = $null
+                    $PortStatus = $null
+                }
+            }
+            Else {
+                Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565'
+                Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565' -WarnIcon
+                $Port = $null
+                $PortStatus = $null
+            }
+        }
+    }
+}
+
+# Used only to get Box LAN Switch Port State
+Function Get-LanPortState {
+
+<#
+.SYNOPSIS
+    To get Box LAN Switch Port State
+
+.DESCRIPTION
+    To get Box LAN Switch Port State
+
+.PARAMETER LanPortState
+    This is the switch port number to get the state
+
+.EXAMPLE
+    Get-LanPortState -LanPortState 1
+    Get-LanPortState -LanPortState 2
+    Get-LanPortState -LanPortState 3
+    Get-LanPortState -LanPortState 4
+
+.INPUTS
+    $LanPortState
+
+.OUTPUTS
+    $State
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-BBOXDeviceFullLog'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$LanPortState
+    )
+    
+    Switch ($LanPortState) {
+    
+        0          {$State = "Disable";Break}
+        1          {$State = "Enable";Break}
+        2          {$State = "Enable";Break}
+        3          {$State = "Enable";Break}
+        4          {$State = "Enable";Break}
+        Default    {$State = "Unknow";Break}
+    }
+    
+    Return $State
+}
+
+# Used only to connect to BBox Web Interface
+Function Connect-BBox {
+
+<#
+.SYNOPSIS
+    To connect to BBox Web interface
+
+.DESCRIPTION
+    To connect to BBox Web interface
+
+.PARAMETER UrlAuth
+    This is the url use to login to the BBox web interface
+
+.PARAMETER UrlHome
+    This is the main page of BBox web interface
+
+.PARAMETER Password
+    This is the user password to authentificate to Box web interface
+    
+.EXAMPLE
+    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr"      -UrlHome "https://mabbox.bytel.fr/index.html"      -Password "Password"
+    Connect-BBOX -UrlAuth "https://mabbox.bytel.fr:8560" -UrlHome "https://mabbox.bytel.fr:8560/index.html" -Password "Password"
+    Connect-BBOX -UrlAuth "https://exemple.com:80"       -UrlHome "https://exemple.com:80/index.html"       -Password "Password"
+
+.INPUTS
+    $UrlAuth
+    $UrlHome
+    $Password
+
+.OUTPUTS
+    User authentificated to the Box Web Interface
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlAuth,
+
+        [Parameter(Mandatory=$True)]
+        [String]$UrlHome,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Password
+    )
+    
+    # Open Web Site Home Page 
+    $global:ChromeDriver.Navigate().GoToURL($UrlAuth)
+    Start-Sleep $global:SleepChromeDriverNavigation
+    
+    # Enter the password to connect (# Methods to find the input textbox for the password)
+    $global:ChromeDriver.FindElementByName("password").SendKeys("$Password") 
+    Start-Sleep $global:SleepDefault
+    
+    # Tic checkBox "Stay Connect" (# Methods to find the input checkbox for stay connect)
+    $global:ChromeDriver.FindElementByClassName('cb').Click()
+    Start-Sleep $global:SleepDefault
+    
+    # Click on the connect button
+    $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
+    Start-Sleep $global:SleepDefault
+
+    If ($global:ChromeDriver.Url -ne $UrlHome) {
+        Write-Log ERROR -Category 'Program run' -Name 'ChromeDriver Authentification' -Message "Failed, Authentification can't be done, due to : Wrong Password or connection timeout"
+        Stop-Program -Context System -ErrorMessage 'Authentification can not be done' -Reason 'Authentification can not be done' -ErrorAction Stop
+    }
+    
+    <#
+    $LoginParameters = @{
+        Uri             = $UrlAuth
+        SessionVariable = 'Session'
+        Method          = 'POST'
+        Body            = @{
+        Password        = $Password
+        }
+    }
+     
+    $LoginResponse = Invoke-WebRequest @LoginParameters
+
+    If ($LoginResponse.StatusCode -ne '200') {
+        Write-Log ERROR -Category 'Program run' -Name 'ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password or connection timeout'
+        Stop-Program -Context System -ErrorMessage 'Authentification can not be done' -Reason 'Authentification can not be done' -ErrorAction Stop
+    }
+    Else {
+        Write-Log value -Category 'Program run' -Name 'ChromeDriver Authentification' -Message 'Successful'
+    }
+    #>
+}
+
+# Used only to connect to FREEBOX Web Interface
+Function Connect-FREEBOX {
+    
+<#
+.SYNOPSIS
+    To connect to Box Web interface
+
+.DESCRIPTION
+    To connect to Box Web interface
+
+.PARAMETER UrlAuth
+    This is the url use to login to the Box web interface
+
+.PARAMETER UrlHome
+    This is the main page of Box web interface
+
+.PARAMETER Password
+    This is the user password to authentificate to Box web interface
+    
+.EXAMPLE
+    Connect-BOX -UrlAuth "https://192.168.0.254"      -UrlHome "https://192.168.0.254/index.html"      -Password "Password"
+    Connect-BOX -UrlAuth "https://192.168.0.254:8560" -UrlHome "https://192.168.0.254:8560/index.html" -Password "Password"
+    Connect-BOX -UrlAuth "https://exemple.com:80"     -UrlHome "https://exemple.com:80/index.html"     -Password "Password"
+
+.INPUTS
+    $UrlAuth
+    $UrlHome
+    $Password
+
+.OUTPUTS
+    User authentificated to the Box Web Interface
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Stop-Program'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlAuth,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlHome,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Password
+    )
+    
+    # Open Web Site Home Page 
+    $global:ChromeDriver.Navigate().GoToURL($UrlAuth)
+    Start-Sleep $global:SleepDefault
+
+    # Enter the password to connect (# Methods to find the input textbox for the password)
+    $global:ChromeDriver.FindElementByClassName("password").SendKeys("$Password") 
+    Start-Sleep $global:SleepDefault
+    
+    # Click on the connect button
+    $global:ChromeDriver.FindElementByClassName("submit-btn").Submit()
+    Start-Sleep $global:SleepChromeDriverLoading
+
+    <#"If ($global:ChromeDriver.Url -ne $UrlHome) {
+        Write-Log ERROR -Category 'Program run' -Name 'ChromeDriver Authentification' -Message 'Failed, Authentification cant be done, due to : Wrong Password or connection timeout'
+        Stop-Program -Context System -ErrorAction Stop
+    }#>
+}
+
+# Used only to get information from API page content for BBOX
+Function Get-BBOXInformation {
+
+<#
+.SYNOPSIS
+    To get information from API page content
+
+.DESCRIPTION
+    To get information from API page content
+
+.PARAMETER UrlToGo
+    This is the url that you want to collect data
+
+.EXAMPLE
+    Get-BBOXInformation -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log"
+    Get-BBOXInformation -UrlToGo "https://exemple.com:8560/api/v1/device/log"
+    Get-BBOXInformation -UrlToGo "https://exemple.com:80/api/v1/device/log"
+
+.INPUTS
+    UrlToGo
+
+.OUTPUTS
+    PSCustomObject = $Json
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-BBOXErrorCode', 'ConvertFrom-Json'
+    linked to many functions in the module : '.\Box-Modules.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Start retrieve informations requested" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Get informations requested from url : $UrlToGo" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Request status :" -NotDisplay
+    
+    If ($global:PreviousUrlToGo -notcontains $UrlToGo) {
+        
+        $global:PreviousUrlToGo = $UrlToGo
+        
+        If (($global:TriggerAuthentification -eq 1) -or ($UrlToGo -match $global:APINameExclusionsChrome)) {
+        
+            Try {
+                # Go to the web page to get information we need
+                $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
+                Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Failed, due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Please check your local/internet network connection"
+                Return "0"
+                Break
+            }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "End retrieve informations requested" -NotDisplay
+            Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "Start convert data from Html to plaintxt format" -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Convert HTML' -Message "HTML Conversion status : " -NotDisplay
+            
+            Try {
+                # Get Web page Content
+                $Html = $global:ChromeDriver.PageSource
+                # Convert $Html To Text
+                $Plaintxt = ConvertFrom-HtmlToText -Html $Html
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Convert HTML' -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert to HTML, due to : $($_.ToString())"
+                Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End convert data from Html to plaintxt format" -NotDisplay
+                Return "0"
+                Break
+            }
+            Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End convert data from Html to plaintxt format" -NotDisplay
+            Try {
+                # Convert $Plaintxt as JSON to array
+                $Global:Json = $Plaintxt | ConvertFrom-Json -ErrorAction Stop
+                Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+                Return "0"
+                Break
+            }
+            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
+            
+            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
+                
+                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
+                Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
+                
+                Try {
+                    $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
+                    Return $ErrorCode.String()
+                    Break
+                }
+                Catch {
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+                    Return $null
+                }
+                
+                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
+            }
+            Else {
+                Return $Global:Json
+            }
+        }
+        Else {
+        
+            Try {
+                # Get Web page Content
+                $Response = Invoke-WebRequest -Uri $UrlToGo -AllowUnencryptedAuthentication -SkipCertificateCheck -SkipHeaderValidation -AllowInsecureRedirect -ConnectionTimeoutSeconds 30 -OperationTimeoutSeconds 30 -RetryIntervalSec 1 -Method Get
+                Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                
+                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Failed, due to : $($_.ToString())"
+            }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name "Convert JSON" -Message "JSON Conversion status : " -NotDisplay
+            
+            Try {
+                # Convert $Plaintxt as JSON to array
+                $Global:Json = $($Response.Content) | ConvertFrom-Json -ErrorAction Stop
+                Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+                Return "0"
+                Break
+            }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
+            
+            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
+                
+                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
+                Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
+                
+                Try {
+                    $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
+                    Return $ErrorCode.String()
+                    Break
+                }
+                Catch {
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
+                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+                    Return $null
+                }
+                
+                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
+            }
+            Else {
+                Return $Global:Json
+            }
+        }
+    }
+    Else {
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Information' -Message "Data already loaded in cache" -NotDisplay
+        $global:PreviousUrlToGo = $UrlToGo
+        Return $Global:Json
+    }
+}
+
+# Used only to get information from API page content for FREEBOX
+Function Get-FREEBOXInformation {
+    
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name "Get Information" -Message "Start retrieving informations requested" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name "Get Information" -Message "Get informations requested from url : $UrlToGo" -NotDisplay
+    Try {
+        # Go to the web page to get information we need
+        $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
+        Write-Log -Type INFO -Category 'Program run' -Name "Get Information" -Message "Successsful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program run' -Name "Get Information" -Message "Failed - Due to : $($_.ToString())"
+        Write-Host "Please check your local/internet network connection" -ForegroundColor Yellow
+        Return "0"
+        Break
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name "Get Information" -Message "End retrieving informations requested" -NotDisplay
+
+    Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "Start converting data from Html to plaintxt format" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Convert HTML' -Message "HTML Conversion status : " -NotDisplay
+    Try {
+        # Get Web page Content
+        $Html = $global:ChromeDriver.PageSource
+        
+        # Convert $Html To Text
+        $Plaintxt = ConvertFrom-HtmlToText -Html $Html
+        
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Convert HTML' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert to HTML, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End converting data from Html to plaintxt format" -NotDisplay
+        Return "0"
+        Break
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End converting data from Html to plaintxt format" -NotDisplay
+        
+    Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name "Convert JSON" -Message "JSON Conversion status : " -NotDisplay
+    Try {
+        # Convert $Plaintxt as JSON to array
+        $Json = $Plaintxt | ConvertFrom-Json
+        Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+        Return "0"
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End converting data from plaintxt to Json format" -NotDisplay
+    
+    If ($Json.success -eq 'false') {
+        
+        Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start getting API error code" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API error code : "
+        Try {
+            $ErrorCode = Get-FREEBOXErrorCode -Json $Json -ErrorAction Stop
+            Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$ErrorCode"
+            Return $ErrorCode
+        }
+        Catch {
+            Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+        }
+
+        Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End getting API error code" -NotDisplay
+    }
+    Else {
+        Return $Json
+    }
+}
+
+# Used only to convert HTML page to TXT
+Function ConvertFrom-HtmlToText {
+
+<#
+.SYNOPSIS
+    Convert HTML page to TXT
+
+.DESCRIPTION
+    Convert HTML page to TXT
+
+.PARAMETER $Html
+    This is the HTML code content from the Web API content
+
+.EXAMPLE
+    ConvertFrom-HtmlToText -Html $Html
+
+.INPUTS
+    $Html
+
+.OUTPUTS
+    $Html
+
+.NOTES
+    Author : Winston - 2010/09/21
+    Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+    Linked to function(s): 'Get-BBOXInformation', 'Update-ChromeDriver'
+
+#>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [System.String]$Html
+    )
+    
+    # remove line breaks, replace with spaces
+    $Html = $Html -replace "(`r|`n|`t)", ' '
+    # write-verbose "removed line breaks: `n`n$Html`n"
+    
+    # remove invisible content
+    @('head', 'style', 'script', 'object', 'embed', 'applet', 'noframes', 'noscript', 'noembed') | Foreach-object {
+    $Html = $Html -replace "<$_[^>]*?>.*?</$_>", ''
+    }
+    # write-verbose "removed invisible blocks: `n`n$Html`n"
+    
+    # Condense extra whitespace
+    $Html = $Html -replace "( )+", ' '
+    # write-verbose "condensed whitespace: `n`n$Html`n"
+    
+    # Add line breaks
+    @('div','p','blockquote','h[1-9]') | Foreach-object { $Html = $Html -replace "</?$_[^>]*?>.*?</$_>", ("`n" + '$0' )} 
+    # Add line breaks for self-closing tags
+    @('div','p','blockquote','h[1-9]','br') | Foreach-object { $Html = $Html -replace "<$_[^>]*?/>", ('$0' + "`n")} 
+    # write-verbose "added line breaks: `n`n$Html`n"
+    
+    #strip tags 
+    $Html = $Html -replace "<[^>]*?>", ''
+    # write-verbose "removed tags: `n`n$Html`n"
+    
+    # replace common entities
+    @( 
+    @("&amp;bull;", " * "),
+    @("&amp;lsaquo;", "<"),
+    @("&amp;rsaquo;", ">"),
+    @("&amp;(rsquo|lsquo);", "'"),
+    @("&amp;(quot|ldquo|rdquo);", '"'),
+    @("&amp;trade;", "(tm)"),
+    @("&amp;frasl;", "/"),
+    @("&amp;(quot|#34|#034|#x22);", '"'),
+    @('&amp;(amp|#38|#038|#x26);', "&amp;"),
+    @("&amp;(lt|#60|#060|#x3c);", "<"),
+    @("&amp;(gt|#62|#062|#x3e);", ">"),
+    @('&amp;(copy|#169);', "(c)"),
+    @("&amp;(reg|#174);", "(r)"),
+    @("&amp;nbsp;", ' '),
+    @("&amp;(.{2,6});", '')
+    ) | Foreach-object { $Html = $Html -replace $_[0], $_[1] }
+    # write-verbose "replaced entities: `n`n$Html`n"
     
     Return $Html
 }
 
-#endregion Features
+# Used only to Set value(s) to JSON File
+Function Set-ValueToJSONFile {
 
-#region Switch-Info (Functions used only in the PSM1 file : ".\Box-Module.psm1")
+<#
+.SYNOPSIS
+    To set value(s) to JSON File
+
+.DESCRIPTION
+    To set value(s) to JSON File
+
+.PARAMETER JSONFileContent
+    This is settings to be set to the JSON file
+
+.PARAMETER JSONFileContentPath
+    This is JSON file path where Settings will be saved
+
+.EXAMPLE
+    Set-ValueToJSONFile JSONFileContent @{} -JSONFileContentPath "C:\Temp\File.json"
+
+.INPUTS
+    $JSONFileContent
+    $JSONFileContentPath
+
+.OUTPUTS
+    Settings saved to JSON file
+    Write in logs files
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-HostStatus', 'Get-PortStatus', 'Switch-DisplayFormat', 'Switch-OpenExportFolder', 'Switch-OpenHTMLReport', 'Export-HTMLReport', 'Switch-ExportFormat', 'Set-TriggerOpenExportFolder', 'Export-GlobalOutputData'
+    Linked to script(s) : .\BBox-Administration.ps1
+
+#>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$JSONFileContent,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JSONFileContentPath
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Start Save Settings to JSON File" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Try to save settings to JSON File : $JSONFileContentPath" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Save Settings to JSON File Status : " -NotDisplay
+    Try {
+        $JSONFileContent | ConvertTo-Json -ErrorAction Continue | Out-File -FilePath $JSONFileContentPath -Encoding unicode -Force -ErrorAction Continue
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "End Save Settings to JSON File" -NotDisplay
+}
+
+# Used only to select function to get data from Box web API or do actions
+Function Switch-Info {
+
+<#
+.SYNOPSIS
+    To select function to get data from Box web API or do actions
+
+.DESCRIPTION
+    To select function to get data from Box web API or do actions
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Switch-Info -Label "Get-BBOXDEVICEFLOG" -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+    Switch-Info -Label "Get-BBOXDEVICEFLOG" -UrlToGo "https://exemple.com:8560/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+    Switch-Info -Label "Get-BBOXDEVICEFLOG" -UrlToGo "https://exemple.com:80/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
+
+.INPUTS
+    $Label
+    $UrlToGo
+    $APIName
+    $Mail
+    $JournalPath
+    $GitHubUrlSite
+
+.OUTPUTS
+    $FormatedData
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-BoxConfigTestingProgram', ''
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$Label,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Mail,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$GitHubUrlSite
+    )
+    
+        Switch ($Label) {
+            
+            # Error Code 
+            Get-BBOXErrorCode        {$FormatedData = Get-BBOXErrorCode -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXErrorCodeTest    {$FormatedData = Get-BBOXErrorCodeTest -UrlToGo $UrlToGo;Break}
+            
+            # API Version 
+            Get-FREEBOXAPIVersion    {$FormatedData = Get-FREEBOXAPIVersion -UrlToGo $UrlToGo;Break}
+            
+            # Contact 
+            Get-FREEBOXContact       {$FormatedData = Get-FREEBOXContact -UrlToGo $UrlToGo;Break}
+            
+            # Call Log
+            Get-FREEBOXCalllog       {$FormatedData = Get-FREEBOXCalllog -UrlToGo $UrlToGo;Break}
+            
+            # Call Log Summary
+            Get-FREEBOXCalllogS      {$FormatedData = Get-FREEBOXCalllogSummary -UrlToGo $UrlToGo;Break}
+            
+            # Airties
+            Get-BBOXAirties          {$FormatedData = Get-BBOXAirties -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXAirtiesL         {$FormatedData = Get-BBOXAirtiesLANmode -UrlToGo $UrlToGo;Break}
+            
+            # Backup
+            Get-BBOXCONFIGSL         {$FormatedData = Get-BBOXBackupList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            # DHCP
+            Get-BBOXDHCP             {$FormatedData = Get-BBOXDHCP -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXDHCPC            {$FormatedData = Get-BBOXDHCPClients -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPCID          {$FormatedData = Get-BBOXDHCPClientsID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPAO           {$FormatedData = Get-BBOXDHCPActiveOptions -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPO            {$FormatedData = Get-BBOXDHCPOptions -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPOID          {$FormatedData = Get-BBOXDHCPOptionsID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPSTBO         {$FormatedData = Get-BBOXDHCPSTBOptions -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDHCPv6PFD        {$FormatedData = Get-BBOXDHCPv6PrefixDelegation -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXDHCPv6O          {$FormatedData = Get-BBOXDHCPv6Options -UrlToGo $UrlToGo;Break}
+            
+            # DNS
+            Get-BBOXDNSS             {$FormatedData = Get-BBOXDNSStats -UrlToGo $UrlToGo;Break}
+            
+            # DEVICE
+            Get-BBOXDEVICE           {$FormatedData = Get-BBOXDevice -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXDEVICELOG        {$FormatedData = Get-BBOXDeviceLog -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXDEVICEFLOG       {$FormatedData = Get-BBOXDeviceFullLog -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICEFTLOG      {$FormatedData = Get-BBOXDeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICECHLOG      {$FormatedData = Get-BBOXDeviceConnectionHistoryLog -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICECHLOGID    {$FormatedData = Get-BBOXDeviceConnectionHistoryLogID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICEC          {$FormatedData = Get-BBOXDeviceCpu -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICEM          {$FormatedData = Get-BBOXDeviceMemory -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICELED        {$FormatedData = Get-BBOXDeviceLED -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICES          {$FormatedData = Get-BBOXDeviceSummary -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICET          {$FormatedData = Get-BBOXDeviceToken -UrlToGo $UrlToGo;Break}
+            
+            Set-BBOXDEVICER          {Set-BBOXDeviceReboot -UrlToGo $UrlToGo;Break}
+            
+            Set-BBOXDEVICEFR         {Set-BBOXDeviceResetFactory -UrlToGo $UrlToGo;Break}
+            
+            # DYNDNS
+            Get-BBOXDYNDNS           {$FormatedData = Get-BBOXDYNDNS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXDYNDNSPL         {$FormatedData = Get-BBOXDYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXDYNDNSC          {$FormatedData = Get-BBOXDYNDNSClient -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXDYNDNSCID        {$FormatedData = Get-BBOXDYNDNSClientID -UrlToGo $UrlToGo;Break}
+
+            # FIREWALL
+            Get-BBOXFIREWALL         {$FormatedData = Get-BBOXFIREWALL -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXFIREWALLR        {$FormatedData = Get-BBOXFIREWALLRules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLRID      {$FormatedData = Get-BBOXFIREWALLRulesID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLGM       {$FormatedData = Get-BBOXFIREWALLGamerMode -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLPR       {$FormatedData = Get-BBOXFIREWALLPingResponder -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLv6R      {$FormatedData = Get-BBOXFIREWALLv6Rules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLv6RID    {$FormatedData = Get-BBOXFIREWALLv6RulesID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXFIREWALLv6L      {$FormatedData = Get-BBOXFIREWALLv6Level -UrlToGo $UrlToGo;Break}
+            
+            # API
+            Get-BBOXAPIRM            {$FormatedData = Get-BBOXAPIRessourcesMap -UrlToGo $UrlToGo;Break}
+            
+            # HOST
+            Get-BBOXHOSTSDTH         {$FormatedData = Get-BBOXHOSTSDownloadThreshold -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXHOSTS            {$FormatedData = Get-BBOXHOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXHOSTSID          {$FormatedData = Get-BBOXHOSTSID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXHOSTSW           {$FormatedData = Get-BBOXHOSTSWireless -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXHOSTSME          {$FormatedData = Get-BBOXHOSTSME -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXHOSTSL           {$FormatedData = Get-BBOXHOSTSLite -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXHOSTSP           {$FormatedData = Get-BBOXHOSTSPAUTH -UrlToGo $UrlToGo;Break}
+            
+            # LAN
+            Get-BBOXLANIPC           {$FormatedData = Get-BBOXLANIPConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXLANIPSC          {$FormatedData = Get-BBOXLANIPSwitchConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXLANS             {$FormatedData = Get-BBOXLANStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXLANPS            {$FormatedData = Get-BBOXLANPortStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXLANA             {$FormatedData = Get-BBOXLANAlerts -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            # NAT
+            Get-BBOXNAT              {$FormatedData = Get-BBOXNAT -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNATDMZ           {$FormatedData = Get-BBOXNATDMZ -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNATR             {$FormatedData = Get-BBOXNATRules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNATRID           {$FormatedData = Get-BBOXNATRulesID -UrlToGo $UrlToGo;Break}
+            
+            # Parental Control
+            Get-BBOXPARENTALCONTROL  {$FormatedData = Get-BBOXParentalControl -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXPARENTALCONTROLS {$FormatedData = Get-BBOXParentalControlScheduler -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXPARENTALCONTROLSR{$FormatedData = Get-BBOXParentalControlSchedulerRules -UrlToGo $UrlToGo;Break}
+            
+            # PROFILE
+            Get-BBOXPROFILEC         {$FormatedData = Get-BBOXProfileConsumption -UrlToGo $UrlToGo;Break}
+            
+            # REMOTE
+            Get-BBOXREMOTEPWOL       {$FormatedData = Get-BBOXREMOTEProxyWOL -UrlToGo $UrlToGo;Break}
+            
+            # SERVICES
+            Get-BBOXSERVICES         {$FormatedData = Get-BBOXSERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            # IP TV
+            Get-BBOXIPTV             {$FormatedData = Get-BBOXIPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXIPTVD            {$FormatedData = Get-BBOXIPTVDiags -UrlToGo $UrlToGo;Break}
+            
+            # NOTIFICATION
+            Get-BBOXNOTIFICATION     {$FormatedData = Get-BBOXNOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXNOTIFICATIONCA   {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNOTIFICATIONCC   {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNOTIFICATIONCE   {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNOTIFICATIONA    {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNOTIFICATIONC    {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXNOTIFICATIONE    {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
+            
+            # UPNP IGD
+            Get-BBOXUPNPIGD          {$FormatedData = Get-BBOXUPNPIGD -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXUPNPIGDR         {$FormatedData = Get-BBOXUPNPIGDRules -UrlToGo $UrlToGo;Break}
+            
+            # USB
+            Get-BBOXDEVICEUSBP       {$FormatedData = Get-BBOXDeviceUSBPrinter -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXDEVICEUSBD       {$FormatedData = Get-BBOXDeviceUSBDevices -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXUSBS             {$FormatedData = Get-BBOXUSBStorage -UrlToGo $UrlToGo;Break}
+            
+            # VOIP
+            Get-BBOXVOIP             {$FormatedData = Get-BBOXVOIP -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXVOIPDC           {$FormatedData = Get-BBOXVOIPDiagConfig -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPDL           {$FormatedData = Get-BBOXVOIPDiagLine -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPDU           {$FormatedData = Get-BBOXVOIPDiagUSB -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPDH           {$FormatedData = Get-BBOXVOIPDiagHost -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPS            {$FormatedData = Get-BBOXVOIPScheduler -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPSR           {$FormatedData = Get-BBOXVOIPSchedulerRules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPCL           {$FormatedData = Get-BBOXVOIPCallLogLine -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPCLPN         {$FormatedData = Get-BBOXVOIPCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPCLS          {$FormatedData = Get-BBOXVOIPCallLogLineXSummary -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPFCL          {$FormatedData = Get-BBOXVOIPFullCallLogLine -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPFCLPN        {$FormatedData = Get-BBOXVOIPFullCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPFCLS         {$FormatedData = Get-BBOXVOIPFullCallLogLineXSummary -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXVOIPALN          {$FormatedData = Get-BBOXVOIPAllowedListNumber -UrlToGo $UrlToGo;Break}
+            
+            # CPL
+            Get-BBOXCPL              {$FormatedData = Get-BBOXCPL -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXCPLDL            {$FormatedData = Get-BBOXCPLDeviceList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            # WAN
+            Get-BBOXWANAC            {$FormatedData = Get-BBOXWANAutowanConfig -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANAP            {$FormatedData = Get-BBOXWANAutowanProfiles -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWAND             {$FormatedData = Get-BBOXWANDiags -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANDS            {$FormatedData = Get-BBOXWANDiagsSessions -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXWANDSHAS         {$FormatedData = Get-BBOXWANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANDAAS          {$FormatedData = Get-BBOXWANDiagsAllActiveSessions -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXWANDAASH         {$FormatedData = Get-BBOXWANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANFS            {$FormatedData = Get-BBOXWANFTTHStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANIP            {$FormatedData = Get-BBOXWANIP -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANIPS           {$FormatedData = Get-BBOXWANIPStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWANXDSL          {$FormatedData = Get-BBOXWANXDSL -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXWANXDSLS         {$FormatedData = Get-BBOXWANXDSLStats -UrlToGo $UrlToGo;Break}
+
+            Get-BBOXWANSFF           {$FormatedData = Get-BBOXWANSFF -UrlToGo $UrlToGo;Break}
+            
+            # WIRELESS
+            Get-BBOXWIRELESS         {$FormatedData = Get-BBOXWIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXWIRELESSSTD      {$FormatedData = Get-BBOXWIRELESSSTANDARD -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESS24       {$FormatedData = Get-BBOXWIRELESS24Ghz -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESS24S      {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESS5        {$FormatedData = Get-BBOXWIRELESS5Ghz -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESS5S       {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSACL      {$FormatedData = Get-BBOXWIRELESSACL -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSACLR     {$FormatedData = Get-BBOXWIRELESSACLRules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSACLRID   {$FormatedData = Get-BBOXWIRELESSACLRulesID -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSWPS      {$FormatedData = Get-BBOXWIRELESSWPS -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSFBNH     {$FormatedData = Get-BBOXWIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            Get-BBOXWIRELESSFSM      {$FormatedData = Get-BBOXWIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSS        {$FormatedData = Get-BBOXWIRELESSScheduler -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSSR       {$FormatedData = Get-BBOXWIRELESSSchedulerRules -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSR        {$FormatedData = Get-BBOXWIRELESSRepeater -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSVBSTB    {$FormatedData = Get-BBOXWIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo;Break}
+            
+            Get-BBOXWIRELESSVBR      {$FormatedData = Get-BBOXWIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo;Break}
+            
+            # SUMMARY
+            Get-BBOXSUMMARY          {$FormatedData = Get-BBOXSUMMARY -UrlToGo $UrlToGo;Break}
+            
+            # USERSAVE
+            Get-BBOXUSERSAVE         {$FormatedData = Get-BBOXUSERSAVE -UrlToGo $UrlToGo -APIName $APIName;Break}
+            
+            # Password Recovery Verify
+            Get-BBOXPASSRECOVERV     {$FormatedData = Get-BBOXPasswordRecoveryVerify -UrlToGo $UrlToGo;Break}
+            
+            # BoxJournal
+            Get-BBOXBoxJournal       {$FormatedData = Get-BBOXBoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath;Break}
+            
+            # BBox Referential Contact
+            Show-BBOXRC              {$FormatedData = Show-BBOXReferentialContact;Break}
+            
+            Add-BBOXNewRC            {$FormatedData = Add-BBOXNewReferentialContact;Break}
+            
+            Remove-BBOXRC            {$FormatedData = Remove-BBOXReferentialContact;Break}
+            
+            # Export Program files Number
+            Export-PFC           {$FormatedData = Export-ProgramFilesCount -FolderRoot $PSScriptRoot;Break}
+            
+            # Remove-FolderContent
+            Remove-FCAll         {$FormatedData = Remove-FolderContentAll -FolderRoot $PSScriptRoot -FoldersName $APIName;Break}
+            
+            Remove-FCLogs        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCExportCSV   {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCExportJSON  {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCJournal     {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCJBC         {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCReport      {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            Remove-FCH           {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            
+            # DisplayFormat
+            Switch-DF            {$FormatedData = Switch-DisplayFormat;Break}
+            
+            # ExportFormat
+            Switch-EF            {$FormatedData = Switch-ExportFormat;Break}
+            
+            # OpenExportFormat
+            SWITCH-OEF           {$FormatedData = Switch-OpenExportFolder;Break}
+            
+            # OpenHTMLReport
+            Switch-OHR           {$FormatedData = Switch-OpenHTMLReport;Break}
+            
+            # Switch Resolved Dns Name
+            Switch-RDN           {$FormatedData = Switch-ResolveDnsName;Break}
+            
+            # Remove Box Windows Password Manager
+            Remove-BoxC          {$FormatedData = Remove-BoxCredential;Break}
+            
+            # Show Box Windows Password Manager
+            Get-BoxC             {$FormatedData = Get-BoxCredential;Break}
+            
+            # Show Box Windows Password Manager
+            Show-BoxC            {$FormatedData = Show-BoxCredential;Break}
+            
+            # Set Box Windows Password Manager
+            Add-BoxC             {$FormatedData = Add-BoxCredential;Break}
+            
+            # Reset-Current User Program Configuration
+            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
+            
+            # Export-Module Function
+            Export-MFS           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport}
+            
+            Export-MFD           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport}
+            
+            Export-MFSD          {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport}
+            
+            # Export-ModuleHelp
+            Export-MH            {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath}
+            
+            # Exit
+            Q                    {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
+            
+            # Quit/Close Program
+            Stop-Program         {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
+            
+            # Uninstall Program
+            Uninstall-Program    {Uninstall-Program -ErrorAction Stop;Break}
+            
+            # Default
+            Default              {Write-log WARNING -Category 'Program run' -Name 'Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
+                                  Show-WindowsFormDialogBox -Title 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
+                                  $FormatedData = 'Program'
+                                  Break
+                                 }
+        }
+    
+        Return $FormatedData
+}
+
+#endregion Common functions
+
+#region Refresh WIRELESS Frequency Neighborhood Scan
+
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan
+function Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan {
+
+<#
+.SYNOPSIS
+    To Refresh WIRELESS Frequency Neighborhood Scan
+
+.DESCRIPTION
+    To Refresh WIRELESS Frequency Neighborhood Scan
+
+.PARAMETER APIName
+    Indicate the API name associated to wireless scan result
+
+.PARAMETER UrlToGo
+    Indicate the url to start the wireless scan
+
+.EXAMPLE
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
+
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
+
+.INPUTS
+    $APIName
+    $UrlToGo
+
+.OUTPUTS
+    Wireless scan neighborhood done
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-Date1970', 'Get-BBOXWIRELESSFrequencyNeighborhoodScan'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Start WIRELESS Frequency Neighborhood scan' -NotDisplay
+    
+    # Get information from Box API and last scan date
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
+    $Lastscan = $Json.lastscan
+    
+    Write-Log -Type INFONO -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'WIRELESS Frequency Neighborhood Lastscan : ' -NotDisplay
+    
+    If ($Lastscan -eq 0) {
+        
+        Write-Log -Type VALUE -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Never' -NotDisplay
+    }
+    Else {
+        Write-Log -Type VALUE -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message $(Format-Date1970 -Seconds $Lastscan) -NotDisplay
+    }
+    
+    $global:ChromeDriver.Navigate().GoToURL($($UrlToGo.replace("$global:APIVersion/$APIName",'diagnostic.html')))
+    Start-Sleep -Seconds $global:SleepDefault
+    
+    Switch ($APIName) {
+        
+        wireless/24/neighborhood {($global:ChromeDriver.FindElementsByClassName('scan24') | Where-Object -Property text -eq 'Scanner').click();Break}
+            
+        wireless/5/neighborhood  {($global:ChromeDriver.FindElementsByClassName('scan5') | Where-Object -Property text -eq 'Scanner').click();Break}
+    }
+    
+    If ($global:TriggerExportConfig -eq $false) {
+        
+        Write-Log -Type WARNING -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Be careful, the scan can temporary suspend your Wi-Fi network'
+        Write-Log -Type WARNING -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? : ' -NotDisplay
+        
+        While ($ActionState -notmatch "Y|N") {
+                
+            #$ActionState = Read-Host "Do you want to continue ? (Y) Yes / (N) No"
+            $ActionState = Show-WindowsFormDialogBox -Title 'Program run - WIRELESS Frequency Neighborhood scan' -Message 'Do you want to continue ? (Y) Yes / (N) No' -YesNo
+            Write-Log -Type INFO -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message "Action chosen by user : $ActionState" -NotDisplay
+        }
+    }
+    Else {
+        $ActionState = 'Y'
+    }
+
+    If ($ActionState[0] -eq 'Y') {
+        
+        # addd
+        Try {
+            ($global:ChromeDriver.FindElementsByClassName('cta-1') | Where-Object -Property text -eq 'Rafraîchir').click()
+            Start-Sleep -Seconds $global:SleepDefault
+            ($global:ChromeDriver.FindElementsByClassName('cta-2') | Where-Object -Property text -eq 'OK').click()
+        }
+        Catch {
+            ($global:ChromeDriver.FindElementsByClassName("cta-2") | Where-Object -Property text -eq 'OK').click()
+        }
+        
+        Write-Log -Type INFONO -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Refresh WIRELESS Frequency Neighborhood scan : ' -NotDisplay
+        Start-Sleep -Seconds $global:SleepRefreshWIRELESSFrequencyNeighborhoodScan
+        Write-Log -Type VALUE -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'Ended' -NotDisplay
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name 'WIRELESS Frequency Neighborhood scan' -Message 'End WIRELESS Frequency Neighborhood scan' -NotDisplay
+}
+
+# Used only to Refresh WIRELESS Frequency Neighborhood Scan ID
+Function Get-BBOXWIRELESSFrequencyNeighborhoodScan {
+
+<#
+.SYNOPSIS
+    To Refresh WIRELESS Frequency Neighborhood Scan ID
+
+.DESCRIPTION
+    To Refresh WIRELESS Frequency Neighborhood Scan ID
+
+.PARAMETER APIName
+    Indicate the API name associated to wireless scan result
+
+.PARAMETER UrlToGo
+    Indicate the url to start the wireless scan
+
+.EXAMPLE
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/24/neighborhood"
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://mabbox.bytel.fr/api/v1/wireless/5/neighborhood"
+
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/24/neighborhood"
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:8560/api/v1/wireless/5/neighborhood"
+
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/24/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/24/neighborhood"
+    Get-BBOXWIRELESSFrequencyNeighborhoodScan -APIName "wireless/5/neighborhood" -UrlToGo "https://exemple.com:80/api/v1/wireless/5/neighborhood"
+
+.INPUTS
+    $APIName
+    $UrlToGo
+
+.OUTPUTS
+    $FormatedData
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan', 'Get-BBOXWIRELESSFrequencyNeighborhoodScanID'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName
+    )
+    
+    Start-RefreshBBOXWIRELESSFrequencyNeighborhoodScan -APIName $APIName -UrlToGo $UrlToGo
+    $FormatedData = @()
+    $FormatedData = Get-BBOXWIRELESSFrequencyNeighborhoodScanID -UrlToGo $UrlToGo
+    
+    Return $FormatedData
+}
+
+#endregion Refresh WIRELESS Frequency Neighborhood Scan
+
+#region Manage Output Display after data export
+
+#region Switch
+
+# Used only to change Display Format
+Function Switch-DisplayFormat {
+
+<#
+.SYNOPSIS
+    To change Display Format
+
+.DESCRIPTION
+    To change Display Format
+
+.PARAMETER 
+    Switch-DisplayFormat
+
+.EXAMPLE
+    
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    HTML or Table format
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Show-WindowsFormDialogBox2Choices', 'Switch-Info', 'Set-ValueToJSONFile'
+
+#>
+
+    Param(  )
+    
+    # Choose Display Format : HTML or Table
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message 'Start data display format' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
+    $global:DisplayFormat = ''
+    
+    While ($global:DisplayFormat[0] -notmatch $global:ValuesDisplayFormat) {
+        
+        #$Temp = Read-Host "Enter your choice"
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display Format' -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
+        
+        Switch ($Temp) {
+                
+            H    {$global:DisplayFormat = 'H';Break}
+            T    {$global:DisplayFormat = 'T';Break}
+        }
+    }
+    
+    Write-Log -Type VALUE -Category 'Program run' -Name 'Choose Display Format' -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message 'End data display format' -NotDisplay
+    
+    $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat = $global:DisplayFormat
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+}
+
+# Used only to change Open Export Folder
+Function Switch-OpenExportFolder {
+
+<#
+.SYNOPSIS
+    To change Open Export Folder
+
+.DESCRIPTION
+    To change Open Export Folder
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Switch-OpenExportFolder
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    Open or not export folder
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Show-WindowsFormDialogBox2Choices', 'Switch-Info', 'Export-toCSV', "'xport-toJSON', "Export-BoxConfiguration', 'Export-BoxConfigTestingProgram', 'Export-GlobalOutputData', 'Set-ValueToJSONFile'
+
+#>
+
+    Param ()
+    
+    # Choose Open Export Folder : Y (Yes) or N (No)
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder at each export (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
+    $global:OpenExportFolder = ""
+    
+    While ($global:OpenExportFolder[0] -notmatch $global:ValuesOpenExportFolder) {
+            
+        #$Temp = Read-Host "Enter your choice"
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+        
+        Switch ($Temp) {
+                
+            Y    {$global:OpenExportFolder = 'Y';Break}
+            N    {$global:OpenExportFolder = 'N';Break}
+        }
+    }
+    
+    Write-Log -Type VALUE -Category 'Program run' -Name 'Choose Open Export Folder' -Message "Value Choosen : $global:OpenExportFolder" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message 'End switch Open Export Folder' -NotDisplay
+    
+    $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder = $global:OpenExportFolder
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+}
+
+# Used only to open or not HTML Report
+Function Switch-OpenHTMLReport {
+
+<#
+.SYNOPSIS
+    To open or not HTML Report
+
+.DESCRIPTION
+    To open or not HTML Report
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Switch-OpenHTMLReport
+
+.INPUTS
+    User choice
+
+.OUTPUTS
+    HTML report will be open or not
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-HTMLReport', 'Open-HTMLReport', 'Switch-info', 'Set-ValueToJSONFile'
+
+#>
+
+    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
+    $global:OpenHTMLReport = ''
+    
+    While ($global:OpenHTMLReport[0] -notmatch $global:ValuesOpenHTMLReport) {
+        
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Open HTML Report' -LabelMessageText "Do you want to open HTML Report at each time ? :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'        
+        
+        Switch ($Temp) {
+                
+            Y    {$global:OpenHTMLReport = 'Y';Break}
+            N    {$global:OpenHTMLReport = 'N';Break}
+        }
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'End Switch Open HTML Report' -NotDisplay
+    
+    $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport = $global:OpenHTMLReport
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+}
+
+# Used only to change Display Format
+Function Switch-ResolveDnsName {
+
+    <#
+    .SYNOPSIS
+        To allow or not to Resolve Dns Name from an IP Address
+    
+    .DESCRIPTION
+        To allow or not to Resolve Dns Name from an IP Address
+    
+    .PARAMETER 
+        user answer/Action
+    
+    .EXAMPLE
+        Switch-ResolveDnsName
+    
+    .INPUTS
+        User choice
+    
+    .OUTPUTS
+        Enable to resolve an IP address to a hostname
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): ''
+    
+    #>
+    
+        Param(  )
+        
+        # Switch Resolve Dns Name : Yes or No
+        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message 'Start Switch Resolve Dns Name' -NotDisplay
+        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message "Please choose if you want to resolve IP Address to DNS Hostname (Can be changed later) : (Y) Yes or (N) No" -NotDisplay
+        $global:ResolveDnsName = ''
+        
+        While ($global:ResolveDnsName[0] -notmatch $global:ValuesResolveDnsName) {
+            
+            #$Temp = Read-Host "Enter your choice"
+            $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Resolve Dns Name' -LabelMessageText "Please choose if you want to resolve IP Address to DNS Hostname or not (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+            
+            Switch ($Temp) {
+                    
+                Y    {$global:ResolveDnsName = 'Y';Break}
+                N    {$global:ResolveDnsName = 'N';Break}
+            }
+        }
+        
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message "Value Choosen : $global:ResolveDnsName" -NotDisplay
+        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message 'End Switch Resolve Dns Name' -NotDisplay
+        
+        $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName = $global:ResolveDnsName
+        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+}
+
+# Used only to Switch Export Format
+Function Switch-ExportFormat {
+
+<#
+.SYNOPSIS
+    To Switch Export Format
+
+.DESCRIPTION
+    To Switch Export Format
+
+.PARAMETER 
+    
+
+.EXAMPLE
+    Switch-ExportFormat
+
+.INPUTS
+    User Choice
+
+.OUTPUTS
+    Export format is define to CSV or JSON
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-Info', 'Export-GlobalOutputData', 'Set-ValueToJSONFile'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    # Choose Export Format : CSV or JSON
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'Start data export format' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
+    $global:ExportFormat = ''
+    
+    While ($global:ExportFormat[0] -notmatch $global:ValuesExportFormat) {
+        
+        #$Temp = Read-Host "Enter your choice"
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Export Result' -LabelMessageText "Please choose an export format (Can be changed later) :`n- (C) CSV`n- (J) JSON" -FirstOptionButtonText 'C' -SecondOptionButtonText 'J'
+            
+        Switch ($Temp) {
+            
+            C    {$global:ExportFormat = 'C';Break}
+            J    {$global:ExportFormat = 'J';Break}
+        }
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'End data export format' -NotDisplay
+    
+    $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat = $global:ExportFormat
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+}
+
+#endregion Switch
+
+#region Format
+
+# Used only to format display result function user choice
+Function Format-DisplayResult {
+
+<#
+.SYNOPSIS
+    To format display result function user choice
+
+.DESCRIPTION
+    To format display result function user choice
+
+.PARAMETER FormatedData
+    Data were already format and will be displayed
+
+.PARAMETER APIName
+    Title report name or Title the Out-GridView Window
+
+.PARAMETER Description
+    Description of the report
+
+.PARAMETER ReportType
+    Report type can be : Table or List
+
+.PARAMETER ReportPath
+    Path of the report folder
+
+.PARAMETER Exportfile
+    Full path of export file
+
+.EXAMPLE
+    Format-DisplayResult -FormatedData $FormatedData -APIName "device/log" -Description "Device log" -ReportType "Table" -ReportPath "C:\Windows\Report" -Exportfile "C:\Windows\Report\device-log.csv"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $Description
+    $ReportType
+    $ReportPath
+    $Exportfile
+
+.OUTPUTS
+    Result is Displayed in HTML or in table under Out-Gridview
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Export-HTMLReport', 'Out-GridviewDisplay', 'Open-HTMLReport'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Description,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ReportType,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ReportPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+    Switch ($global:DisplayFormat) {
+        
+        'H' {# Display result by HTML Report
+             Export-HTMLReport -DataReported $FormatedData -ReportTitle "$global:BoxType Configuration Report - $APIName" -ReportType $ReportType -ReportPath $ReportPath -ReportFileName $Exportfile -HTMLTitle "$global:BoxType Configuration Report" -ReportPrecontent $APIName -Description $Description
+             Break
+            }
+        
+        'T' {# Display result by Out-Gridview
+             Out-GridviewDisplay -FormatedData $FormatedData -APIName $APIName -Description $Description
+             Break
+            }
+    }
+    Write-Log -Type INFO -Category 'Program run' -Name 'Display Result' -Message 'End display result' -NotDisplay
+}
+
+# Used only to format export result function user choice
+Function Format-ExportResult {
+
+<#
+.SYNOPSIS
+    To format export result function user choice
+
+.DESCRIPTION
+    To format export result function user choice
+
+.PARAMETER FormatedData
+    Data you want to export
+
+.PARAMETER APIName
+    API path use to get data to export
+
+.PARAMETER ExportCSVPath
+    Path Folder for CSV file
+
+.PARAMETER ExportJSONPath
+    Path Folder for JSON file
+
+.PARAMETER Exportfile
+    Export file Name
+
+.EXAMPLE
+    Format-ExportResult -FormatedData "$FormatedData" -APIName "" -ExportCSVPath "" -ExportJSONPath "" -Exportfile ""
+
+.INPUTS
+    $global:ExportFormat
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $ExportJSONPath
+    $Exportfile
+
+.OUTPUTS
+    Data exported to CSV or JSON file depending of : $global:ExportFormat value
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData', 'Export-toCSV', 'Export-toJSON'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$False)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportCSVPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportJSONPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+    Switch ($global:ExportFormat) {
+        
+        'C' {# Export result to CSV
+                Export-toCSV -FormatedData $FormatedData -APIName $APIName -ExportCSVPath $ExportCSVPath -Exportfile $Exportfile;Break
+            }
+        'J' {# Export result to JSON
+                Export-toJSON -FormatedData $FormatedData -APIName $APIName -ExportJSONPath $ExportJSONPath -Exportfile $Exportfile;Break
+            }
+    }
+}
+
+#endregion Format
+
+#region Export
+
+# Used only to export result to CSV File
+Function Export-toCSV {
+
+<#
+.SYNOPSIS
+    To export result to CSV File
+
+.DESCRIPTION
+    To export result to CSV File
+
+.PARAMETER FormatedData
+    This is the data you want to export to the csv file
+
+.PARAMETER APIName
+    This is the name of the API where data are retrived
+
+.PARAMETER ExportCSVPath
+    This is the folder path of the Export CSV folder
+
+.PARAMETER Exportfile
+    This is the name of the export CSV File (Include file extention)
+
+.EXAMPLE
+    Export-toCSV -FormatedData "$FormatedData" -APIName "Device\log" -ExportCSVPath "C:\ExportFolder" -Exportfile "Device-log.csv"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $Exportfile
+
+.OUTPUTS
+    Csv File
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-ExportResult'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportCSVPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result CSV' -Message 'Start export result as CSV' -NotDisplay
+    
+    Try {
+        # Define Export file path
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $DateShort = $(Get-Date -UFormat %Y%m%d)
+        Test-FolderPath -FolderRoot "$ExportCSVPath\$global:BoxType" -FolderPath "$ExportCSVPath\$global:BoxType\$DateShort" -FolderName $DateShort
+        $ExportPath = "$ExportCSVPath\$global:BoxType\$DateShort\$Date-$Exportfile.csv"
+        $FormatedData | Export-Csv -Path $ExportPath -Encoding unicode -Delimiter ";" -NoTypeInformation -Force        
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Result CSV' -Message 'CSV Data have been exported to : ' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Export Result CSV' -Message $ExportPath -NotDisplay
+        
+        Open-ExportFolder -WriteLogName 'Program run - Export Result CSV' -ExportFolderPath $ExportCSVPath
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program run' -Name 'Export Result CSV' -Message "Failed, to export data to : `"$ExportPath`", due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result CSV' -Message 'End export result as CSV' -NotDisplay
+}
+
+# Used only to export result to JSON File
+Function Export-toJSON {
+
+<#
+.SYNOPSIS
+    To export result to JSON File
+
+.DESCRIPTION
+    To export result to JSON File
+
+.PARAMETER FormatedData
+    This is the data you want to export to the JSON file
+
+.PARAMETER APIName
+    This is the name of the API where data are retrived
+
+.PARAMETER ExportJSONPath
+    This is the folder path of the Export JSON folder
+
+.PARAMETER Exportfile
+    This is the name of the export JSON File (Include file extention)
+
+.EXAMPLE
+    Export-toJSON -FormatedData "$FormatedData" -APIName "Device\log" -ExportJSONPath "C:\ExportFolder" -Exportfile "Device-log.json"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportJSONPath
+    $Exportfile
+
+.OUTPUTS
+    JSON File
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-ExportResult'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportJSONPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Exportfile
+    )
+    
+     Write-Log -Type INFO -Category 'Program run' -Name 'Export Result JSON' -Message 'Start export result as JSON' -NotDisplay
+     
+     Try {
+        # Define Export file path
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $DateShort = $(Get-Date -UFormat %Y%m%d)
+        Test-FolderPath -FolderRoot "$ExportJSONPath\$global:BoxType" -FolderPath "$ExportJSONPath\$global:BoxType\$DateShort" -FolderName $DateShort
+        $FullPath = "$ExportJSONPath\$global:BoxType\$DateShort\$Date-$Exportfile.json"
+        $FormatedData | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Result JSON' -Message 'JSON Data have been exported to : ' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Export Result JSON' -Message $FullPath -NotDisplay
+        
+        Open-ExportFolder -WriteLogName 'Program run - Export Result JSON' -ExportFolderPath $ExportJSONPath
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program run' -Name 'Export Result JSON' -Message "Failed to export data to : `"$FullPath`", due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result JSON' -Message 'End export result as JSON' -NotDisplay
+}
+
+# Used only to create HTML Report
+Function Export-HTMLReport {
+
+<#
+.SYNOPSIS
+    To create HTML Report
+
+.DESCRIPTION
+    To create HTML Report
+
+.PARAMETER DataReported
+    This is the array data that display in the body html report
+
+.PARAMETER ReportType
+    This is the type of the report that are available
+    Validated values :
+    - Table
+    - List
+
+.PARAMETER ReportTitle
+    This is the Main Title of the report in the tab in the web browser
+
+.PARAMETER ReportPath
+    This is the folder path where HTML report are saved
+
+.PARAMETER ReportFileName
+    This is the name of the HTLM report file
+
+.PARAMETER HTMLTitle
+    This is the Main Title of the report
+
+.PARAMETER ReportPrecontent
+    This is the short description of the report
+
+.PARAMETER Description
+    This is the description of the report
+
+.EXAMPLE
+    Export-HTMLReport -DataReported "$DataReported" -ReportType "List" -ReportTitle "Report of data" -ReportPath "C:\Report" -ReportFileName "Report.html" -HTMLTitle "Main Data Reporting" -ReportPrecontent "Subtitle / Subcategory" -Description "This is the main data to report"
+    Export-HTMLReport -DataReported "$DataReported" -ReportType "Table" -ReportTitle "Report of data" -ReportPath "C:\Report" -ReportFileName "Report.html" -HTMLTitle "Main Data Reporting" -ReportPrecontent "Subtitle / Subcategory" -Description "This is the main data to report"
+
+.INPUTS
+    $DataReported
+    $ReportType
+    $ReportTitle
+    $ReportPath
+    $ReportFileName
+    $HTMLTitle
+    $ReportPrecontent
+    $Description
+
+.OUTPUTS
+    HTML Report Created
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-DisplayResult', 'Switch-OpenHTMLReport', 'Switch-OpenExportFolder', 'Open-HTMLReport', 'ConvertTo-Html', 'Open-ExportFolder', 'Set-ValueToJSONFile'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$False)]
+        [Array]$DataReported,
+        
+        [Parameter(Mandatory=$True)]
+        [ValidateSet('List','Table')]
+        [String]$ReportType = 'List',
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ReportTitle,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ReportPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$ReportFileName,
+
+        [Parameter(Mandatory=$True)]
+        [String]$HTMLTitle,
+
+        [Parameter(Mandatory=$True)]
+        [String]$ReportPrecontent,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Description
+    )
+    
+    $Date = $(Get-Date -Format yyyyMMdd-HHmmss)
+    $DateShort = $(Get-Date -UFormat %Y%m%d)
+    $FullReportPath = "$ReportPath\$global:BoxType\$DateShort\$Date-$ReportFileName.html"
+    Test-FolderPath -FolderRoot "$ReportPath\$global:BoxType" -FolderPath "$ReportPath\$global:BoxType\$DateShort" -FolderName $DateShort
+    
+    If ($DataReported) {
+    
+        $HTML = $null
+        $Title = "<h1>$HTMLTitle</h1>"
+        $PreContent = "<h2> API Name : $ReportPrecontent </h2> Description : $Description<br/><br/>"
+        $header = @("<style>
+                        h1 {
+                            font-family: Arial, Helvetica, sans-serif;
+                            color: #e68a00;
+                            font-size: 28px;
+                        }
+
+                        h2 {
+                            font-family: Arial, Helvetica, sans-serif;
+                            color: #000099;
+                            font-size: 16px;
+                        }
+
+                        table {
+                            font-size: 12px;
+                            border: 0px; 
+                            font-family: Arial, Helvetica, sans-serif;
+                        }
+                        
+                        td {
+                            padding: 4px;
+                            margin: 0px;
+                            border: 0;
+                        }
+                        
+                        th {
+                            background: #395870;
+                            background: linear-gradient(#49708f, #293f50);
+                            color: #fff;
+                            font-size: 11px;
+                            text-transform: uppercase;
+                            padding: 10px 15px;
+                            vertical-align: middle;
+                        }
+
+                        tbody tr:nth-child(even) {
+                            background: #f0f0f2;
+                        }
+
+                        CreationDate {
+                            font-family: Arial, Helvetica, sans-serif;
+                            color: #ff3300;
+                            font-size: 12px;
+                        }
+                    </style>
+                ")
+        
+        $Date = $(Get-Date -Format yyyy/MM/dd-HH:mm:ss)
+        $ReportAuthor = "Report generated from : $env:COMPUTERNAME, by : $env:USERNAME, at : $Date (Local Time)."
+        $HTML = ConvertTo-Html -Body "$Title $PreContent $($DataReported | ConvertTo-Html -As $ReportType)" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
+        
+        Write-Log -Type INFO -Category 'Program run' -Name 'Export HTML Report' -Message 'Start export HTML report' -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Export HTML Report' -Message 'Export HTML report status : ' -NotDisplay
+        
+        Try {
+            $HTML | Out-File -FilePath $FullReportPath -Force -Encoding unicode
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Export HTML Report' -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Export HTML Report' -Message 'HTML Report has been exported to : '
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Export HTML Report' -Message $FullReportPath
+            Open-HTMLReport -Path $FullReportPath
+        }
+        Catch {
+            Write-Log -Type WARNING -Category 'Program run' -Name 'Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to $($_.tostring())" -NotDisplay
+        }
+        
+        Write-Log -Type INFO -Category 'Program run' -Name 'Export HTML Report' -Message 'End export HTML report' -NotDisplay
+        
+        If ($global:TriggerOpenHTMLReport -eq 0) {
+            
+            $global:TriggerOpenHTMLReport = Switch-OpenHTMLReport
+            $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport = $global:TriggerOpenHTMLReport
+            Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+        }
+        
+        Open-ExportFolder -WriteLogName 'Program run - Export Result HTML' -ExportFolderPath $ReportPath
+    }
+    Else {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to : there is not data to export/Display" -NotDisplay
+    }
+}
+
+#endregion Export
+
+#region Manage Output Display
+
+# Used only to allow to open export folder
+Function Set-TriggerOpenExportFolder {
+
+<#
+.SYNOPSIS
+    To set TriggerOpenExportFolder 
+
+.DESCRIPTION
+    To open TriggerOpenExportFolder
+
+.PARAMETER None
+    None
+
+.EXAMPLE
+    Set-TriggerOpenExportFolder
+
+.INPUTS
+    User input from Windows form dialogue box
+
+.OUTPUTS
+    Open Export Folder Trigger is set
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Open-ExportFolder', 'Export-BoxConfiguration', 'Set-ValueToJSONFile'
+
+#>
+
+    Param ()
+    
+    If ($global:TriggerOpenExportFolder -eq 0) {
+        
+        $global:TriggerOpenExportFolder = Switch-OpenExportFolder
+        $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
+        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+    }
+}
+
+# Used only to open HTML Report
+Function Open-HTMLReport {
+
+<#
+.SYNOPSIS
+    To open HTML Report
+
+.DESCRIPTION
+    To open HTML Report
+
+.PARAMETER Path
+    This is the full path of the HTML file to open
+
+.EXAMPLE
+    Open-HTMLReport -Path "C:\HTMLReportFolder\ReportHTML.html"
+
+.INPUTS
+    $Path
+
+.OUTPUTS
+    HTML report openned
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-HTMLReport'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$Path
+    )
+    
+    Write-Log -Type INFO -Category 'Program initialisation' -Name "Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program initialisation' -Name "Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
+    
+    If ($global:OpenHTMLReport -eq "Y") {
+        
+        Try {
+            Invoke-Item -Path $Path
+            Write-Log -Type VALUE -Category 'Program initialisation' -Name "Open HTML Report" -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Name $WriteLogName -Message "Opening HTML Report : "
+            Write-Log -Type VALUE -Name $WriteLogName -Message $Path
+        }
+        Catch {
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name "Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
+        }
+    }
+    Else {
+        Write-Log -Type VALUE -Category 'Program initialisation' -Name "Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
+    }
+    
+    Write-Log -Type INFO -Category 'Program initialisation' -Name "Open HTML Report" -Message "End Open HTML Report" -NotDisplay
+}
+
+# Used only to open Export Folder
+Function Open-ExportFolder {
+
+<#
+.SYNOPSIS
+    To open Export Folder
+
+.DESCRIPTION
+    To open Export Folder
+
+.PARAMETER WriteLogName
+    This is the log categorie link the action and folder to open
+
+.PARAMETER ExportFolderPath
+    This is the full path of the Export Folder to open
+
+.EXAMPLE
+    Open-ExportFolder -WriteLogName "This is the log categorie" -ExportFolderPath "C:\Temp"
+
+.INPUTS
+    $WriteLogName
+    $ExportFolderPath
+
+.OUTPUTS
+    Export Folder openned
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-toCSV', 'Export-toJSON', 'Export-HTMLReport', 'Export-BoxConfigTestingProgram', 'Set-TriggerOpenExportFolder', Export-BoxConfiguration
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$WriteLogName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportFolderPath
+    )
+    
+    Set-TriggerOpenExportFolder
+    
+    $DateShort = Get-Date -Format yyyyMMdd
+    $ExportFolderPath = "$ExportFolderPath\$global:BoxType\$DateShort"
+    
+    If ($global:OpenExportFolder -eq 'Y') {
+        Write-Log -Type INFONO -Name $WriteLogName -Message "Opening folder : "
+        Write-Log -Type VALUE -Name $WriteLogName -Message $ExportFolderPath
+        Invoke-Item -Path $ExportFolderPath
+    }
+}
+
+# Used only to Out-Gridview Display
+Function Out-GridviewDisplay {
+
+<#
+.SYNOPSIS
+    To Out-Gridview Display
+
+.DESCRIPTION
+    To Out-Gridview Display
+
+.PARAMETER FormatedData
+    Data you want to be displayed by out-gridview 
+
+.PARAMETER APIName
+    This is the name of API where data have been obtained
+
+.PARAMETER Description
+    This is the description of data have been collected by the API Name
+
+.EXAMPLE
+    Out-GridviewDisplay -FormatedData "$FormatedData" -APIName "device/log" - "Get log"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $Description
+
+.OUTPUTS
+    Data displayed by out-gridview
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Format-DisplayResult'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Description
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Out-Gridview Display' -Message 'Start Out-Gridview Display' -NotDisplay
+    $FormatedData | Out-GridView -Title $Description -Wait
+    Write-Log -Type INFO -Category 'Program run' -Name 'Out-Gridview Display' -Message 'End Out-Gridview Display' -NotDisplay
+}
+
+#endregion Manage Output Display
+
+#endregion Manage Output Display after data export
+
+#region Export data
+
+# Used only to export Full Box Configuration to CSV/JSON files
+function Export-BoxConfiguration {
+
+<#
+.SYNOPSIS
+    To export Full Box Configuration to CSV/JSON files
+
+.DESCRIPTION
+    To export Full Box Configuration to CSV/JSON files
+
+.PARAMETER APISName
+    This is the list of API name that based to collect data
+
+.PARAMETER UrlRoot
+    This is the root API url that API name are based to collect data
+
+.PARAMETER JSONFolderPath
+    This is the folder path use for JSON export file
+
+.PARAMETER CSVFolderPath
+    This is the folder path use for CSV export file
+
+.PARAMETER GitHubUrlSite
+    This is the url of the Github Project
+
+.PARAMETER JournalPath
+    This is the path of the folder use to store Box Journal
+
+.PARAMETER Mail
+    This is the mail address of the developper
+
+.EXAMPLE
+    Export-BoxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -JSONFolderPath "C:\Export\JSON" CSVFolderPath "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+    Export-BoxConfiguration -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -JSONFolderPath "C:\Export\JSON" CSVFolderPath "C:\Export\CSV" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+
+.INPUTS
+    $APISName
+    $UrlRoot
+    $JSONFolderPath
+    $CSVFolderPath
+    $GitHubUrlSite
+    $JournalPath
+    $Mail
+
+.OUTPUTS
+    Data exported to csv and json files
+
+.NOTES
+    Author : @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-OpenExportFolder', 'Get-BBOXInformation', 'Open-ExportFolder'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$APISName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlRoot,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JSONFolderPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$CSVFolderPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$ReportPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$GitHubUrlSite,
+
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath,
+
+        [Parameter(Mandatory=$True)]
+        [String]$Mail
+    ) 
+    
+    Foreach ($APIName in $APISName) {
+        
+        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
+        
+        # Get information from Box API
+        Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Get $($APIName.Label) configuration ..."
+        $Json = Get-BBOXInformation -UrlToGo $UrlToGo
+        
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $DateShort = $(Get-Date -UFormat %Y%m%d)
+        
+        # Export result as JSON file
+        Test-FolderPath -FolderRoot "$JSONFolderPath\$global:BoxType" -FolderPath "$JSONFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
+        
+        $ExportPathJson = "$JSONFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).json"
+        Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Start Export Box Configuration To JSON' -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Export Box Configuration To JSON status : ' -NotDisplay
+        
+        Try {
+            $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $ExportPathJson -Force
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Export configuration to : '
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message $ExportPathJson
+        }
+        Catch {
+            Write-Log -Type WARNING -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message "Failed, due to $($_.tostring())"
+        }
+        
+        Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'End Export Box Configuration To JSON' -NotDisplay
+        
+        # Export result as CSV file
+        Test-FolderPath -FolderRoot "$CSVFolderPath\$global:BoxType" -FolderPath "$CSVFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
+        $FormatedData = Switch-Info -Label $APIName.label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
+        
+        If (-not ([string]::IsNullOrEmpty($FormatedData))) {
+        
+            Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Start Export Box Configuration To CSV' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Export Box Configuration To CSV status : ' -NotDisplay 
+            $ExportPathCSV = "$CSVFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).csv"   
+            
+            Try {
+                $FormatedData | Export-Csv -Path $ExportPathCSV -Encoding unicode -Force -Delimiter ";" -NoTypeInformation
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Successful' -NotDisplay
+                Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Export configuration to : '
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message $ExportPathCSV
+            }
+            Catch {
+                Write-Log -Type WARNING -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message "Failed, due to $($_.tostring())"
+            }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'End Export Box Configuration To CSV' -NotDisplay
+        }
+        
+        # Export result as HTML file
+        $Json = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
+        Export-HTMLReport -DataReported $Json -ReportType $APIName.ReportType -ReportTitle "$global:BoxType Configuration Report - $($APIName.APIName)" -ReportPath $ReportPath -ReportFileName $APIName.ExportFile -HTMLTitle "$global:BoxType Configuration Report" -ReportPrecontent $APIName.APIName -Description $APIName.Description
+    }
+
+    # Open Export Folder
+    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To JSON' -ExportFolderPath $JSONFolderPath
+    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To CSV' -ExportFolderPath $CSVFolderPath
+}
+
+# Used only to export Full Box Configuration to JSON files to test the program
+function Export-BoxConfigTestingProgram {
+
+<#
+.SYNOPSIS
+    To export Full Box Configuration to JSON files to test the program
+
+.DESCRIPTION
+    To export Full Box Configuration to JSON files to test the program
+
+.PARAMETER APISName
+    This is the list of API name that based to collect data
+
+.PARAMETER UrlRoot
+    This is the root API url that API name are based to collect data
+
+.PARAMETER OutputFolder
+    This is the folder path use for export files
+
+.PARAMETER GitHubUrlSite
+    This is the url of the Github Project
+
+.PARAMETER JournalPath
+    This is the path of the folder use to store Box Journal
+
+.PARAMETER Mail
+    This is the mail address of the developper
+
+.EXAMPLE
+    Export-BoxConfigTestingProgram -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+    Export-BoxConfigTestingProgram -APISName "API Name list" -UrlRoot "https://mabbox.bytel.fr:8560" -OutputFolder "C:\Export\JSON" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell" -JournalPath "C:\Export\Journal" -Mail "Tom78_91_45@yahoo.fr"
+
+.INPUTS
+    $APISName
+    $UrlRoot
+    $OutputFolder
+    $GitHubUrlSite
+    $JournalPath
+    $Mail
+
+.OUTPUTS
+    Data exported to json files
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        
+        [Parameter(Mandatory=$True)]
+        [Array]$APISName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$UrlRoot,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$Mail,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$OutputFolder,
+
+        [Parameter(Mandatory=$True)]
+        [String]$GitHubUrlSite
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'Start Testing Program'
+    
+    Foreach ($APIName in $APISName) {
+        
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Tested action : '
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message $($APIName.Label)   
+        
+        $UrlToGo = "$UrlRoot/$($APIName.APIName)"
+        
+        # Get information from Box API
+        $FormatedData = @()
+        $FormatedData = Switch-Info -Label $APIName.Label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
+        
+        # Export result as CSV file
+        $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
+        $DateShort = $(Get-Date -UFormat %Y%m%d)
+        
+        If ($APIName.ExportFile -and $FormatedData) {
+            
+            Test-FolderPath -FolderRoot "$OutputFolder\$global:BoxType" -FolderPath "$OutputFolder\$global:BoxType\$DateShort" -FolderName $DateShort
+            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'Start Export Box Configuration To CSV' -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Export Box Configuration To CSV status : ' -NotDisplay
+            
+            Try {
+                $FullPath = "$OutputFolder\$global:BoxType\$DateShort\$Date-$($APIName.ExportFile).csv"
+                $FormatedData | Export-Csv -Path $FullPath -Encoding unicode -Force -NoTypeInformation -Delimiter ";" -ErrorAction Continue
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message 'Successful' -NotDisplay
+                Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Export configuration to : '
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message $FullPath
+            }
+            Catch {
+                Write-Log -Type WARNING -Category 'Program run' -Name 'Testing Program' -Message "Failed, due to $($_.tostring())"
+            }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'End Export Box Configuration To CSV' -NotDisplay
+        }
+        Else {
+            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'No data were found, export cant be possible' -NotDisplay
+        }
+    }
+    
+    Open-ExportFolder -WriteLogName 'Program run - Testing Program' -ExportFolderPath $OutputFolder
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'End Testing Program'
+}
+
+# Used only to export Box Journal
+Function Get-BoxJournal {
+
+<#
+.SYNOPSIS
+    To export Box Journal
+
+.DESCRIPTION
+    To export Box Journal
+
+.PARAMETER UrlToGo
+    This is the url to get data from the journal
+
+.PARAMETER JournalPath
+    This is the full path of the export file for the journal
+
+.EXAMPLE
+    Get-BoxJournal -UrlToGo "https://mabbox.bytel.fr/log.html" -JournalPath "C:\Journal\Journal.csv"
+    Get-BoxJournal -UrlToGo "https://mabbox.bytel.fr:8560/log.html" -JournalPath "C:\Journal\Journal.csv"
+
+.INPUTS
+    $UrlToGo
+    $JournalPath
+
+.OUTPUTS
+    Journal exported to CSV file
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-Info'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$JournalPath
+    )
+        
+    # Loading Journal Home Page
+    $UrlToGo = $UrlToGo -replace $global:APIVersion -replace ('//','/')
+    $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
+    Start-Sleep $global:SleepChromeDriverLoading
+    
+    # Download Journal file from Box
+    Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Start download Box Journal' -NotDisplay
+    Try {
+        $global:ChromeDriver.FindElementByClassName('download').click()
+    }
+    Catch {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed to start the download Box Journal, due to : $($_.tostring())" -NotDisplay
+    }
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message "Download Journal in progress ... : "
+    
+    # Waiting end of journal's download
+    Start-Sleep $global:SleepBoxJournalDownload
+    
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'User download folder location : ' -NotDisplay
+    Try {
+        $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName -ErrorAction Stop
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFolderDefault -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+    }
+    
+    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'User download folder status : ' -NotDisplay
+    If (Test-Path -Path $UserDownloadFolderDefault) {
+        
+        Try {
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Exists' -NotDisplay
+            $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$global:JournalName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
+            $UserDownloadFileFullPath          = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+        }
+    }
+    Else {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Unable to find user download folder' -NotDisplay
+    }
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Download Box Journal status : ' -NotDisplay
+    If (-not ([string]::IsNullOrEmpty($UserDownloadFileFullPath))) {
+        
+        If (Test-Path -Path $UserDownloadFileFullPath) {
+            
+            $DateShort                   = $(Get-Date -UFormat %Y%m%d)
+            $ExportJournalFolderRootPath = "$JournalPath\$global:BoxType"
+            $ExportJournalFolderPath     = "$ExportJournalFolderRootPath\$DateShort"
+            
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Journal download location folder creation' -Message "Journal download location folder creation to $ExportJournalFolderPath, status : " -NotDisplay
+            If ($(Test-Path -Path $ExportJournalFolderPath) -eq $false) {
+                
+                Try {
+                    $null = New-Item -Path $ExportJournalFolderRootPath -Name $DateShort -ItemType Directory -Force -ErrorAction Stop
+                    Write-Log -Type INFO -Category 'Program run' -Name 'Journal download location folder creation' -Message 'Successful' -NotDisplay
+                }
+                Catch {
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Journal download location folder creation' -Message "Failed, to create folder : $ExportJournalFolderPath, due to $($_.ToString())"
+                }
+            }
+            Else {
+                Write-Log -Type INFO -Category 'Program run' -Name 'Journal download location folder creation' -Message 'Already created' -NotDisplay
+            }
+            
+            $DownloadedJournalDestinationPath = "$ExportJournalFolderPath\$UserDownloadFolderDefaultFileName"
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been downloaded from : ' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been downloaded to : ' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $DownloadedJournalDestinationPath -NotDisplay
+            Try {
+                # Move Journal file from Download folder to journal folder : "$PSScriptRoot\Journal"
+                Move-Item -Path $UserDownloadFileFullPath -Destination $DownloadedJournalDestinationPath -Force -ErrorAction Stop
+                Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Finish' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+            }
+            
+            # Export Journal data as CSV file to the correct folder
+            If (Test-path -Path $DownloadedJournalDestinationPath) {
+                
+                Try {
+                    $FormatedData = Import-Csv -Path $DownloadedJournalDestinationPath -Delimiter ';' -Encoding unicode
+                }
+                Catch {
+                    Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+                }
+            }
+            Else {
+                $FormatedData = $null
+            }
+            
+            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Successful'
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been saved to : '
+            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message "$DownloadedJournalDestinationPath"
+            Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message "End download Box Journal" -NotDisplay
+            Return $FormatedData
+        }
+    }
+    Else {
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Failed, due to time out'
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Failed to download Journal' -NotDisplay
+        Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'End download Box Journal' -NotDisplay
+    }
+}
+
+# Used only to manage errors when there is no data to Export/Display
+Function EmptyFormatedDATA {
+
+<#
+.SYNOPSIS
+    To manage errors when there is no data to Export/Display
+
+.DESCRIPTION
+    To manage errors when there is no data to Export/Display
+
+.PARAMETER FormatedData
+    Array with data or not
+
+.EXAMPLE
+    EmptyFormatedDATA -FormatedData $FormatedData
+
+.INPUTS
+    $FormatedData
+
+.OUTPUTS
+    Write log when when there is no data to Export/Display
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Export-GlobalOutputData'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$False)]
+        [array]$FormatedData
+    )
+    
+    Write-Log -Type INFO -Category 'Program run' -Name 'Display/Export Result' -Message 'Start display/export result' -NotDisplay
+    
+    Switch ($FormatedData) {
+        
+        $Null     {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        
+        ''        {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        
+        ' '       {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        
+        'Domain'  {Write-Log -Type WARNING -Category 'Program initialisation' -Name "Display / Export Result" -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
+                
+        'Program' {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data need to be exported or displayed' -NotDisplay;Break}
+        
+        Default   {Write-Log -Type WARNING -Category 'Program initialisation' -Name "Display / Export Result" -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
+    }
+
+    Write-Log -Type INFO -Category 'Program initialisation' -Name "Export/Display Result" -Message 'End export/display result' -NotDisplay
+}
+
+# Used only to manage data Export/Display
+function Export-GlobalOutputData {
+
+<#
+.SYNOPSIS
+    To manage data Export/Display
+
+.DESCRIPTION
+    To manage data Export/Display
+
+.PARAMETER FormatedData
+    Data to export
+
+.PARAMETER APIName
+    API name (Url) used to get data
+
+.PARAMETER ExportCSVPath
+    Folder path for CSV files
+
+.PARAMETER ExportJSONPath
+    Folder path for JSON files
+
+.PARAMETER ExportFile
+    Name of the exoprt file
+
+.PARAMETER Description
+    Description base on the API Name and the associated action
+
+.PARAMETER ReportType
+    Type of the report 2 choices : Table / List
+
+.PARAMETER ReportPath
+    Folder path for report Files
+
+.EXAMPLE
+    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "Table" -ReportPath "C:\Export\Report"
+    Export-GlobalOutputData -FormatedData $FormatedData -APIName "device\log" -ExportCSVPath "C:\Export\CSV" -ExportJSONPath "C:\Export\JSON" -ExportFile "device-log" -Description "Device Logs" -ReportType "List" -ReportPath "C:\Export\Report"
+
+.INPUTS
+    $FormatedData
+    $APIName
+    $ExportCSVPath
+    $ExportJSONPath
+    $ExportFile
+    $Description
+    $ReportType
+    $ReportPath
+
+.OUTPUTS
+    Data exported to CSV, JSON, HTML
+    Data display Out-GridView or HTML
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Switch-ExportFormat', 'Switch-DisplayFormat', 'Format-ExportResult', 'Format-DisplayResult', 'EmptyFormatedDATA', 'Set-ValueToJSONFile', 'Set-ValueToJSONFile'
+    Linked to script(s): '.\Box-Administration.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$False)]
+        [array]$FormatedData,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$APIName,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$ExportCSVPath,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$ExportJSONPath,
+        
+        [Parameter(Mandatory=$False)]
+        [string]$ExportFile,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$Description,
+        
+        [Parameter(Mandatory=$False)]
+        [string]$ReportType,
+        
+        [Parameter(Mandatory=$True)]
+        [string]$ReportPath
+    )
+    
+    # Format data before choose output format
+    If (($FormatedData -notmatch $global:FormatedDataGlobalOutputDataExclusion) -and ($null -ne $FormatedData) -and ($FormatedData -ne '') -and ($FormatedData -ne ' ')) {
+        
+        # Choose Export format => CSV or JSON
+        If ($global:TriggerExportFormat -eq 0) {
+            
+            $global:TriggerExportFormat = Switch-ExportFormat
+            $global:JSONSettingsCurrentUserContent.Trigger.ExportFormat = $global:TriggerExportFormat
+        }
+        
+        # Choose Display format => HTML or Table
+        If ($global:TriggerDisplayFormat -eq 0) {
+            
+            $global:TriggerDisplayFormat = Switch-DisplayFormat
+            $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat = $global:TriggerDisplayFormat
+        }
+        
+        # Choose if open export folder
+        If ($global:TriggerOpenExportFolder -eq 0) {
+            
+            $global:TriggerOpenExportFolder = Switch-OpenExportFolder
+            $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder = $global:TriggerOpenExportFolder
+        }
+
+        # Save New settings set to JSON configuration file
+        Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+        
+        # Apply Export Format
+        Format-ExportResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -ExportCSVPath $ExportCSVPath -ExportJSONPath $ExportJSONPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        
+        # Apply Display Format
+        Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    }
+    Else {
+        EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    }
+}
+
+function Export-ProgramFilesCount {
+
+    <#
+    .SYNOPSIS
+        Export Files numbers generate by the program
+    
+    .DESCRIPTION
+        Export Files numbers generate by the program
+    
+    .PARAMETER FolderRoot
+        This is the root folder where files data are stored
+    
+    .EXAMPLE
+        Export-ProgramFilesCount -FolderRoot 'C:\Temp'
+
+    .INPUTS
+        $FolderRoot
+
+    .OUTPUTS
+        $Array
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): ''
+        Linked to script(s): ''
+    
+    #>
+    
+        Param (
+            [Parameter(Mandatory=$False)]
+            [string]$FolderRoot
+        )
+        
+        # Create array
+        $Array = @()
+        
+        $global:RessourcesFolderName = 'Ressources'
+        $FolderRoot = "D:\OneDrive\Scripting\Projets\BBOX-Administration\Version-2.7"
+        $FolderList = Get-ChildItem -Path $FolderRoot -Exclude $global:RessourcesFolderName -Directory
+        
+        Foreach ($Folder in $FolderList) {
+            
+            $FileCount = $(get-childItem -Path $Folder.FullName -Recurse).count
+            
+            $FolderLine = New-Object -TypeName PSObject
+            $FolderLine | Add-Member -Name 'Folder Name'        -MemberType Noteproperty -Value $Folder.Name
+            $FolderLine | Add-Member -Name 'Folder Path'        -MemberType Noteproperty -Value $Folder.FullName
+            $FolderLine | Add-Member -Name 'Parent Folder'      -MemberType Noteproperty -Value $Folder.Parent
+            $FolderLine | Add-Member -Name 'Folder Files count' -MemberType Noteproperty -Value $FileCount
+            
+            # Add lines to $Array
+            $Array += $FolderLine
+        
+        }
+        Return $Array
+}
+
+#endregion Export data
+
+#endregion GLOBAL Functions
+
+#region Switch-Info
+
+#region BBox
 
 #region Errors code
 
-Function Get-ErrorCode {
+Function Get-BBOXErrorCode {
     
     <#
     .SYNOPSIS
@@ -6823,7 +7448,7 @@ Function Get-ErrorCode {
         This the Json error code to convert
 
     .EXAMPLE
-        Get-ErrorCode -Json $JSON
+        Get-BBOXErrorCode -Json $JSON
 
     .INPUTS
         [Array]$Json
@@ -6836,7 +7461,6 @@ Function Get-ErrorCode {
         Author: @Zardrilokis => Tom78_91_45@yahoo.fr
         linked to functions : '', ''
         linked to script : '.\BBOX-Administration.psm1'
-
     #>
     
     Param (
@@ -6863,7 +7487,7 @@ Function Get-ErrorCode {
     Return $Array
 }
 
-Function Get-ErrorCodeTest {
+Function Get-BBOXErrorCodeTest {
     
     <#
     .SYNOPSIS
@@ -6876,7 +7500,7 @@ Function Get-ErrorCodeTest {
         This the Json error code to convert
 
     .EXAMPLE
-        Get-ErrorCodeTest -Json $JSON
+        Get-BBOXErrorCodeTest -Json $JSON
 
     .INPUTS
         [Array]$Json
@@ -6898,7 +7522,7 @@ Function Get-ErrorCodeTest {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -6921,9 +7545,37 @@ Function Get-ErrorCodeTest {
 
 #endregion Errors code
 
+#region Get Function
+
 #region PasswordRecoveryVerify
 
-Function Get-PasswordRecoveryVerify {
+Function Get-BBOXPasswordRecoveryVerify {
+    
+    <#
+    .SYNOPSIS
+        Get Password Recovery Verify
+        
+    .DESCRIPTION
+        Get Password Recovery Verify
+        
+    .PARAMETER UrlToGo
+        This is the Url to get information
+        
+    .EXAMPLE
+        Function can be used only on local network
+        Get-BBOXPasswordRecoveryVerify -UrlToGo 'https://192.168.1.254/api/v1/password-recovery/verify'
+        
+    .INPUTS
+        [String]$UrlToGo
+        
+    .OUTPUTS
+        Password recovery verify is set to 'Yes' or 'No'
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-BBOXInformation'
+        linked to script : '.\BBOX-Administration.psm1'
+    #>
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -6931,7 +7583,7 @@ Function Get-PasswordRecoveryVerify {
     )
 
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -6950,143 +7602,9 @@ Function Get-PasswordRecoveryVerify {
 
 #endregion PasswordRecoveryVerify
 
-#region API VERSION
-
-Function Get-APIVersion {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from FREEBOX API
-    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Create New PSObject and add values to array
-    $APIVersionLine = New-Object -TypeName PSObject
-    $APIVersionLine | Add-Member -Name "Box Model Name"  -MemberType Noteproperty -Value $Json.box_model_name
-    $APIVersionLine | Add-Member -Name "Device Type"     -MemberType Noteproperty -Value $Json.device_type
-    $APIVersionLine | Add-Member -Name "BOX Model"       -MemberType Noteproperty -Value $Json.box_model
-    $APIVersionLine | Add-Member -Name "UID"             -MemberType Noteproperty -Value $Json.uid
-    $APIVersionLine | Add-Member -Name "HTTPS Port"      -MemberType Noteproperty -Value $Json.https_port
-    $APIVersionLine | Add-Member -Name "HTTPS Status"    -MemberType Noteproperty -Value $(Get-Status -Status $Json.https_available)
-    $APIVersionLine | Add-Member -Name "API Version"     -MemberType Noteproperty -Value $Json.api_version
-    $APIVersionLine | Add-Member -Name "API Base URL"    -MemberType Noteproperty -Value $Json.api_base_url
-    #$APIVersionLine | Add-Member -Name "APIVersion Name" -MemberType Noteproperty -Value $Json.APIVersion_name
-    $APIVersionLine | Add-Member -Name "API Domain"      -MemberType Noteproperty -Value $Json.api_domain
-    
-    # Add lines to $Array
-    $Array += $APIVersionLine
-    
-    Return $Array
-}
-
-#endregion API VERSION
-
-#region Contact/Annuary
-
-Function Get-Contact {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from FREEBOX API
-    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
-    $Json = $Json.result
-
-    # Create array
-    $Array = @()
-    
-    $ContactLine = 0
-    While ($ContactLine -lt $Json.count) {
-        
-        $numberLine = 0
-        While ($numberLine -lt $Json[$ContactLine].numbers.count) {
-            
-            # Create New PSObject and add values to array
-            $ContactLineList = New-Object -TypeName PSObject
-            $ContactLineList | Add-Member -Name "ID"            -MemberType Noteproperty -Value $Json[$ContactLine].id
-            $ContactLineList | Add-Member -Name "Display Name"  -MemberType Noteproperty -Value $Json[$ContactLine].display_name
-            $ContactLineList | Add-Member -Name "Last Name"     -MemberType Noteproperty -Value $Json[$ContactLine].last_name
-            $ContactLineList | Add-Member -Name "First Name"    -MemberType Noteproperty -Value $Json[$ContactLine].first_name
-            $ContactLineList | Add-Member -Name "Number"        -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].number
-            $ContactLineList | Add-Member -Name "Type"          -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].type
-            $ContactLineList | Add-Member -Name "Contact ID"    -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].contact_id
-            $ContactLineList | Add-Member -Name "Is default"    -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].is_default
-            $ContactLineList | Add-Member -Name "Is onw"        -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].is_own
-            $ContactLineList | Add-Member -Name "Birthday Date" -MemberType Noteproperty -Value $Json[$ContactLine].birthday
-            $ContactLineList | Add-Member -Name "Company"       -MemberType Noteproperty -Value $Json[$ContactLine].company
-            $ContactLineList | Add-Member -Name "Notes"         -MemberType Noteproperty -Value $Json[$ContactLine].notes
-            $ContactLineList | Add-Member -Name "Ulr Photo"     -MemberType Noteproperty -Value $Json[$ContactLine].photo_url
-            $ContactLineList | Add-Member -Name "Last Update"   -MemberType Noteproperty -Value $((Get-Date -Date "01/01/1970").addseconds($Json[$ContactLine].last_update))
-            
-            # Add lines to $Array
-            $Array += $ContactLineList
-
-            $numberLine ++
-        }
-    $ContactLine ++
-    }
-    Return $Array
-}
-
-#endregion Contacts/Annuary
-
-#region Call Log
-
-Function Get-Calllog {
-    
-    Param(
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    # Get information from FREEBOX API
-    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
-    
-    # Create array
-    $Array = @()
-    
-    # Select $JSON header
-    $Json = $Json.result
-    
-    $Call = 0
-    
-    While ($Call -lt $Json.Count) {
-        
-        $CallTime = New-TimeSpan -Seconds $Json[$Call].duration
-        
-        # Create New PSObject and add values to array
-        $CallLine = New-Object -TypeName PSObject
-        $CallLine | Add-Member -Name "Call ID"      -MemberType Noteproperty -Value $Json[$Call].id
-        $CallLine | Add-Member -Name "Number"       -MemberType Noteproperty -Value "0$($Json[$Call].number)"
-        $CallLine | Add-Member -Name "Call Type"    -MemberType Noteproperty -Value $Json[$Call].type
-        $CallLine | Add-Member -Name "Duration"     -MemberType Noteproperty -Value "$($CallTime.Hours)h $($CallTime.Minutes)min $($CallTime.Seconds)s"
-        $CallLine | Add-Member -Name "Call Date"    -MemberType Noteproperty -Value $((Get-Date -Date "01/01/1970").addseconds($Json[$Call].datetime))
-        $CallLine | Add-Member -Name "Contact ID"   -MemberType Noteproperty -Value $Json[$Call].contact_id
-        $CallLine | Add-Member -Name "Line ID"      -MemberType Noteproperty -Value $Json[$Call].line_id
-        $CallLine | Add-Member -Name "Contact Name" -MemberType Noteproperty -Value $Json[$Call].name
-        $CallLine | Add-Member -Name "Is New ?"     -MemberType Noteproperty -Value $(Get-Status -Status $Json[$Call].new)
-        
-        # Add lines to $Array
-        $Array += $CallLine
-        
-        $Call ++
-    }
-    
-    Return $Array
-}
-
-#endregion Call Log
-
 #region Airties
 
-function Get-Airties {
+function Get-BBOXAirties {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7094,7 +7612,7 @@ function Get-Airties {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Select $JSON header
     $Json = $Json.airties
@@ -7102,7 +7620,7 @@ function Get-Airties {
     Return $Json
 }
 
-function Get-AirtiesLANMode {
+function Get-BBOXAirtiesLANMode {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7110,7 +7628,7 @@ function Get-AirtiesLANMode {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7133,7 +7651,7 @@ function Get-AirtiesLANMode {
 
 #region API Ressources Map
 
-Function Get-APIRessourcesMap {
+Function Get-BBOXAPIRessourcesMap {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7141,7 +7659,7 @@ Function Get-APIRessourcesMap {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7223,7 +7741,7 @@ Function Get-APIRessourcesMap {
 
 #region BACKUP
 
-Function Get-BackupList {
+Function Get-BBOXBackupList {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7234,7 +7752,7 @@ Function Get-BackupList {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7272,7 +7790,7 @@ Function Get-BackupList {
         
         $APIName                   = 'usersave'
         $UrlToGo                   = $UrlToGo.Replace('configs',$APIName)
-        $CloudSynchronisationState = Get-BoxInformation -UrlToGo $UrlToGo
+        $CloudSynchronisationState = Get-BBOXInformation -UrlToGo $UrlToGo
         $Enable                    = $(Get-State -State $CloudSynchronisationState.$APIName.enable)
         $Status                    = $(Get-Status -Status $CloudSynchronisationState.$APIName.status)
         $Authorized                = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
@@ -7280,23 +7798,23 @@ Function Get-BackupList {
         $Datelastrestore           = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
         If ([string]::IsNullOrEmpty($Datelastrestore)) {$Datelastrestore = "Never"}
         
-        Write-Log -Type WARNING -Name 'Program run - Get Box Configuration Save' -Message 'No local backups were found'
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'No local backups were found'
         
-        Write-Log -Type INFONO -Name 'Program run - Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation state : '
-        Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message $Enable
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation state : '
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Enable
         
-        Write-Log -Type INFONO -Name 'Program run - Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation status : '
-        Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message $Status
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation status : '
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Status
         
-        Write-Log -Type INFONO -Name 'Program run - Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation user consent : '
-        Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message $Authorized
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation user consent : '
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Authorized
         
-        Write-Log -Type INFONO -Name 'Program run - Get Box Configuration Save' -Message 'Last Time Box Configuration save to the cloud : '
-        Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message $Datelastsave
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Last Time Box Configuration save to the cloud : '
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Datelastsave
         
-        Write-Log -Type INFONO -Name 'Program run - Get Box Configuration Save' -Message 'Last Time Box Configuration restored from the cloud : '
-        If ($Datelastrestore) {Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message $Datelastrestore}
-        Else {Write-Log -Type VALUE -Name 'Program run - Get Box Configuration Save' -Message ''}
+        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Last Time Box Configuration restored from the cloud : '
+        If ($Datelastrestore) {Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Datelastrestore}
+        Else {Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message ''}
         
         $Message = "No local backups in Box configuration were found.`nBox cloud save synchronisation settings :
         - State : $Enable
@@ -7317,7 +7835,7 @@ Function Get-BackupList {
 
 #region USERSAVE
 
-Function Get-USERSAVE {
+Function Get-BBOXUSERSAVE {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7328,7 +7846,7 @@ Function Get-USERSAVE {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7366,7 +7884,7 @@ Function Get-USERSAVE {
 
 #region CPL
 
-Function Get-CPL {
+Function Get-BBOXCPL {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7377,7 +7895,7 @@ Function Get-CPL {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7397,7 +7915,7 @@ Function Get-CPL {
     Return $Array
 }
 
-Function Get-CPLDeviceList {
+Function Get-BBOXCPLDeviceList {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7408,7 +7926,7 @@ Function Get-CPLDeviceList {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7463,7 +7981,7 @@ Function Get-CPLDeviceList {
 
 #region DEVICE
 
-Function Get-Device {
+Function Get-BBOXDevice {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -7474,7 +7992,7 @@ Function Get-Device {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -7530,7 +8048,7 @@ Function Get-Device {
     Return $Array
 }
 
-Function Get-DeviceLog {
+Function Get-BBOXDeviceLog {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -7538,7 +8056,7 @@ Function Get-DeviceLog {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8020,7 +8538,7 @@ Function Get-DeviceLog {
     Return $Array
 }
 
-Function Get-DeviceFullLog {
+Function Get-BBOXDeviceFullLog {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -8028,7 +8546,7 @@ Function Get-DeviceFullLog {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8515,13 +9033,13 @@ Function Get-DeviceFullLog {
         $Pageid ++
         
         # Get information from Box API
-        $Json = Get-BoxInformation -UrlToGo "$UrlToGo/$Pageid"
+        $Json = Get-BBOXInformation -UrlToGo "$UrlToGo/$Pageid"
     }
     
     Return $Array
 }
 
-Function Get-DeviceFullTechnicalLog {
+Function Get-BBOXDeviceFullTechnicalLog {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -8529,7 +9047,7 @@ Function Get-DeviceFullTechnicalLog {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8658,13 +9176,13 @@ Function Get-DeviceFullTechnicalLog {
         $Pageid ++
         
         # Get information from Box API
-        $Json = Get-BoxInformation -UrlToGo "$UrlToGo/$Pageid"
+        $Json = Get-BBOXInformation -UrlToGo "$UrlToGo/$Pageid"
     }
     
     Return $Array
 }
 
-Function Get-DeviceConnectionHistoryLog {
+Function Get-BBOXDeviceConnectionHistoryLog {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -8672,7 +9190,7 @@ Function Get-DeviceConnectionHistoryLog {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8720,7 +9238,7 @@ Function Get-DeviceConnectionHistoryLog {
         $Pageid ++
         
         # Get information from Box API
-        $Json = Get-BoxInformation -UrlToGo "$UrlToGo/$Pageid"
+        $Json = Get-BBOXInformation -UrlToGo "$UrlToGo/$Pageid"
     }
     
     $Devices = $Array | Select-Object -Property MACAddress -Unique
@@ -8753,14 +9271,14 @@ Function Get-DeviceConnectionHistoryLog {
     Return $Output
 }
 
-Function Get-DeviceConnectionHistoryLogID {
+Function Get-BBOXDeviceConnectionHistoryLogID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $DeviceConnectionHistoryLogIDs = Get-DeviceConnectionHistoryLog -UrlToGo $UrlToGo
+    $DeviceConnectionHistoryLogIDs = Get-BBOXDeviceConnectionHistoryLog -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $DeviceConnectionHistoryLogID = $DeviceConnectionHistoryLogIDs | Select-Object -Property 'Mac Address',Hostname -Unique -First 1
     }
@@ -8773,7 +9291,7 @@ Function Get-DeviceConnectionHistoryLogID {
     Return $DeviceConnectionHistoryLogHost
 }
 
-Function Get-DeviceCpu {
+Function Get-BBOXDeviceCpu {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -8781,7 +9299,7 @@ Function Get-DeviceCpu {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8808,7 +9326,7 @@ Function Get-DeviceCpu {
     Return $Array
 }
 
-Function Get-DeviceMemory {
+Function Get-BBOXDeviceMemory {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -8816,7 +9334,7 @@ Function Get-DeviceMemory {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8837,7 +9355,7 @@ Function Get-DeviceMemory {
     Return $Array
 }
 
-Function Get-DeviceLED {
+Function Get-BBOXDeviceLED {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -8845,7 +9363,7 @@ Function Get-DeviceLED {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8891,7 +9409,7 @@ Function Get-DeviceLED {
     Return $Array
 }
 
-Function Get-DeviceSummary {
+Function Get-BBOXDeviceSummary {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -8899,7 +9417,7 @@ Function Get-DeviceSummary {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8921,7 +9439,7 @@ Function Get-DeviceSummary {
     Return $Array
 }
 
-Function Get-DeviceToken {
+Function Get-BBOXDeviceToken {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -8929,7 +9447,7 @@ Function Get-DeviceToken {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8959,7 +9477,7 @@ Function Get-DeviceToken {
 
 #region DHCP
 
-Function Get-DHCP {
+Function Get-BBOXDHCP {
         
     Param (
         [Parameter(Mandatory=$True)]
@@ -8970,7 +9488,7 @@ Function Get-DHCP {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -8995,7 +9513,7 @@ Function Get-DHCP {
     Return $Array
 }
 
-Function Get-DHCPClients {
+Function Get-BBOXDHCPClients {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9003,7 +9521,7 @@ Function Get-DHCPClients {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9039,14 +9557,14 @@ Function Get-DHCPClients {
     }
 }
 
-Function Get-DHCPClientsID {
+Function Get-BBOXDHCPClientsID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $DeviceIDs = Get-DHCPClients -UrlToGo $UrlToGo
+    $DeviceIDs = Get-BBOXDHCPClients -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $DeviceID = $DeviceIDs | Select-Object -Property ID,'Device HostName' -First 1
     }
@@ -9058,7 +9576,7 @@ Function Get-DHCPClientsID {
     Return $Device
 }
 
-Function Get-DHCPActiveOptions {
+Function Get-BBOXDHCPActiveOptions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9066,7 +9584,7 @@ Function Get-DHCPActiveOptions {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9152,7 +9670,7 @@ Function Get-DHCPActiveOptions {
     Return $Array
 }
 
-Function Get-DHCPOptions {
+Function Get-BBOXDHCPOptions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9160,7 +9678,7 @@ Function Get-DHCPOptions {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9195,14 +9713,14 @@ Function Get-DHCPOptions {
     }
 }
 
-Function Get-DHCPOptionsID {
+Function Get-BBOXDHCPOptionsID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $OptionIDs = Get-DHCPOptions -UrlToGo $UrlToGo
+    $OptionIDs = Get-BBOXDHCPOptions -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $OptionID = $OptionIDs | Select-Object -Property ID,Description -First 1
     }
@@ -9214,7 +9732,7 @@ Function Get-DHCPOptionsID {
     Return $Option
 }
 
-Function Get-DHCPSTBOptions {
+Function Get-BBOXDHCPSTBOptions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9222,7 +9740,7 @@ Function Get-DHCPSTBOptions {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9255,7 +9773,7 @@ Function Get-DHCPSTBOptions {
     }
 }
 
-function Get-DHCPv6PrefixDelegation {
+function Get-BBOXDHCPv6PrefixDelegation {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9263,7 +9781,7 @@ function Get-DHCPv6PrefixDelegation {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9300,7 +9818,7 @@ function Get-DHCPv6PrefixDelegation {
     }
 }
 
-Function Get-DHCPv6Options {
+Function Get-BBOXDHCPv6Options {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9308,7 +9826,7 @@ Function Get-DHCPv6Options {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9347,7 +9865,7 @@ Function Get-DHCPv6Options {
 
 #region DNS
 
-Function Get-DNSStats {
+Function Get-BBOXDNSStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9355,7 +9873,7 @@ Function Get-DNSStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9387,7 +9905,7 @@ Function Get-DNSStats {
 
 #region DYNDNS
 
-Function Get-DYNDNS {
+Function Get-BBOXDYNDNS {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9398,7 +9916,7 @@ Function Get-DYNDNS {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9424,7 +9942,7 @@ Function Get-DYNDNS {
     Return $Array
 }
 
-Function Get-DYNDNSProviderList {
+Function Get-BBOXDYNDNSProviderList {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9435,7 +9953,7 @@ Function Get-DYNDNSProviderList {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9480,7 +9998,7 @@ Function Get-DYNDNSProviderList {
     }
 }
 
-Function Get-DYNDNSClient {
+Function Get-BBOXDYNDNSClient {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9491,7 +10009,7 @@ Function Get-DYNDNSClient {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9550,14 +10068,14 @@ Function Get-DYNDNSClient {
     }
 }
 
-Function Get-DYNDNSClientID {
+Function Get-BBOXDYNDNSClientID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $DyndnsIDs = Get-DYNDNSClient -UrlToGo $UrlToGo -APIName $APIName
+    $DyndnsIDs = Get-BBOXDYNDNSClient -UrlToGo $UrlToGo -APIName $APIName
     If ($global:TriggerExportConfig -eq $true) {
         $DyndnsID = $DyndnsIDs | Select-Object -Property ID,Provider,Host -First 1
     }
@@ -9573,7 +10091,7 @@ Function Get-DYNDNSClientID {
 
 #region FIREWALL
 
-Function Get-FIREWALL {
+Function Get-BBOXFIREWALL {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9584,7 +10102,7 @@ Function Get-FIREWALL {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9604,7 +10122,7 @@ Function Get-FIREWALL {
     Return $Array
 }
 
-Function Get-FIREWALLRules {
+Function Get-BBOXFIREWALLRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9612,7 +10130,7 @@ Function Get-FIREWALLRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9658,14 +10176,14 @@ Function Get-FIREWALLRules {
     }
 }
 
-Function Get-FIREWALLRulesID {
+Function Get-BBOXFIREWALLRulesID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
 
-    $RuleIDs = Get-FIREWALLRules -UrlToGo $UrlToGo
+    $RuleIDs = Get-BBOXFIREWALLRules -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $RuleID = $RuleIDs | Select-Object -Property ID,Description -First 1
     }
@@ -9677,7 +10195,7 @@ Function Get-FIREWALLRulesID {
     Return $Rule
 }
 
-Function Get-FIREWALLPingResponder {
+Function Get-BBOXFIREWALLPingResponder {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9685,7 +10203,7 @@ Function Get-FIREWALLPingResponder {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9706,7 +10224,7 @@ Function Get-FIREWALLPingResponder {
     Return $Array
 }
 
-Function Get-FIREWALLGamerMode {
+Function Get-BBOXFIREWALLGamerMode {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9714,7 +10232,7 @@ Function Get-FIREWALLGamerMode {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9733,7 +10251,7 @@ Function Get-FIREWALLGamerMode {
     Return $Array
 }
 
-Function Get-FIREWALLv6Rules {
+Function Get-BBOXFIREWALLv6Rules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9741,7 +10259,7 @@ Function Get-FIREWALLv6Rules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9791,14 +10309,14 @@ Function Get-FIREWALLv6Rules {
     }
 }
 
-Function Get-FIREWALLv6RulesID {
+Function Get-BBOXFIREWALLv6RulesID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $RuleIDs = Get-FIREWALLv6Rules -UrlToGo $UrlToGo
+    $RuleIDs = Get-BBOXFIREWALLv6Rules -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $RuleID = $RuleIDs | Select-Object -Property ID,Description -First 1
     }
@@ -9810,7 +10328,7 @@ Function Get-FIREWALLv6RulesID {
     Return $Rule
 }
 
-function Get-FIREWALLv6Level {
+function Get-BBOXFIREWALLv6Level {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9818,7 +10336,7 @@ function Get-FIREWALLv6Level {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9841,7 +10359,7 @@ function Get-FIREWALLv6Level {
 
 #region HOSTS
 
-Function Get-HOSTSDownloadThreshold {
+Function Get-BBOXHOSTSDownloadThreshold {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9849,7 +10367,7 @@ Function Get-HOSTSDownloadThreshold {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -9873,7 +10391,7 @@ Function Get-HOSTSDownloadThreshold {
     Return $Array
 }
 
-Function Get-HOSTS {
+Function Get-BBOXHOSTS {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -9884,7 +10402,7 @@ Function Get-HOSTS {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10017,14 +10535,14 @@ Function Get-HOSTS {
     }
 }
 
-Function Get-HOSTSID {
+Function Get-BBOXHOSTSID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $HostIDs = Get-HOSTS -UrlToGo $UrlToGo -APIName $APIName
+    $HostIDs = Get-BBOXHOSTS -UrlToGo $UrlToGo -APIName $APIName
     If ($global:TriggerExportConfig -eq $true) {
         $HostID = $HostIDs | Select-Object -Property ID,Hostname -First 1
     }
@@ -10036,7 +10554,7 @@ Function Get-HOSTSID {
     Return $MachineID
 }
 
-Function Get-HOSTSWireless {
+Function Get-BBOXHOSTSWireless {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10044,7 +10562,7 @@ Function Get-HOSTSWireless {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10084,7 +10602,7 @@ Function Get-HOSTSWireless {
     }
 }
 
-Function Get-HOSTSME {
+Function Get-BBOXHOSTSME {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10092,7 +10610,7 @@ Function Get-HOSTSME {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10250,13 +10768,13 @@ Function Get-HOSTSME {
         $Array += $DeviceLine
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program run - Get Hosts Me' -Message "No information found, due to you are connected remotly. Please connect to your local $global:BoxType Ethernet or Wifi Network to get information"
+        Write-Log -Type WARNING -Category 'Program run' -Name 'Get Hosts Me' -Message "No information found, due to you are connected remotly. Please connect to your local $global:BoxType Ethernet or Wifi Network to get information"
     }
     
     Return $Array
 }
 
-Function Get-HOSTSLite {
+Function Get-BBOXHOSTSLite {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10264,7 +10782,7 @@ Function Get-HOSTSLite {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10300,7 +10818,7 @@ Function Get-HOSTSLite {
     }
 }
 
-Function Get-HOSTSPAUTH {
+Function Get-BBOXHOSTSPAUTH {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10308,7 +10826,7 @@ Function Get-HOSTSPAUTH {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10376,7 +10894,7 @@ Function Get-HOSTSPAUTH {
 
 #region IPTV
 
-Function Get-IPTV {
+Function Get-BBOXIPTV {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10387,7 +10905,7 @@ Function Get-IPTV {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10426,7 +10944,7 @@ Function Get-IPTV {
     }
 }
 
-Function Get-IPTVDiags {
+Function Get-BBOXIPTVDiags {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10434,7 +10952,7 @@ Function Get-IPTVDiags {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10464,7 +10982,7 @@ Function Get-IPTVDiags {
 
 #region LAN
 
-Function Get-LANIPConfig {
+Function Get-BBOXLANIPConfig {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10475,7 +10993,7 @@ Function Get-LANIPConfig {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create arrays
     $IP = @()
@@ -10518,7 +11036,7 @@ Function Get-LANIPConfig {
     Return $IP
 }
 
-Function Get-LANIPSwitchConfig {
+Function Get-BBOXLANIPSwitchConfig {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10529,7 +11047,7 @@ Function Get-LANIPSwitchConfig {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create arrays
     $Array = @()
@@ -10557,7 +11075,7 @@ Function Get-LANIPSwitchConfig {
     Return $Array
 }
 
-Function Get-LANStats {
+Function Get-BBOXLANStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10565,7 +11083,7 @@ Function Get-LANStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10594,7 +11112,7 @@ Function Get-LANStats {
     Return $Array
 }
 
-Function Get-LANPortStats {
+Function Get-BBOXLANPortStats {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -10602,7 +11120,7 @@ Function Get-LANPortStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10644,7 +11162,7 @@ Function Get-LANPortStats {
     }
 }
 
-Function Get-LANAlerts {
+Function Get-BBOXLANAlerts {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -10655,7 +11173,7 @@ Function Get-LANAlerts {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10778,7 +11296,7 @@ Function Get-LANAlerts {
 
 #region NAT
 
-Function Get-NAT {
+Function Get-BBOXNAT {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10786,7 +11304,7 @@ Function Get-NAT {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10795,7 +11313,7 @@ Function Get-NAT {
     $Json = $Json[0].nat
     
     # Get Configured Rules 
-    $RulesConfig = Get-NATRules -UrlToGo $UrlToGo
+    $RulesConfig = Get-BBOXNATRules -UrlToGo $UrlToGo
     $EnableRulesCount  = $($RulesConfig.Status | Where-Object {$_ -match "Enable"}).count
     $DisableRulesCount = $($RulesConfig.Status | Where-Object {$_ -match "Disable"}).count
 
@@ -10818,7 +11336,7 @@ Function Get-NAT {
     Return $Array
 }
 
-Function Get-NATDMZ {
+Function Get-BBOXNATDMZ {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10826,7 +11344,7 @@ Function Get-NATDMZ {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10856,7 +11374,7 @@ Function Get-NATDMZ {
     Return $Array
 }
 
-Function Get-NATRules {
+Function Get-BBOXNATRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10864,7 +11382,7 @@ Function Get-NATRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -10948,14 +11466,14 @@ Function Get-NATRules {
     }
 }
 
-Function Get-NATRulesID {
+Function Get-BBOXNATRulesID {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $RuleIDs = Get-NATRules -UrlToGo $UrlToGo
+    $RuleIDs = Get-BBOXNATRules -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $RuleID = $RuleIDs | Select-Object -Property ID,Description -First 1
     }
@@ -10971,7 +11489,7 @@ Function Get-NATRulesID {
 
 #region Notification
 
-Function Get-NOTIFICATIONConfig {
+Function Get-BBOXNOTIFICATIONConfig {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -10982,7 +11500,7 @@ Function Get-NOTIFICATIONConfig {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11009,7 +11527,7 @@ Function Get-NOTIFICATIONConfig {
     Return $Array
 }
 
-Function Get-NOTIFICATIONAlerts {
+Function Get-BBOXNOTIFICATIONAlerts {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11017,7 +11535,7 @@ Function Get-NOTIFICATIONAlerts {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11027,7 +11545,7 @@ Function Get-NOTIFICATIONAlerts {
     
     If ($Json.Count -ne 0) {
         
-        $Contacts = Get-NOTIFICATIONContacts -UrlToGo $($UrlToGo -replace("alerts","contacts"))
+        $Contacts = Get-BBOXNOTIFICATIONContacts -UrlToGo $($UrlToGo -replace("alerts","contacts"))
         $Index = 0
         
         While ($Index -lt $Json.Count) {
@@ -11071,7 +11589,7 @@ Function Get-NOTIFICATIONAlerts {
     }
 }
 
-Function Get-NOTIFICATIONContacts {
+Function Get-BBOXNOTIFICATIONContacts {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11079,7 +11597,7 @@ Function Get-NOTIFICATIONContacts {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11114,7 +11632,7 @@ Function Get-NOTIFICATIONContacts {
     }
 }
 
-Function Get-NOTIFICATIONEvents {
+Function Get-BBOXNOTIFICATIONEvents {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11122,7 +11640,7 @@ Function Get-NOTIFICATIONEvents {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11193,7 +11711,7 @@ Function Get-NOTIFICATIONEvents {
 
 #region PARENTAL CONTROL
 
-Function Get-ParentalControl {
+Function Get-BBOXParentalControl {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11204,7 +11722,7 @@ Function Get-ParentalControl {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11225,7 +11743,7 @@ Function Get-ParentalControl {
     Return $Array
 }
 
-Function Get-ParentalControlScheduler {
+Function Get-BBOXParentalControlScheduler {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11233,7 +11751,7 @@ Function Get-ParentalControlScheduler {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11259,7 +11777,7 @@ Function Get-ParentalControlScheduler {
     Return $Array
 }
 
-Function Get-ParentalControlSchedulerRules {
+Function Get-BBOXParentalControlSchedulerRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11267,7 +11785,7 @@ Function Get-ParentalControlSchedulerRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11307,7 +11825,7 @@ Function Get-ParentalControlSchedulerRules {
 
 #region PROFILE
 
-Function Get-ProfileConsumption {
+Function Get-BBOXProfileConsumption {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11315,7 +11833,7 @@ Function Get-ProfileConsumption {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11339,7 +11857,7 @@ Function Get-ProfileConsumption {
 
 #region REMOTE
 
-Function Get-REMOTEProxyWOL {
+Function Get-BBOXREMOTEProxyWOL {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11347,7 +11865,7 @@ Function Get-REMOTEProxyWOL {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11371,7 +11889,7 @@ Function Get-REMOTEProxyWOL {
 
 #region SERVICES
 
-Function Get-SERVICES {
+Function Get-BBOXSERVICES {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11382,7 +11900,7 @@ Function Get-SERVICES {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11533,7 +12051,7 @@ Function Get-SERVICES {
 
 #region SUMMARY
 
-Function Get-SUMMARY {
+Function Get-BBOXSUMMARY {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11541,7 +12059,7 @@ Function Get-SUMMARY {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11709,7 +12227,7 @@ Function Get-SUMMARY {
 
 #region UPNP/IGD
 
-Function Get-UPNPIGD {
+Function Get-BBOXUPNPIGD {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11717,7 +12235,7 @@ Function Get-UPNPIGD {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11739,7 +12257,7 @@ Function Get-UPNPIGD {
     Return $Array
 }
 
-Function Get-UPNPIGDRules {
+Function Get-BBOXUPNPIGDRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11747,7 +12265,7 @@ Function Get-UPNPIGDRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     If ($Json.Count -ne 0) {
     
@@ -11796,7 +12314,7 @@ Function Get-UPNPIGDRules {
 
 #region USB
 
-Function Get-DeviceUSBDevices {
+Function Get-BBOXDeviceUSBDevices {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11804,7 +12322,7 @@ Function Get-DeviceUSBDevices {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     If ($Json.usb.count -ne '0') {
         
@@ -11853,7 +12371,7 @@ Function Get-DeviceUSBDevices {
     }
 }
 
-Function Get-DeviceUSBPrinter {
+Function Get-BBOXDeviceUSBPrinter {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11861,7 +12379,7 @@ Function Get-DeviceUSBPrinter {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11897,7 +12415,7 @@ Function Get-DeviceUSBPrinter {
     }
 }
 
-Function Get-USBStorage {
+Function Get-BBOXUSBStorage {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11905,7 +12423,7 @@ Function Get-USBStorage {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11946,7 +12464,7 @@ Function Get-USBStorage {
 
 #region VOIP
 
-Function Get-VOIP {
+Function Get-BBOXVOIP {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11957,7 +12475,7 @@ Function Get-VOIP {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -11986,7 +12504,7 @@ Function Get-VOIP {
     Return $Array
 }
 
-Function Get-VOIPDiagConfig {
+Function Get-BBOXVOIPDiagConfig {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -11994,7 +12512,7 @@ Function Get-VOIPDiagConfig {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12030,7 +12548,7 @@ Function Get-VOIPDiagConfig {
     Return $Array
 }
 
-Function Get-VOIPDiagLine {
+Function Get-BBOXVOIPDiagLine {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12038,7 +12556,7 @@ Function Get-VOIPDiagLine {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12072,7 +12590,7 @@ Function Get-VOIPDiagLine {
     }
 }
 
-Function Get-VOIPDiagHost {
+Function Get-BBOXVOIPDiagHost {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12080,7 +12598,7 @@ Function Get-VOIPDiagHost {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12116,7 +12634,7 @@ Function Get-VOIPDiagHost {
     }
 }
 
-Function Get-VOIPDiagUSB {
+Function Get-BBOXVOIPDiagUSB {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12124,7 +12642,7 @@ Function Get-VOIPDiagUSB {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12161,7 +12679,7 @@ Function Get-VOIPDiagUSB {
     }
 }
 
-Function Get-VOIPScheduler {
+Function Get-BBOXVOIPScheduler {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12169,7 +12687,7 @@ Function Get-VOIPScheduler {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12202,7 +12720,7 @@ Function Get-VOIPScheduler {
     Return $Array
 }
 
-Function Get-VOIPSchedulerRules {
+Function Get-BBOXVOIPSchedulerRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12210,7 +12728,7 @@ Function Get-VOIPSchedulerRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12245,7 +12763,7 @@ Function Get-VOIPSchedulerRules {
     }
 }
 
-Function Get-VOIPCallLogLineX {
+Function Get-BBOXVOIPCallLogLineX {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12253,7 +12771,7 @@ Function Get-VOIPCallLogLineX {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12270,6 +12788,9 @@ Function Get-VOIPCallLogLineX {
             # Calculate call time
             $CallTime = New-TimeSpan -Seconds $($Json[$Call].duree)
             
+            # Get Phone Number Details
+            $NumberDetails = $global:PhoneNumberReferential | Where-Object {$_.Number -ilike $Json[$Call].number}
+            
             # Create New PSObject and add values to array
             $CallLine = New-Object -TypeName PSObject
             $CallLine | Add-Member -Name 'ID'                  -MemberType Noteproperty -Value $Json[$Call].id
@@ -12279,6 +12800,11 @@ Function Get-VOIPCallLogLineX {
             $CallLine | Add-Member -Name 'Was Answered ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Call].answered)
             $CallLine | Add-Member -Name 'Call Time'           -MemberType Noteproperty -Value "$($CallTime.Hours)h$($CallTime.Minutes)m$($CallTime.Seconds)s"
             $CallLine | Add-Member -Name 'Call Time (Default)' -MemberType Noteproperty -Value $Json[$Call].duree
+            $CallLine | Add-Member -Name 'Name'                -MemberType Noteproperty -Value $NumberDetails.Name
+            $CallLine | Add-Member -Name 'Surname'             -MemberType Noteproperty -Value $NumberDetails.Surname
+            $CallLine | Add-Member -Name 'Description'         -MemberType Noteproperty -Value $NumberDetails.Description
+            $CallLine | Add-Member -Name 'Category'            -MemberType Noteproperty -Value $NumberDetails.Category
+            $CallLine | Add-Member -Name 'Type'                -MemberType Noteproperty -Value $NumberDetails.Type
             
             # Add lines to $Array
             $Array += $CallLine
@@ -12294,7 +12820,7 @@ Function Get-VOIPCallLogLineX {
     }
 }
 
-Function Get-VOIPCallLogLineXSummary {
+Function Get-BBOXVOIPCallLogLineXSummary {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12302,7 +12828,7 @@ Function Get-VOIPCallLogLineXSummary {
     )
     
     # Get information from Box API
-    $Data = Get-VOIPCallLogLine -UrlToGo $UrlToGo
+    $Data = Get-BBOXVOIPCallLogLine -UrlToGo $UrlToGo
     $PhoneNumbers = $Data.number | Select-Object -Unique
     
     # Create array
@@ -12316,6 +12842,9 @@ Function Get-VOIPCallLogLineXSummary {
         $Details | ForEach-Object {$CallTime = $CallTime + $_.'Call Time (Default)'}
         $TotalCallTime = New-TimeSpan -Seconds $CallTime
         
+        # Get Phone Number Details
+        $NumberDetails = $global:PhoneNumberReferential | Where-Object {$_.Number -ilike $Number}
+        
         # Create New PSObject and add values to array
         $CallLine = New-Object -TypeName PSObject
         $CallLine | Add-Member -Name 'Number'                                                -MemberType Noteproperty -Value $Number
@@ -12327,6 +12856,11 @@ Function Get-VOIPCallLogLineXSummary {
         $CallLine | Add-Member -Name 'Call Incoming Out Range Call (Active rule) Count'      -MemberType Noteproperty -Value $($Details.'Call Type' | Where-Object {$_ -match "Incoming Out Range Call (Active rule)"}).count
         $CallLine | Add-Member -Name 'Call Outgoing Count'                                   -MemberType Noteproperty -Value $($Details.'Call Type' | Where-Object {$_ -match "Outgoing"}).count
         $CallLine | Add-Member -Name 'Total Call Time'                                       -MemberType Noteproperty -Value $TotalCallTime
+        $CallLine | Add-Member -Name 'Name'                                                  -MemberType Noteproperty -Value $NumberDetails.Name
+        $CallLine | Add-Member -Name 'Surname'                                               -MemberType Noteproperty -Value $NumberDetails.Surname
+        $CallLine | Add-Member -Name 'Description'                                           -MemberType Noteproperty -Value $NumberDetails.Description
+        $CallLine | Add-Member -Name 'Category'                                              -MemberType Noteproperty -Value $NumberDetails.Category
+        $CallLine | Add-Member -Name 'Type'                                                  -MemberType Noteproperty -Value $NumberDetails.Type
         
         # Add lines to $Array
         $Array += $CallLine
@@ -12335,26 +12869,28 @@ Function Get-VOIPCallLogLineXSummary {
     Return $Array
 }
 
-Function Get-VOIPCallLogLineXPhoneNumber {
+Function Get-BBOXVOIPCallLogLineXPhoneNumber {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $CallLogLineXPhoneNumberIDs = Get-VOIPCallLogLineX -UrlToGo $UrlToGo
+    $CallLogLineXPhoneNumberIDs = Get-BBOXVOIPCallLogLine -UrlToGo $UrlToGo
+    
     If ($global:TriggerExportConfig -eq $true) {
         $CallLogLineXPhoneNumberID = $CallLogLineXPhoneNumberIDs | Select-Object -Property Number -First 1 -Unique
     }
     Else {
-        $CallLogLineXPhoneNumberID = $CallLogLineXPhoneNumberIDs | Select-Object -Property Number | Out-GridView -Title "Phone Number List" -OutputMode Single
+        $CallLogLineXPhoneNumberID = $CallLogLineXPhoneNumberIDs | Select-Object -Property Number -Unique | Out-GridView -Title "Phone Number List" -OutputMode Single
     }
-    $CallLogLineXPhoneNumbers = $CallLogLineXPhoneNumberIDs | Where-Object {$_.ID -ilike $CallLogLineXPhoneNumberID.Number}
+    
+    $CallLogLineXPhoneNumbers = $CallLogLineXPhoneNumberIDs | Where-Object {$_.Number -ilike $CallLogLineXPhoneNumberID.Number}
     
     Return $CallLogLineXPhoneNumbers
 }
 
-Function Get-VOIPFullCallLogLineX {
+Function Get-BBOXVOIPFullCallLogLineX {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12362,7 +12898,7 @@ Function Get-VOIPFullCallLogLineX {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12379,6 +12915,9 @@ Function Get-VOIPFullCallLogLineX {
             # Calculate call time
             $CallTime = New-TimeSpan -Seconds $($Json[$Call].duree)
             
+            # Get Phone Number Details
+            $NumberDetails = $global:PhoneNumberReferential | Where-Object {$_.Number -ilike $Json[$Call].number}
+            
             # Create New PSObject and add values to array
             $CallLine = New-Object -TypeName PSObject
             $CallLine | Add-Member -Name 'ID'                  -MemberType Noteproperty -Value $Json[$Call].id
@@ -12388,6 +12927,11 @@ Function Get-VOIPFullCallLogLineX {
             $CallLine | Add-Member -Name 'Was Answered ?'      -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json[$Call].answered)
             $CallLine | Add-Member -Name 'Call Time'           -MemberType Noteproperty -Value "$($CallTime.Hours)h$($CallTime.Minutes)m$($CallTime.Seconds)s"
             $CallLine | Add-Member -Name 'Call Time (Default)' -MemberType Noteproperty -Value $Json[$Call].duree
+            $CallLine | Add-Member -Name 'Name'                -MemberType Noteproperty -Value $NumberDetails.Name
+            $CallLine | Add-Member -Name 'Surname'             -MemberType Noteproperty -Value $NumberDetails.Surname
+            $CallLine | Add-Member -Name 'Description'         -MemberType Noteproperty -Value $NumberDetails.Description
+            $CallLine | Add-Member -Name 'Category'            -MemberType Noteproperty -Value $NumberDetails.Category
+            $CallLine | Add-Member -Name 'Type'                -MemberType Noteproperty -Value $NumberDetails.Type
             
             # Add lines to $Array
             $Array += $CallLine
@@ -12403,7 +12947,7 @@ Function Get-VOIPFullCallLogLineX {
     }
 }
 
-Function Get-VOIPFullCallLogLineXSummary {
+Function Get-BBOXVOIPFullCallLogLineXSummary {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12411,7 +12955,7 @@ Function Get-VOIPFullCallLogLineXSummary {
     )
     
     # Get information from Box API
-    $Data = Get-VOIPFullCallLogLine -UrlToGo $UrlToGo
+    $Data = Get-BBOXVOIPFullCallLogLine -UrlToGo $UrlToGo
     $PhoneNumbers = $Data.number | Select-Object -Unique
     
     # Create array
@@ -12425,6 +12969,8 @@ Function Get-VOIPFullCallLogLineXSummary {
         $Details | ForEach-Object {$CallTime = $CallTime + $_.'Call Time (Default)'}
         $TotalCallTime = New-TimeSpan -Seconds $CallTime
         
+        $NumberDetails = $global:PhoneNumberReferential | Where-Object {$_.Number -ilike $Number}
+        
         # Create New PSObject and add values to array
         $CallLine = New-Object -TypeName PSObject
         $CallLine | Add-Member -Name 'Number'                                                -MemberType Noteproperty -Value $Number
@@ -12436,6 +12982,11 @@ Function Get-VOIPFullCallLogLineXSummary {
         $CallLine | Add-Member -Name 'Call Incoming Out Range Call (Active rule) Count'      -MemberType Noteproperty -Value $($Details.'Call Type' | Where-Object {$_ -match "Incoming Out Range Call (Active rule)"}).count
         $CallLine | Add-Member -Name 'Call Outgoing Count'                                   -MemberType Noteproperty -Value $($Details.'Call Type' | Where-Object {$_ -match "Outgoing"}).count
         $CallLine | Add-Member -Name 'Total Call Time'                                       -MemberType Noteproperty -Value $TotalCallTime
+        $CallLine | Add-Member -Name 'Name'                                                  -MemberType Noteproperty -Value $NumberDetails.Name
+        $CallLine | Add-Member -Name 'Surname'                                               -MemberType Noteproperty -Value $NumberDetails.Surname
+        $CallLine | Add-Member -Name 'Description'                                           -MemberType Noteproperty -Value $NumberDetails.Description
+        $CallLine | Add-Member -Name 'Category'                                              -MemberType Noteproperty -Value $NumberDetails.Category
+        $CallLine | Add-Member -Name 'Type'                                                  -MemberType Noteproperty -Value $NumberDetails.Type
         
         # Add lines to $Array
         $Array += $CallLine
@@ -12444,26 +12995,28 @@ Function Get-VOIPFullCallLogLineXSummary {
     Return $Array
 }
 
-Function Get-VOIPFullCallLogLineXPhoneNumber {
+Function Get-BBOXVOIPFullCallLogLineXPhoneNumber {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $VOIPFullCallLogLineXPhoneNumberIDs = Get-VOIPFullCallLogLineXPhoneNumber -UrlToGo $UrlToGo
+    $VOIPFullCallLogLineXPhoneNumberIDs = Get-BBOXVOIPFullCallLogLine -UrlToGo $UrlToGo
+    
     If ($global:TriggerExportConfig -eq $true) {
         $VOIPFullCallLogLineXPhoneNumberID = $VOIPFullCallLogLineXPhoneNumberIDs | Select-Object -Property Number -First 1 -Unique
     }
     Else {
-        $VOIPFullCallLogLineXPhoneNumberID = $VOIPFullCallLogLineXPhoneNumberIDs | Select-Object -Property Number | Out-GridView -Title "Phone Number List" -OutputMode Single
+        $VOIPFullCallLogLineXPhoneNumberID = $VOIPFullCallLogLineXPhoneNumberIDs | Select-Object -Property Number -Unique | Out-GridView -Title "Phone Number List" -OutputMode Single
     }
-    $VOIPFullCallLogLineXPhoneNumbers = $VOIPFullCallLogLineXPhoneNumberIDs | Where-Object {$_.ID -ilike $VOIPFullCallLogLineXPhoneNumberID.Number}
+    
+    $VOIPFullCallLogLineXPhoneNumbers = $VOIPFullCallLogLineXPhoneNumberIDs | Where-Object {$_.number -ilike $VOIPFullCallLogLineXPhoneNumberID.Number}
     
     Return $VOIPFullCallLogLineXPhoneNumbers
 }
 
-Function Get-VOIPAllowedListNumber {
+Function Get-BBOXVOIPAllowedListNumber {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12471,7 +13024,7 @@ Function Get-VOIPAllowedListNumber {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12485,10 +13038,22 @@ Function Get-VOIPAllowedListNumber {
         
         While ($Number -lt $Json.Count) {
             
+            # Get Phone Numer Detail
+            $Prefixe       = $Json[$Number].number[0..2] -join ""
+            $PhoneNumber   = $Json[$Number].number.replace($Prefixe,"0")
+            $NumberDetails = $global:PhoneNumberReferential | Where-Object {$_.Number -ilike $PhoneNumber}
+            
             # Create New PSObject and add values to array
             $NumberLine = New-Object -TypeName PSObject
-            $NumberLine | Add-Member -Name 'ID'     -MemberType Noteproperty -Value $Json[$Number].id
-            $NumberLine | Add-Member -Name 'Number' -MemberType Noteproperty -Value $Json[$Number].number
+            $NumberLine | Add-Member -Name 'ID'          -MemberType Noteproperty -Value $Json[$Number].id
+            $NumberLine | Add-Member -Name 'Full Number' -MemberType Noteproperty -Value $Json[$Number].Number
+            $NumberLine | Add-Member -Name 'Prefixe'     -MemberType Noteproperty -Value $Prefixe
+            $NumberLine | Add-Member -Name 'Number'      -MemberType Noteproperty -Value $PhoneNumber
+            $NumberLine | Add-Member -Name 'Name'        -MemberType Noteproperty -Value $NumberDetails.Name
+            $NumberLine | Add-Member -Name 'Surname'     -MemberType Noteproperty -Value $NumberDetails.Surname
+            $NumberLine | Add-Member -Name 'Description' -MemberType Noteproperty -Value $NumberDetails.Description
+            $NumberLine | Add-Member -Name 'Category'    -MemberType Noteproperty -Value $NumberDetails.Category
+            $NumberLine | Add-Member -Name 'Type'        -MemberType Noteproperty -Value $NumberDetails.Type
             
             # Add lines to $Array
             $Array += $NumberLine
@@ -12508,7 +13073,7 @@ Function Get-VOIPAllowedListNumber {
 
 #region WAN
 
-Function Get-WANAutowanConfig {
+Function Get-BBOXWANAutowanConfig {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12516,7 +13081,7 @@ Function Get-WANAutowanConfig {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12526,15 +13091,15 @@ Function Get-WANAutowanConfig {
     
     # Create New PSObject and add values to array
     $AutoWanLine = New-Object -TypeName PSObject
-    $AutoWanLine  | Add-Member -Name 'Model'            -MemberType Noteproperty -Value $Json.device.model
-    $AutoWanLine  | Add-Member -Name 'Firmware Version' -MemberType Noteproperty -Value $Json.device.firmware.main
-    $AutoWanLine  | Add-Member -Name 'Firmware Date'    -MemberType Noteproperty -Value $(Edit-Date -Date $Json.device.firmware.date)
-    $AutoWanLine  | Add-Member -Name 'WAN IP Address'   -MemberType Noteproperty -Value $Json.ip.address
-    $AutoWanLine  | Add-Member -Name 'WAN Bytel DNS'    -MemberType Noteproperty -Value $($(Resolve-DnsName -Name $Json.ip.address -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).NameHost -join ',') # Not included in API
-    $AutoWanLine  | Add-Member -Name 'Profile Device'   -MemberType Noteproperty -Value $Json.Profile.device
-    $AutoWanLine  | Add-Member -Name 'Profile Active'   -MemberType Noteproperty -Value $Json.Profile.active
-    $AutoWanLine  | Add-Member -Name 'IGMP State'       -MemberType Noteproperty -Value (Get-State -State $Json.Services.igmp)
-    $AutoWanLine  | Add-Member -Name 'VOIP State'       -MemberType Noteproperty -Value (Get-State -State $Json.Services.voip)
+    $AutoWanLine | Add-Member -Name 'Model'            -MemberType Noteproperty -Value $Json.device.model
+    $AutoWanLine | Add-Member -Name 'Firmware Version' -MemberType Noteproperty -Value $Json.device.firmware.main
+    $AutoWanLine | Add-Member -Name 'Firmware Date'    -MemberType Noteproperty -Value $(Edit-Date -Date $Json.device.firmware.date)
+    $AutoWanLine | Add-Member -Name 'WAN IP Address'   -MemberType Noteproperty -Value $Json.ip.address
+    $AutoWanLine | Add-Member -Name 'WAN Bytel DNS'    -MemberType Noteproperty -Value $($(Resolve-DnsName -Name $Json.ip.address -ErrorAction SilentlyContinue -WarningAction SilentlyContinue).NameHost -join ',') # Not included in API
+    $AutoWanLine | Add-Member -Name 'Profile Device'   -MemberType Noteproperty -Value $Json.Profile.device
+    $AutoWanLine | Add-Member -Name 'Profile Active'   -MemberType Noteproperty -Value $Json.Profile.active
+    $AutoWanLine | Add-Member -Name 'IGMP State'       -MemberType Noteproperty -Value (Get-State -State $Json.Services.igmp)
+    $AutoWanLine | Add-Member -Name 'VOIP State'       -MemberType Noteproperty -Value (Get-State -State $Json.Services.voip)
     
     # Add lines to $Array
     $Array += $AutoWanLine
@@ -12542,7 +13107,7 @@ Function Get-WANAutowanConfig {
     Return $Array
 }
 
-Function Get-WANAutowanProfiles {
+Function Get-BBOXWANAutowanProfiles {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12550,7 +13115,7 @@ Function Get-WANAutowanProfiles {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12597,7 +13162,7 @@ Function Get-WANAutowanProfiles {
     Return $Array
 }
 
-Function Get-WANDiags {
+Function Get-BBOXWANDiags {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12605,7 +13170,7 @@ Function Get-WANDiags {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create arrays
     $Array = @()
@@ -12685,7 +13250,7 @@ Function Get-WANDiags {
     Return $Array
 }
 
-Function Get-WANDiagsSessions {
+Function Get-BBOXWANDiagsSessions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12693,7 +13258,7 @@ Function Get-WANDiagsSessions {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12739,7 +13304,7 @@ Function Get-WANDiagsSessions {
     }
 }
 
-Function Get-WANDiagsSummaryHostsActiveSessions {
+Function Get-BBOXWANDiagsSummaryHostsActiveSessions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12747,7 +13312,7 @@ Function Get-WANDiagsSummaryHostsActiveSessions {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12787,7 +13352,7 @@ Function Get-WANDiagsSummaryHostsActiveSessions {
     }
 }
 
-Function Get-WANDiagsAllActiveSessions {
+Function Get-BBOXWANDiagsAllActiveSessions {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12797,7 +13362,7 @@ Function Get-WANDiagsAllActiveSessions {
     # Create array
     $Array = @()
     
-    $NbPages = $(Get-BoxInformation -UrlToGo $UrlToGo).pages + 1
+    $NbPages = $(Get-BBOXInformation -UrlToGo $UrlToGo).pages + 1
     $Currentpage = 1
     $Choice = ''
     
@@ -12827,7 +13392,7 @@ Function Get-WANDiagsAllActiveSessions {
         While ($Currentpage -ne $NbPages) {
             
             $SessionPage = "$UrlToGo/$Currentpage"
-            $Json = Get-BoxInformation -UrlToGo $SessionPage
+            $Json = Get-BBOXInformation -UrlToGo $SessionPage
             
             While ($Line -lt $Json.Count) {
                 
@@ -12869,7 +13434,7 @@ Function Get-WANDiagsAllActiveSessions {
         $SessionPage = "$UrlToGo/$Currentpage"
         $Date = Get-Date
         # Get information from Box API
-        $Json = Get-BoxInformation -UrlToGo $SessionPage
+        $Json = Get-BBOXInformation -UrlToGo $SessionPage
         $Line = 0
         
         While ($Line -lt $Json.Count) {
@@ -12909,14 +13474,14 @@ Function Get-WANDiagsAllActiveSessions {
     Return $Array
 }
 
-Function Get-WANDiagsAllActiveSessionsHost {
+Function Get-BBOXWANDiagsAllActiveSessionsHost {
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $AllActiveSessions = Get-WANDiagsAllActiveSessions -UrlToGo $UrlToGo
+    $AllActiveSessions = Get-BBOXWANDiagsAllActiveSessions -UrlToGo $UrlToGo
     If ($global:TriggerExportConfig -eq $true) {
         $HostID = $AllActiveSessions | Select-Object -Property 'Source IP Address','Source HostName' -First 1
     }
@@ -12928,7 +13493,7 @@ Function Get-WANDiagsAllActiveSessionsHost {
     Return $HostAllActiveSessions
 }
 
-Function Get-WANFTTHStats {
+Function Get-BBOXWANFTTHStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12936,7 +13501,7 @@ Function Get-WANFTTHStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -12956,7 +13521,7 @@ Function Get-WANFTTHStats {
     Return $Array
 }
 
-Function Get-WANIP {
+Function Get-BBOXWANIP {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -12964,7 +13529,7 @@ Function Get-WANIP {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13041,7 +13606,7 @@ Function Get-WANIP {
     Return $Array
 }
 
-Function Get-WANIPStats {
+Function Get-BBOXWANIPStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13049,7 +13614,7 @@ Function Get-WANIPStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13084,7 +13649,7 @@ Function Get-WANIPStats {
     Return $Array
 }
 
-Function Get-WANXDSL {
+Function Get-BBOXWANXDSL {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13092,7 +13657,7 @@ Function Get-WANXDSL {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13131,7 +13696,7 @@ Function Get-WANXDSL {
     Return $Array
 }
 
-Function Get-WANXDSLStats {
+Function Get-BBOXWANXDSLStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13139,7 +13704,7 @@ Function Get-WANXDSLStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13162,7 +13727,7 @@ Function Get-WANXDSLStats {
     Return $Array
 }
 
-function Get-WANSFF {
+function Get-BBOXWANSFF {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13170,7 +13735,7 @@ function Get-WANSFF {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13207,7 +13772,7 @@ function Get-WANSFF {
 
 #region WIRELESS
 
-Function Get-WIRELESS {
+Function Get-BBOXWIRELESS {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13218,7 +13783,7 @@ Function Get-WIRELESS {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13286,7 +13851,7 @@ Function Get-WIRELESS {
     $WIRELESSLine | Add-Member -Name '5,2Ghz WPS Avalability'           -MemberType Noteproperty -Value (Get-YesNoAsk -YesNoAsk $Json.ssid.'5'.wps.available)
     $WIRELESSLine | Add-Member -Name '5,2Ghz WPS Status'                -MemberType Noteproperty -Value (Get-Status -Status $Json.ssid.'5'.wps.status)
     
-    $WIRELESSLine | Add-Member -Name '5,2Ghz Capabilities'              -MemberType Noteproperty -Value $(Get-WIRELESS5GHCAPABILITIES -Capabilities $Json.capabilities.'5')
+    $WIRELESSLine | Add-Member -Name '5,2Ghz Capabilities'              -MemberType Noteproperty -Value $(Get-BBOXWIRELESS5GHCAPABILITIES -Capabilities $Json.capabilities.'5')
     
     # Add lines to $Array
     $Array += $WIRELESSLine
@@ -13294,7 +13859,7 @@ Function Get-WIRELESS {
     Return $Array
 }
 
-Function Get-WIRELESSSTANDARD {
+Function Get-BBOXWIRELESSSTANDARD {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13302,7 +13867,7 @@ Function Get-WIRELESSSTANDARD {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13343,7 +13908,7 @@ Function Get-WIRELESSSTANDARD {
     Return $Array
 }
 
-Function Get-WIRELESS24Ghz {
+Function Get-BBOXWIRELESS24Ghz {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13351,7 +13916,7 @@ Function Get-WIRELESS24Ghz {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13391,7 +13956,7 @@ Function Get-WIRELESS24Ghz {
     Return $Array
 }
 
-Function Get-WIRELESS5Ghz {
+Function Get-BBOXWIRELESS5Ghz {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13399,7 +13964,7 @@ Function Get-WIRELESS5Ghz {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13436,7 +14001,7 @@ Function Get-WIRELESS5Ghz {
     $WIRELESSLine | Add-Member -Name 'Security Protocol'     -MemberType Noteproperty -Value $Json.ssid.'5'.security.protocol
     $WIRELESSLine | Add-Member -Name 'Encryption'            -MemberType Noteproperty -Value $Json.ssid.'5'.security.encryption
     $WIRELESSLine | Add-Member -Name 'Passphrase'            -MemberType Noteproperty -Value $Json.ssid.'5'.security.passphrase
-    $WIRELESSLine | Add-Member -Name 'Capabilities'          -MemberType Noteproperty -Value $(Get-WIRELESS5GHCAPABILITIES -Capabilities $Json.capabilities.'5')
+    $WIRELESSLine | Add-Member -Name 'Capabilities'          -MemberType Noteproperty -Value $(Get-BBOXWIRELESS5GHCAPABILITIES -Capabilities $Json.capabilities.'5')
     $WIRELESSLine | Add-Member -Name 'Advanced'              -MemberType Noteproperty -Value $Json.Advanced
     
     # Add lines to $Array
@@ -13445,7 +14010,7 @@ Function Get-WIRELESS5Ghz {
     Return $Array
 }
 
-Function Get-WIRELESS5GHCAPABILITIES {
+Function Get-BBOXWIRELESS5GHCAPABILITIES {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13479,7 +14044,7 @@ Function Get-WIRELESS5GHCAPABILITIES {
     Return $Array
 }
 
-Function Get-WIRELESSStats {
+Function Get-BBOXWIRELESSStats {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13487,7 +14052,7 @@ Function Get-WIRELESSStats {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13513,7 +14078,7 @@ Function Get-WIRELESSStats {
     Return $Array
 }
 
-Function Get-WIRELESSACL {
+Function Get-BBOXWIRELESSACL {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13521,7 +14086,7 @@ Function Get-WIRELESSACL {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13541,7 +14106,7 @@ Function Get-WIRELESSACL {
     Return $Array
 }
 
-Function Get-WIRELESSACLRules {
+Function Get-BBOXWIRELESSACLRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13549,7 +14114,7 @@ Function Get-WIRELESSACLRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13583,7 +14148,7 @@ Function Get-WIRELESSACLRules {
     }
 }
 
-Function Get-WIRELESSACLRulesID {
+Function Get-BBOXWIRELESSACLRulesID {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13602,7 +14167,7 @@ Function Get-WIRELESSACLRulesID {
     Return $WIRELESSACLHost
 }
 
-Function Get-WIRELESSFastScanMe {
+Function Get-BBOXWIRELESSFastScanMe {
 
     Param (
         [Parameter(Mandatory=$True)]
@@ -13610,7 +14175,7 @@ Function Get-WIRELESSFastScanMe {
     )
 
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13630,7 +14195,7 @@ Function Get-WIRELESSFastScanMe {
     Return $Array
 }
 
-Function Get-WIRELESSFrequencyNeighborhoodScanID {
+Function Get-BBOXWIRELESSFrequencyNeighborhoodScanID {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13638,7 +14203,7 @@ Function Get-WIRELESSFrequencyNeighborhoodScanID {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13676,7 +14241,7 @@ Function Get-WIRELESSFrequencyNeighborhoodScanID {
     }
 }
 
-Function Get-WIRELESSScheduler {
+Function Get-BBOXWIRELESSScheduler {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13684,7 +14249,7 @@ Function Get-WIRELESSScheduler {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13717,7 +14282,7 @@ Function Get-WIRELESSScheduler {
     Return $Array
 }
 
-Function Get-WIRELESSSchedulerRules {
+Function Get-BBOXWIRELESSSchedulerRules {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13725,7 +14290,7 @@ Function Get-WIRELESSSchedulerRules {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13761,7 +14326,7 @@ Function Get-WIRELESSSchedulerRules {
     }
 }
 
-Function Get-WIRELESSRepeater {
+Function Get-BBOXWIRELESSRepeater {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13769,7 +14334,7 @@ Function Get-WIRELESSRepeater {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13797,7 +14362,7 @@ Function Get-WIRELESSRepeater {
     Return $Array
 }
 
-function Get-WIRELESSVideoBridgeSetTopBoxes {
+function Get-BBOXWIRELESSVideoBridgeSetTopBoxes {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13805,7 +14370,7 @@ function Get-WIRELESSVideoBridgeSetTopBoxes {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13835,7 +14400,7 @@ function Get-WIRELESSVideoBridgeSetTopBoxes {
     Return $Array
 }
 
-function Get-WIRELESSVideoBridgeRepeaters {
+function Get-BBOXWIRELESSVideoBridgeRepeaters {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13843,7 +14408,7 @@ function Get-WIRELESSVideoBridgeRepeaters {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13877,7 +14442,7 @@ function Get-WIRELESSVideoBridgeRepeaters {
 
 #region WPS
 
-Function Get-WIRELESSWPS {
+Function Get-BBOXWIRELESSWPS {
     
     Param (
         [Parameter(Mandatory=$True)]
@@ -13885,7 +14450,7 @@ Function Get-WIRELESSWPS {
     )
     
     # Get information from Box API
-    $Json = Get-BoxInformation -UrlToGo $UrlToGo
+    $Json = Get-BBOXInformation -UrlToGo $UrlToGo
     
     # Create array
     $Array = @()
@@ -13908,38 +14473,715 @@ Function Get-WIRELESSWPS {
 
 #endregion WPS
 
-#endregion
+#endregion Get Function
 
-#region set function
+#region Set function
 
-Function Set-DeviceReboot {
+Function Set-BBOXDeviceReboot {
+    
+    <#
+    .SYNOPSIS
+        Reboot the box
+        
+    .DESCRIPTION
+        Reboot the box with token ID
+        
+    .PARAMETER UrlToGo
+        This is the Url to reboot the box
+        
+    .EXAMPLE
+        It is possible to do it localy and remotly
+        SET-BBOXDeviceReboot -UrlToGo 'https://192.168.1.254/api/v1/device/reboot'
+        
+    .INPUTS
+        [String]$UrlToGo
+        [String]$Token
+        
+    .OUTPUTS
+        Box reboote
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-BBOXDeviceToken', ''
+        linked to script : '.\BBOX-Administration.psm1'
+    #>
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $Token = Get-DeviceToken -UrlToGo $UrlToGo
+    $Token = Get-BBOXDeviceToken -UrlToGo $UrlToGo
     $Token = ($Token | Where-Object {$_.Description -like 'Token'}).value
     $UrlToGo = $UrlToGo.replace('token','reboot?btoken=')
     $UrlToGo = "$UrlToGo$Token"
-    Write-log INFO -Name 'Program run - Device Reboot' -Message 'Send reboot command ...' -NotDisplay
-    #Set-BoxInformation -UrlToGo $UrlToGo
+    Write-log INFO -Category 'Program run' -Name 'Device Reboot' -Message 'Send reboot command ...' -NotDisplay
+    #Set-BBOXInformation -UrlToGo $UrlToGo
 }
 
-Function Set-DeviceResetFactory {
+Function Set-BBOXDeviceResetFactory {
+    
+    <#
+    .SYNOPSIS
+        Reset to factory the box
+        
+    .DESCRIPTION
+        Reset to factory the box with token ID
+        
+    .PARAMETER UrlToGo
+        This is the Url to reset the box
+        
+    .EXAMPLE
+        It is possible to do it only localy
+        Set-BBOXDeviceResetFactory -UrlToGo 'https://192.168.1.254/api/v1/device/factory'
+        
+    .INPUTS
+        [String]$UrlToGo
+        [String]$Token
+        
+    .OUTPUTS
+        Box reseted
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-BBOXDeviceToken', ''
+        linked to script : '.\BBOX-Administration.psm1'
+    #>
     
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
     )
     
-    $Token = Get-DeviceToken -UrlToGo $UrlToGo
+    $Token = Get-BBOXDeviceToken -UrlToGo $UrlToGo
     $Token = ($Token | Where-Object {$_.Description -like 'Token'}).value
     $UrlToGo = $UrlToGo.replace('token','factory?btoken=')
     $UrlToGo = "$UrlToGo$Token"
-    Write-log INFO -Name 'Program run - Device Factory Reset' -Message 'Send Factory reset command ...' -NotDisplay
-    #Set-BoxInformation -UrlToGo $UrlToGo
+    Write-log INFO -Category 'Program run' -Name 'Device Factory Reset' -Message 'Send Factory reset command ...' -NotDisplay
+    #Set-BBOXInformation -UrlToGo $UrlToGo
 }
 
-#endregion set function
+#endregion Set function
+
+#region Others
+
+# To Show Referential Contact for BBox
+function Show-BBOXReferentialContact {
+    
+    <#
+    .SYNOPSIS
+        To show contact in the referencial for Bytel Box
+        
+    .DESCRIPTION
+        To show contact in the referencial for Bytel Box
+        
+    .PARAMETER
+        No parameter, values are asked directly in function
+        
+    .EXAMPLE
+        Show-ReferentialContact
+        
+    .INPUTS
+        $global:PhoneNumberReferential
+        
+    .OUTPUTS
+        [PSCustomObject]@{
+            PhoneNumber = $TextBox0.Text
+            Prefixe     = $TextBox1.Text
+            Number      = $TextBox2.Text
+            Name        = $TextBox3.Text
+            Surname     = $TextBox4.Text
+            Description = $TextBox5.Text
+            Category    = $TextBox6.Text
+            Type        = $TextBox7.Text
+        }
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : ''
+        linked to script : '.\BOX-Module.psm1'
+    #>
+    
+    Param()
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'Start Show Referential Contact' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'Show Referential Contact Status :' -NotDisplay
+    
+    Try {
+        # Display contact Information from BBox
+        $global:PhoneNumberReferential | Out-GridView -Title "Referential Contact for BBox" -Wait -ErrorAction Stop
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Show Referential Contact' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program Run' -Name 'Show Referential Contact' -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'End Show Referential Contact' -NotDisplay
+    
+}
+
+# To Add New Referential Contact for BBox
+function Add-BBOXNewReferentialContact {
+    
+    <#
+    .SYNOPSIS
+        To add new contact in the referencial for Bytel Box
+        
+    .DESCRIPTION
+        To add new contact in the referencial for Bytel Box
+        
+    .PARAMETER
+        No parameter, values are asked directly in function
+        
+    .EXAMPLE
+        Add-NewReferentialContact
+        
+    .INPUTS
+        Show-WindowsFormDialogBox8Inuput -MainFormTitle "Please complete this form :" -LabelMessageText0 "PhoneNumber :" -DefaultValue0 "+33102030405" -LabelMessageText1 "Prefixe :" -DefaultValue1 "+33" -LabelMessageText2 "Number :" -DefaultValue2 "0102030405" -LabelMessageText3 "Name :" -DefaultValue3 "DUPONT" -LabelMessageText4 "SurName :" -DefaultValue4 "Dupont" -LabelMessageText5 "Description :" -DefaultValue5 "This is the desciption of the contact" -LabelMessageText6 "Category :" -DefaultValue6 "Family / Friend / Others" -LabelMessageText7 "Type :" -DefaultValue7 "Mobile / Fixe" -OkButtonText "OK" -CancelButtonText "Cancel"
+        
+    .OUTPUTS
+        [PSCustomObject]@{
+            PhoneNumber = $TextBox0.Text
+            Prefixe     = $TextBox1.Text
+            Number      = $TextBox2.Text
+            Name        = $TextBox3.Text
+            Surname     = $TextBox4.Text
+            Description = $TextBox5.Text
+            Category    = $TextBox6.Text
+            Type        = $TextBox7.Text
+        }
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Show-WindowsFormDialogBox8Inuput'
+        linked to script : '.\BOX-Module.psm1'
+    #>
+    
+    Param()
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'Start Add New Referential Contact' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'Add New Referential Contact Status :' -NotDisplay
+    
+    Try {
+        # Get New contact Information from user inputs
+        $NewReferentialContact = Show-WindowsFormDialogBox8Inuput -MainFormTitle "Please complete this form :" -LabelMessageText0 "PhoneNumber :" -DefaultValue0 "+33102030405" -LabelMessageText1 "Prefixe :" -DefaultValue1 "+33" -LabelMessageText2 "Number :" -DefaultValue2 "0102030405" -LabelMessageText3 "Name :" -DefaultValue3 "DUPONT" -LabelMessageText4 "SurName :" -DefaultValue4 "Dupont" -LabelMessageText5 "Description :" -DefaultValue5 "This is the desciption of the contact" -LabelMessageText6 "Category :" -DefaultValue6 "Family / Friend / Others" -LabelMessageText7 "Type :" -DefaultValue7 "Mobile / Fixe" -OkButtonText "OK" -CancelButtonText "Cancel"
+        
+        # Add New contact to the referential
+        $global:PhoneNumberReferential += $NewReferentialContact
+        
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Add New Referential Contact' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program Run' -Name 'Add New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'End Add New Referential Contact' -NotDisplay
+    
+    # Export New Phone Number Referential to CSV file
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Start Export New Referential Contact' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Export New Referential Contact Status :' -NotDisplay
+    
+    Try { 
+        $global:PhoneNumberReferential | Export-Csv -Path $global:PhoneNumberReferentialFileNamePath -Force -Encoding utf8 -Delimiter ";"
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'End Export New Referential Contact' -NotDisplay
+}
+
+# To Remove Referential Contact for BBox
+function Remove-BBOXReferentialContact {
+    
+    <#
+    .SYNOPSIS
+        To Remove contact in the referencial for Bytel Box
+        
+    .DESCRIPTION
+        To Remove contact in the referencial for Bytel Box
+        
+    .PARAMETER
+        No parameter, values are asked directly in function
+        
+    .EXAMPLE
+        Remove-ReferentialContact
+        
+    .INPUTS
+        $global:PhoneNumberReferential
+        
+    .OUTPUTS
+        [PSCustomObject]@{
+            PhoneNumber = $TextBox0.Text
+            Prefixe     = $TextBox1.Text
+            Number      = $TextBox2.Text
+            Name        = $TextBox3.Text
+            Surname     = $TextBox4.Text
+            Description = $TextBox5.Text
+            Category    = $TextBox6.Text
+            Type        = $TextBox7.Text
+        }
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : ''
+        linked to script : '.\BOX-Module.psm1'
+    #>
+    
+    Param()
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'Start Remove Referential Contact' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'Remove Referential Contact Status :' -NotDisplay
+    
+    Try {
+        # Display contact Information from BBox
+        $RemoveReferentialContact = $global:PhoneNumberReferential | Out-GridView -Title "Referential Contact for BBox" -OutputMode Single -ErrorAction Stop
+        $RemoveReferentialContact
+        $KeepReferentialContact = $global:PhoneNumberReferential | Where-Object {$_.Number -notlike $RemoveReferentialContact.Number}
+        $KeepReferentialContact
+        $global:PhoneNumberReferential = $KeepReferentialContact
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Remove Referential Contact' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program Run' -Name 'Remove Referential Contact' -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'End Remove Referential Contact' -NotDisplay    
+    
+    # Export New Phone Number Referential to CSV file
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Start Export New Referential Contact' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Export New Referential Contact Status :' -NotDisplay
+    
+    Try { 
+        $global:PhoneNumberReferential | Export-Csv -Path $global:PhoneNumberReferentialFileNamePath -Force -Encoding utf8 -Delimiter ";"
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'End Export New Referential Contact' -NotDisplay    
+}
+
+#endregion Others
+
+#endregion BBox
+
+#region Freebox
+
+#region Errors code
+
+Function Get-FREEBOXErrorCode {
+    
+    <#
+    .SYNOPSIS
+        Get Error code and convert it to human readable
+
+    .DESCRIPTION
+        Get Error code and convert it to human readable
+
+    .PARAMETER Json
+        This the Json error code to convert
+
+    .EXAMPLE
+        Get-FREEBOXErrorCode -Json $JSON
+
+    .INPUTS
+        [Array]$Json
+        This the Json error code to convert
+
+    .OUTPUTS
+        [PSObject]$Array
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : '', ''
+        linked to script : '.\BBOX-Administration.psm1'
+    #>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [Array]$Json
+    )
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    $Json = $Json.exception
+
+    # Create New PSObject and add values to array
+    $ErrorLine = New-Object -TypeName PSObject
+    $ErrorLine | Add-Member -Name 'Success'       -MemberType Noteproperty -Value $Json.success
+    $ErrorLine | Add-Member -Name 'Message'       -MemberType Noteproperty -Value $Json.msg
+    $ErrorLine | Add-Member -Name 'ErrorCode'     -MemberType Noteproperty -Value $Json.error_code
+    $ErrorLine | Add-Member -Name 'UID'           -MemberType Noteproperty -Value $Json.uid
+    $ErrorLine | Add-Member -Name 'Password Salt' -MemberType Noteproperty -Value $Json.result.password_salt
+    $ErrorLine | Add-Member -Name 'Challenge'     -MemberType Noteproperty -Value $Json.result.challenge
+    
+    # Add lines to $Array
+    $Array += $ErrorLine
+    
+    Return $Array
+}
+
+Function Get-FREEBOXErrorCodeTest {
+    
+    <#
+    .SYNOPSIS
+        Get Error code and convert it to human readable
+
+    .DESCRIPTION
+        Get Error code and convert it to human readable
+
+    .PARAMETER Json
+        This the Json error code to convert
+
+    .EXAMPLE
+        Get-FREEBOXErrorCodeTest -Json $JSON
+
+    .INPUTS
+        [Array]$Json
+        This the Json error code to convert
+
+    .OUTPUTS
+        [PSObject]$Array
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : '', ''
+        linked to script : '.\BBOX-Administration.psm1'
+
+    #>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from Box API
+    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    #$Json = $Json.exception
+    
+    # Create New PSObject and add values to array
+    $ErrorLine = New-Object -TypeName PSObject
+    $ErrorLine | Add-Member -Name 'Success'       -MemberType Noteproperty -Value $Json.success
+    $ErrorLine | Add-Member -Name 'Message'       -MemberType Noteproperty -Value $Json.msg
+    $ErrorLine | Add-Member -Name 'ErrorCode'     -MemberType Noteproperty -Value $Json.error_code
+    $ErrorLine | Add-Member -Name 'UID'           -MemberType Noteproperty -Value $Json.uid
+    $ErrorLine | Add-Member -Name 'Password Salt' -MemberType Noteproperty -Value $Json.result.password_salt
+    $ErrorLine | Add-Member -Name 'Challenge'     -MemberType Noteproperty -Value $Json.result.challenge
+    
+    # Add lines to $Array
+    $Array += $ErrorLine
+    
+    Return $Array
+}
+
+#endregion Errors code
+
+#region Get Function
+
+#region API VERSION
+
+Function Get-FREEBOXAPIVersion {
+    
+    <#
+    .SYNOPSIS
+        To get all information about API version and associated Url
+        
+    .DESCRIPTION
+        To get all information about API version and associated Url
+        
+    .PARAMETER UrlToGo
+        This is the Url to get information about API version
+        
+    .EXAMPLE
+        Get-FREEBOXAPIVersion -UrlToGo 'https://mafreebox.freebox.fr/api/v4/api_version'
+        
+    .INPUTS
+        [String]$UrlToGo
+        This is the url to go to get API Version
+        
+    .OUTPUTS
+        [Array]$Array
+        This is the result of API Version information
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-FREEBOXInformation'
+        linked to script : '.\BBOX-Administration.psm1'
+    #>
+    
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from FREEBOX API
+    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Create New PSObject and add values to array
+    $APIVersionLine = New-Object -TypeName PSObject
+    $APIVersionLine | Add-Member -Name "Box Model Name"  -MemberType Noteproperty -Value $Json.box_model_name
+    $APIVersionLine | Add-Member -Name "Device Type"     -MemberType Noteproperty -Value $Json.device_type
+    $APIVersionLine | Add-Member -Name "BOX Model"       -MemberType Noteproperty -Value $Json.box_model
+    $APIVersionLine | Add-Member -Name "UID"             -MemberType Noteproperty -Value $Json.uid
+    $APIVersionLine | Add-Member -Name "HTTPS Port"      -MemberType Noteproperty -Value $Json.https_port
+    $APIVersionLine | Add-Member -Name "HTTPS Status"    -MemberType Noteproperty -Value $(Get-Status -Status $Json.https_available)
+    $APIVersionLine | Add-Member -Name "API Version"     -MemberType Noteproperty -Value $Json.api_version
+    $APIVersionLine | Add-Member -Name "API Base URL"    -MemberType Noteproperty -Value $Json.api_base_url
+    #$APIVersionLine | Add-Member -Name "APIVersion Name" -MemberType Noteproperty -Value $Json.APIVersion_name
+    $APIVersionLine | Add-Member -Name "API Domain"      -MemberType Noteproperty -Value $Json.api_domain
+    
+    # Add lines to $Array
+    $Array += $APIVersionLine
+    
+    Return $Array
+}
+
+#endregion API VERSION
+
+#region Contact/Annuary
+
+Function Get-FREEBOXContact {
+    
+    <#
+    .SYNOPSIS
+        To get All contacts details
+        
+    .DESCRIPTION
+        To get All contacts details
+        
+    .PARAMETER UrlToGo
+        This is the Url to get Contact Information
+        
+    .EXAMPLE
+        Get-FREEBOXContact -UrlToGo 'https://mafreebox.freebox.fr/api/v4/contact'
+        
+    .INPUTS
+        [String]$UrlToGo
+        This is the Url to get Contact Information
+        
+    .OUTPUTS
+        [Array]$Array
+        This is the array with all contacts information
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-FREEBOXInformation'
+        linked to script : '.\BBOX-Administration.psm1'
+#>
+    
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from FREEBOX API
+    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
+    $Json = $Json.result
+
+    # Create array
+    $Array = @()
+    
+    $ContactLine = 0
+    While ($ContactLine -lt $Json.count) {
+        
+        $numberLine = 0
+        While ($numberLine -lt $Json[$ContactLine].numbers.count) {
+            
+            # Create New PSObject and add values to array
+            $ContactLineList = New-Object -TypeName PSObject
+            $ContactLineList | Add-Member -Name "ID"            -MemberType Noteproperty -Value $Json[$ContactLine].id
+            $ContactLineList | Add-Member -Name "Display Name"  -MemberType Noteproperty -Value $Json[$ContactLine].display_name
+            $ContactLineList | Add-Member -Name "Last Name"     -MemberType Noteproperty -Value $Json[$ContactLine].last_name
+            $ContactLineList | Add-Member -Name "First Name"    -MemberType Noteproperty -Value $Json[$ContactLine].first_name
+            $ContactLineList | Add-Member -Name "Number"        -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].number
+            $ContactLineList | Add-Member -Name "Type"          -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].type
+            $ContactLineList | Add-Member -Name "Contact ID"    -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].contact_id
+            $ContactLineList | Add-Member -Name "Is default"    -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].is_default
+            $ContactLineList | Add-Member -Name "Is onw"        -MemberType Noteproperty -Value $Json[$ContactLine].numbers[$numberLine].is_own
+            $ContactLineList | Add-Member -Name "Birthday Date" -MemberType Noteproperty -Value $Json[$ContactLine].birthday
+            $ContactLineList | Add-Member -Name "Company"       -MemberType Noteproperty -Value $Json[$ContactLine].company
+            $ContactLineList | Add-Member -Name "Notes"         -MemberType Noteproperty -Value $Json[$ContactLine].notes
+            $ContactLineList | Add-Member -Name "Ulr Photo"     -MemberType Noteproperty -Value $Json[$ContactLine].photo_url
+            $ContactLineList | Add-Member -Name "Last Update"   -MemberType Noteproperty -Value $((Get-Date -Date "01/01/1970").addseconds($Json[$ContactLine].last_update))
+            
+            # Add lines to $Array
+            $Array += $ContactLineList
+
+            $numberLine ++
+        }
+    $ContactLine ++
+    }
+    Return $Array
+}
+
+#endregion Contacts/Annuary
+
+#region Call Log
+
+Function Get-FREEBOXCalllog {
+    
+    <#
+    .SYNOPSIS
+        To get all log call
+        
+    .DESCRIPTION
+        To get all log call
+        
+    .PARAMETER $UrlToGo
+        This is the Url to get Call Log information
+        
+    .EXAMPLE
+        Get-FREEBOXCalllog -UrlToGo 'https://mafreebox.freebox.fr/api/v4/call/log/'
+        
+    .INPUTS
+        [String]$UrlToGo
+        This is the Url to get Call Log information
+        
+    .OUTPUTS
+        [Array]$Array
+        This is the array with all call log information
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-FREEBOXInformation'
+        linked to script : '.\BBOX-Administration.psm1'
+#>
+    
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from FREEBOX API
+    $Json = Get-FREEBOXInformation -UrlToGo $UrlToGo
+    
+    # Create array
+    $Array = @()
+    
+    # Select $JSON header
+    $Json = $Json.result
+    
+    $Call = 0
+    
+    While ($Call -lt $Json.Count) {
+        
+        $CallTime = New-TimeSpan -Seconds $Json[$Call].duration
+        
+        # Create New PSObject and add values to array
+        $CallLine = New-Object -TypeName PSObject
+        $CallLine | Add-Member -Name "Call ID"      -MemberType Noteproperty -Value $Json[$Call].id
+        $CallLine | Add-Member -Name "Number"       -MemberType Noteproperty -Value "0$($Json[$Call].number)"
+        $CallLine | Add-Member -Name "Call Type"    -MemberType Noteproperty -Value $Json[$Call].type
+        $CallLine | Add-Member -Name "Duration"     -MemberType Noteproperty -Value "$($CallTime.Hours)h $($CallTime.Minutes)min $($CallTime.Seconds)s"
+        $CallLine | Add-Member -Name "Call Date"    -MemberType Noteproperty -Value $((Get-Date -Date "01/01/1970").addseconds($Json[$Call].datetime))
+        $CallLine | Add-Member -Name "Contact ID"   -MemberType Noteproperty -Value $Json[$Call].contact_id
+        $CallLine | Add-Member -Name "Line ID"      -MemberType Noteproperty -Value $Json[$Call].line_id
+        $CallLine | Add-Member -Name "Contact Name" -MemberType Noteproperty -Value $Json[$Call].name
+        $CallLine | Add-Member -Name "Is New ?"     -MemberType Noteproperty -Value $(Get-Status -Status $Json[$Call].new)
+        
+        # Add lines to $Array
+        $Array += $CallLine
+        
+        $Call ++
+    }
+    
+    Return $Array
+}
+
+Function Get-FREEBOXCalllogSummary {
+    
+    <#
+    .SYNOPSIS
+        To get all log call Summary
+        
+    .DESCRIPTION
+        To get all log call Summary
+        
+    .PARAMETER $UrlToGo
+        This is the Url to get Call Log information
+        
+    .EXAMPLE
+        Get-FREEBOXCalllogSummary -UrlToGo 'https://mafreebox.freebox.fr/api/v4/call/log/'
+        
+    .INPUTS
+        [String]$UrlToGo
+        This is the Url to get Call Log information
+        
+    .OUTPUTS
+        [Array]$Array
+        This is the array with all call log information
+
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        linked to functions : 'Get-FREEBOXInformation'
+        linked to script : '.\BBOX-Administration.psm1'
+#>
+    
+    Param(
+        [Parameter(Mandatory=$True)]
+        [String]$UrlToGo
+    )
+    
+    # Get information from FREEBOX API
+    $Data = Get-FREEBOXInformation -UrlToGo $UrlToGo
+    $PhoneNumbers = $Data.result.number | Select-Object -Unique
+        
+    # Create array
+    $Array = @()
+    
+    # Get details foreach Phone Numbers
+    Foreach ($Number in $PhoneNumbers) {
+        
+        $CallTime = $Null
+        $Details = $Data.result | Where-Object {$_.number -match $Number}
+        $Details | ForEach-Object {$CallTime = $CallTime + $_.duration}
+        $TotalCallTime = New-TimeSpan -Seconds $CallTime
+        $CallDate = $($Details | ForEach-Object {$((Get-Date -Date "01/01/1970").addseconds($_.datetime))}) -join ","
+        
+        # Create New PSObject and add values to array
+        $CallLine = New-Object -TypeName PSObject
+        $CallLine | Add-Member -Name "Call IDs"            -MemberType Noteproperty -Value $($Details.id -join ",")
+        $CallLine | Add-Member -Name 'Number'              -MemberType Noteproperty -Value $Number
+        $CallLine | Add-Member -Name 'Call Date'           -MemberType Noteproperty -Value $CallDate
+        $CallLine | Add-Member -Name 'Call Count'          -MemberType Noteproperty -Value $Details.Count
+        $CallLine | Add-Member -Name 'Call Type'           -MemberType Noteproperty -Value $($($Details.Type | Select-Object -Unique) -join ",")
+        $CallLine | Add-Member -Name 'Call Accepted Count' -MemberType Noteproperty -Value $($Details.Type | Where-Object {$_ -match "Accepted"}).count
+        $CallLine | Add-Member -Name "Call Missed Count"   -MemberType Noteproperty -Value $($Details.Type | Where-Object {$_ -match "Missed"}).count
+        $CallLine | Add-Member -Name 'Call Outgoing Count' -MemberType Noteproperty -Value $($Details.Type | Where-Object {$_ -match "Outgoing"}).count
+        $CallLine | Add-Member -Name 'Total Call Time'     -MemberType Noteproperty -Value $TotalCallTime
+        $CallLine | Add-Member -Name "Contact ID"          -MemberType Noteproperty -Value $($Details.contact_id | Select-Object -Unique)
+        $CallLine | Add-Member -Name "Line ID"             -MemberType Noteproperty -Value $($Details.line_id | Select-Object -Unique)
+        $CallLine | Add-Member -Name "Contact Name"        -MemberType Noteproperty -Value $($Details.name | Select-Object -Unique)
+        $CallLine | Add-Member -Name "Is New ?"            -MemberType Noteproperty -Value $(Get-Status -Status $($Details.new | Select-Object -Unique))
+        
+        # Add lines to $Array
+        $Array += $CallLine
+    }
+    
+    Return $Array
+}
+
+#endregion Call Log
+
+#endregion Get Function
+
+#region Set function
+
+#endregion Set function
+
+#endregion Freebox
+
+#endregion Switch-Info

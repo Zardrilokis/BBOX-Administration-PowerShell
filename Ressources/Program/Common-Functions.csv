@@ -22,6 +22,7 @@ SWITCH-OEF;Switch-OpenExportFolder;Switch Open Export Folder;Switch_Open_Export_
 SWITCH-OHR;Switch-OpenHTMLReport;Switch Open HTML Report;Switch_Open_HTML_Report;Switch_Open_HTML_Report;Switch;Computer;Computer;Program;Yes;Yes;HTML;html;Custom
 SWITCH-RDN;Switch-ResolveDnsName;Switch Resolve Dns Name;Switch_Resolve_Dns_Name;Switch_Resolve_Dns_Name;Switch;Computer;Computer;Program;Yes;Yes;List;resolve-dnsname;Custom
 REMOVE-BoxC;Remove-BoxCredential;Remove Box Credential stored in Windows Credential Manager;Remove_Box_Credential;Remove_Box_Credential;Remove;Computer;Computer;Program;Yes;Yes;List;remove-credential;Custom
+GET-BoxC;Get-BoxCredential;Get Box Credential stored in Windows Credential Manager;Get_Box_Credential;Get_Box_Credential;Get;Computer;Computer;Program;Yes;Yes;Table;get-credential;Custom
 SHOW-BoxC;Show-BoxCredential;Show Box Credential stored in Windows Credential Manager;Show_Box_Credential;Show_Box_Credential;Show;Computer;Computer;Program;Yes;Yes;List;show-credential;Custom
 ADD-BoxC;Add-BoxCredential;Add Box Credential in Windows Credential Manager;Add_Box_Credential;Add_Box_Credential;Add;Computer;Computer;Program;Yes;Yes;List;add-credential;Custom
 RESET-CUPC;Reset-CurrentUserProgramConfiguration;Reset Current User Program Configuration;Reset_Current_User_Program_Configuration;Reset_Current_User_Program_Configuration;Reset;Computer;Computer;Program;Yes;Yes;List;reset-current-user-program-configuration;Custom

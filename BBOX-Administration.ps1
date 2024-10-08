@@ -270,8 +270,8 @@
     Update       : Debug function : 'Get-PortStatus'
     Update       : Debug function : Switch-OpenExportFolder
 
-    Version 2.7 - Box version 23.7.10
-    Updated Date : 2024/09/06
+    Version 2.7 - Box version 23.7.12
+    Updated Date : 2024/10/06
     Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
     Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
     Update       : Update function : 'Get-WIRELESSACL' - Add parameter 'Rules Count'
@@ -327,7 +327,7 @@
     Update       : Add Box menu selection for end user
     Update       : Add 'Box.TypeList' and 'Box.Freebox' parameter in Json file : '.\Ressources\Settings-Program.json'
     Update       : Add New test files path ("Freebox-API-Summary.csv") from "Ressources" folder
-    Update       : Update function : 'Show-WindowsFormDialogBox4ChoicesCancel' - New WindowsForm with 4 Choices
+    Update       : Update function : 'Show-WindowsFormDialogBox4ChoicesCancel' - New WindowsForm with 4 Choices (Last is Cancel)
     Update       : Update function : 'Export-HTMLReport' - Change Html Footer Report
     Update       : Switch from Google Chrome Setup Installation to Google Chrome Standalone Installation
     Update       : Add testing New folders and files path for Standalone Google Chrome
@@ -407,10 +407,22 @@
     Update       : Add new function : 'Uninstall-TUNCredentialManager' to uninstall the module : 'TUNCredentialManager'
     Update       : Add new function : 'Uninstall-Program' to uninstall the program and all features
     Update       : Rename function from : 'Import-TUNCredentialManager' to : 'Install-TUNCredentialManager' for more understanding
-    Update       : Update log files for better understanding
     Update       : Cleaning old code lines that are only for devlopement and help to switch to the new web request type
-    Update       : Add Help 'Template' for each function and Powershell file to use 'Get-help' with it - Functions that Export data from API web request are not documented because this is the same function build
-
+    Update       : Add Help 'Template' for each function and Powershell file to use 'Get-help' with it - Functions that Export data from API web request are not documented because this is the same build
+    Update       : Update log files for better understanding - Add parameter '-Category' for better filtering logs when trouble shooting
+    Update       : Add new file configuration : '.\Ressources\Known-Phone-Number.csv' - This file can be manged manualy or by the program
+    Update       : Update function : 'Import-Referential' - Add 2 new Parameters : 'LogCategory' and 'LogName'
+    Update       : Update functions : 'Get-VOIPCallLogLineX', 'Get-VOIPCallLogLineXSummary', 'Get-VOIPFullCallLogLineX', 'Get-VOIPFullCallLogLineXSummary',  'Get-VOIPAllowedListNumber' - To have contact details based on CSV file for reference - To be completed manually or by the program it self
+    Update       : Add new function : 'Show-WindowsFormDialogBox8Inuput' - To allow user to give 5 inputs information
+    Update       : Add new function : 'Show-ReferentialContact' - To have a look the register contact for BBox
+    Update       : Add new function : 'Add-NewReferentialContact' - To add a new contact to BBox Annuary
+    Update       : Add new function : 'Remove-ReferentialContact' - To remove a contact from BBox Annuary
+    Update       : Add new function : 'Show-WindowsFormDialogBox5ChoicesCancel' - New WindowsForm with 5 Choices (Last is Cancel)
+    Update       : Rename All function to separate BOX's functions (BBox,FREEBox,ORANGEBox,SFRBox) for better understanding
+    Update       : Add new function : 'Get-BoxCredential' - To get All Box password registred in Windows Credential Manager
+    Update       : Modify configuration file : '.\Ressources\Settings-Program.json' - Reorganize schema for better understanding
+    Update       : Restructure folder and sub-folder of : "Ressources"
+    
 .LINKS
     
     https://maBBox.bytel.fr/
@@ -444,21 +456,29 @@ function Write-Log {
         [Parameter(Mandatory=$false)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
         $Type = 'INFO',
-        [Parameter(Mandatory=$true)]
-        $Message,
+        
+        [Parameter(Mandatory=$True)]
+        [ValidateSet('Program initialisation','Program Run','Program Stop')]
+        $Category = 'Program Run',
+        
         [Parameter(Mandatory=$true)]
         $Name,
+        
+        [Parameter(Mandatory=$true)]
+        $Message,
+        
         [Parameter()]
         [switch]$NotDisplay,
+        
         [Parameter(Mandatory=$false)]
         $Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
     )
     
-    $logpath = $Logname + '.csv'
+    $LogPath = $Logname + '.csv'
     
     # Create log object 
-    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; user= $(whoami) ; Type=$type ; Name=$name ; Message=$Message} 
-    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.date + ' : ' + $this.type +' : ' +$this.name +' : ' + $this.Message} -Force 
+    $log = [pscustomobject] @{Date=(Get-Date -UFormat %Y%m%d_%H%M%S) ; PID=$PID ; User= $(whoami) ; Type=$Yype ; Category=$Category ; Name=$Name ; Message=$Message} 
+    $log | Add-Member -Name ToString -MemberType ScriptMethod -value {$this.Date + ' : ' + $this.Type + ' : ' + $this.Category + ' : ' +$this.Name + ' : ' + $this.Message} -Force 
     
     # Append to global journal
     [Object[]] $Global:journal += $log.toString()
@@ -493,10 +513,10 @@ function Write-Log {
         $mtx.WaitOne() | Out-Null
 	    # Write Header if file don't exists yet
         
-        If (-not (Test-Path $logpath)) {
-            Out-File -FilePath $logpath -Encoding unicode -Append -InputObject "date;pid;user;type;name;message" 
+        If (-not (Test-Path $LogPath)) {
+            Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "Date;PID;User;Type;Category;Name;Message" 
         }
-        Out-File -FilePath $logpath -Encoding unicode -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.name);$($Log.Message)" 
+        Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "$($Log.Date);$($Log.PID);$($Log.User);$($Log.Type);$($Log.Category);$($Log.Name);$($Log.Message)" 
     }
     Finally {
         $mtx.ReleaseMutex()
@@ -526,8 +546,10 @@ $TranscriptFileNamePath    = "$global:LogDateFolderNamePath\$global:TranscriptFi
 # System Json Configuration files
 $global:RessourcesFolderName                 = 'Ressources'
 $global:RessourcesFolderNamePath             = "$ScriptRootFolderPath\$global:RessourcesFolderName"
-$ProgramConfigurationFileSettings            = 'Settings-Program.json'
-$global:ProgramConfigurationFileSettingsPath = "$global:RessourcesFolderNamePath\$ProgramConfigurationFileSettings"
+$ProgramFolderName                           = 'Program'
+$ProgramRessourcesFolderNamePath             = "$global:RessourcesFolderNamePath\$ProgramFolderName"
+$ProgramConfigurationSettingsFileName        = 'Settings-Program.json'
+$global:ProgramConfigurationFileSettingsPath = "$ProgramRessourcesFolderNamePath\$ProgramConfigurationSettingsFileName"
 
 # Main Trigger
 $global:TriggerExitUser         = $Null
@@ -551,37 +573,40 @@ $DYNDNS     = $Null
 #region Start Program initialisation
 
 Start-Transcript -Path $TranscriptFileNamePath -Append -Force -NoClobber
-Write-Log -Type WARNING -Name 'Program initialisation - Start Initialisation' -Message '#################################################### Initialisation #####################################################'
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message 'Start Program initialisation' -NotDisplay
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message 'Program Initialisation takes times due to :'
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message '- If Standalone Chrome Driver and Google Chrome version need to be updated or not'
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message '- Your internet speed connexion'
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message '- Your computer performance'
-Write-Log -Type INFO    -Name 'Program initialisation - Start Initialisation' -Message 'Program loading ...'
+Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Start Initialisation' -Message '#################################################### Initialisation #####################################################'
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message 'Start Program initialisation' -NotDisplay
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message 'Program Initialisation takes times due to :'
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message '- If Standalone Chrome Driver and Google Chrome version need to be updated or not'
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message '- Your internet speed connexion'
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message '- Your computer performance'
+Write-Log -Type INFO    -Category 'Program initialisation' -Name 'Start Initialisation' -Message 'Program loading ...'
 
 #endregion Start Program initialisation
 
 #region Create logs folder
-Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Step 1/10) : Logs Folder Creation'
+
+$Category = 'Program initialisation'
+$LogName  = 'Logs Folder Creation'
+Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Step 1/10) : Logs Folder Creation'
 
 If (-not (Test-Path -Path $ScriptRootFolderPath)) {
     
-    Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Logs Folder Creation' -Message 'Start Logs Folder Creation status : ' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Logs Folder Creation' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Logs Folder Creation status : ' -NotDisplay
 
     Try {
         $Null = New-Item -Path $ScriptRootFolderPath -Name $global:LogFolderName -ItemType Directory -Force -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Successful' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Logs Folder Creation' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Logs Folder Creation' -Message "Failed, due to :$($_.string())" -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, due to :$($_.string())" -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Logs Folder Creation' -NotDisplay
     }
 }
 Else {
-    Write-Log -Type VALUE -Name 'Program initialisation - Logs Folder Creation' -Message 'Already exist' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Logs Folder Creation' -Message 'End Logs Folder Creation' -NotDisplay
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Already exist' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Logs Folder Creation' -NotDisplay
 }
 
 #endregion Create logs folder
@@ -590,19 +615,22 @@ Else {
 
 If ($Null -eq $global:TriggerExitSystem) {
 
-    Write-Log -Type VALUE -Name 'Program initialisation - Import JSON Settings Program' -Message 'Step 2/10) : Import JSON Settings Program'
-    Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Start Import JSON Settings Program' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Import JSON Settings Program' -Message 'Import JSON Settings Program Status : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Import JSON Settings Program'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Step 2/10) : JSON Settings Program Importation'
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Import JSON Settings Program' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Import JSON Settings Program Status : ' -NotDisplay
     Try {
         $global:JSONSettingsProgramContent = Get-Content -Path $global:ProgramConfigurationFileSettingsPath -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Import JSON Settings Program' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Import JSON Settings Program' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, due to : $($_.ToString())"
         $global:JSONSettingsProgramContent = $Null
         $global:TriggerExitSystem = 1
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Import JSON Settings Program' -Message 'End Import JSON Settings Program' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Import JSON Settings Program' -NotDisplay
 }
 
 #endregion Import System Json Configuration files
@@ -611,73 +639,83 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsProgramContent)) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Step 3/10) : Load JSON Settings Program'
-    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Start Load JSON Settings Program' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message "JSON Settings Program file path : $global:ProgramConfigurationFileSettingsPath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Load JSON Settings Program' -Message 'Load JSON Settings Program Status : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Load JSON Settings Program'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Step 3/10) : JSON Settings Program Loading'
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Load JSON Settings Program file path : $global:ProgramConfigurationFileSettingsPath" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Status : " -NotDisplay
 
     Try {        
         # Paths
-        $global:HelpFolderNamePath               = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.HelpFolderName
-        $ExportFolderNamePath                    = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ExportFolderName
-        $JournalFolderNamePath                   = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JournalFolderName
-        $BBOXJournalFolderNamePath               = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXJournalFolderNamePath            = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $global:JournalName                      = $global:JSONSettingsProgramContent.Path.JournalName
-        $JsonBoxconfigFolderNamePath             = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JsonBoxconfigFolderName
-        $BBOXJsonBoxconfigFolderNamePath         = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXJsonBoxconfigFolderNamePath      = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $global:RessourcesFolderNamePath         = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.RessourcesFolderName
-        $ReportFolderNamePath                    = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ReportFolderName
-        $BBOXReportFolderNamePath                = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXReportFolderNamePath             = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $BoxModuleFileNamePath                   = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.BoxModuleFileName + $global:JSONSettingsProgramContent.Values.PowershellModuleFileExtention
-        $TestedEnvironnementFileNamePath         = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.TestedEnvironnementFileName
-        $CommonFunctionsFileNamePath             = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.CommonFunctionsFileName
-        $BBoxAPISummaryFileNamePath              = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.BBox.APISummaryFileName
-        $FreeboxAPISummaryFileNamePath           = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Freebox.APISummaryFileName
-        $ExportCSVFolderNamePath                 = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportCSVFolderName
-        $BBOXExportCSVFolderNamePath             = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXExportCSVFolderNamePath          = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $ExportJSONFolderNamePath                = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportJSONFolderName
-        $BBOXExportJSONFolderNamePath            = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXExportJSONFolderNamePath         = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $global:DownloadShellRegistryFolder      = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder
-        $global:DownloadShellRegistryFolderName  = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
+        $global:JournalName                        = $global:JSONSettingsProgramContent.Path.JournalName
+        $global:HelpFolderNamePath                 = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.HelpFolderName
+        $BoxModuleFileNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.BoxModuleFileName + $global:JSONSettingsProgramContent.Values.PowershellModuleFileExtention
+        $TUNCredentialManagerModuleFileName        = $global:JSONSettingsProgramContent.Path.TUNCredentialManagerModuleFileName
+        $JournalFolderNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JournalFolderName
+        $BBOXJournalFolderNamePath                 = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $FREEBOXJournalFolderNamePath              = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $JsonBoxconfigFolderNamePath               = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JsonBoxconfigFolderName
+        $BBOXJsonBoxconfigFolderNamePath           = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $FREEBOXJsonBoxconfigFolderNamePath        = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $ReportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ReportFolderName
+        $BBOXReportFolderNamePath                  = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $FREEBOXReportFolderNamePath               = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $global:RessourcesFolderNamePath           = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.RessourcesFolderName
+        $ProgramRessourcesFolderNamePath           = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ProgramFolderName
+        $TestedEnvironnementFileNamePath           = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.TestedEnvironnementFileName
+        $CommonFunctionsFileNamePath               = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.CommonFunctionsFileName
+        $BoxRessourcesFolderNamePath               = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.BoxFolderName
+        $FREEBOXResssourcesFolderNamePath          = "$BoxRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $BBoxResssourcesFolderNamePath             = "$BoxRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $BBoxAPISummaryFileNamePath                = "$BBoxResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.BBox.APISummaryFileName
+        $global:PhoneNumberReferentialFileNamePath = "$BBoxResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.BBox.PhoneNumberReferentialFileName
+        $FREEBOXAPISummaryFileNamePath             = "$FREEBOXResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.Freebox.APISummaryFileName
+        $ExportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ExportFolderName
+        $ExportJSONFolderNamePath                  = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportJSONFolderName
+        $BBOXExportJSONFolderNamePath              = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $FREEBOXExportJSONFolderNamePath           = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $ExportCSVFolderNamePath                   = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportCSVFolderName
+        $BBOXExportCSVFolderNamePath               = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $FREEBOXExportCSVFolderNamePath            = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $global:DownloadShellRegistryFolder        = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder
+        $global:DownloadShellRegistryFolderName    = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
         
         # JSON User Configuration File Paths
-        $global:JSONSettingsDefaultUserFilePath = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.UserConfigurationFile.DefaultFileName
-        $global:JSONSettingsCurrentUserFilePath = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.UserConfigurationFile.CurrentFileName
+        $global:JSONSettingsDefaultUserFileNamePath = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.UserConfigurationFile.DefaultFileName
+        $global:JSONSettingsCurrentUserFileNamePath = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.UserConfigurationFile.CurrentFileName
                 
         # Chrome Driver Paths
         $global:ChromeDriver                                    = $Null
         $global:ChromeDriverLastStableVersion                   = $Null
-        $global:ChromeDriverRessourcesFolderNamePath            = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverRessourcesFolderName
-        $global:ChromeDriverDefaultFolderName                   = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultFolderName
-        $global:ChromeDriverDefaultFolderNamePath               = "$global:ChromeDriverRessourcesFolderNamePath\" + $global:ChromeDriverDefaultFolderName
-        $global:ChromeDriverDefaultSetupFileName                = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultSetupFileName
-        $global:ChromeDriverDefaultSetupFileNamePath            = "$global:ChromeDriverDefaultFolderNamePath\" + $global:ChromeDriverDefaultSetupFileName
-        $global:ChromeDriverDefaultWebDriverDLLFileName         = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultWebDriverDLLFileName
-        $global:ChromeDriverDefaultWebDriverDLLFileNamePath     = "$global:RessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverDLLFileName
-        $global:ChromeDriverDefaultWebDriverSupportFileName     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDefaultWebDriverSupportFileName
-        $global:ChromeDriverDefaultWebDriverSupportFileNamePath = "$global:RessourcesFolderNamePath\" + $global:ChromeDriverDefaultWebDriverSupportFileName
-        $global:ChromeDriverLastStableVersionUrl                = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverLastStableVersionUrl
-        $global:ChromeDriverDownloadHomeUrl                     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDownloadHomeUrl
-        $global:ChromeDriverDownloadPathUrl                     = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDownloadPathUrl
-        $global:ChromeDriverDownloadFileName                    = $global:JSONSettingsProgramContent.ChromeDriver.ChromeDriverDownloadFileName
+        $ApplicationsFolderNamePath                             = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ApplicationsFolderName
+        $global:ChromeDriverRessourcesFolderNamePath            = "$ApplicationsFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverRessourcesFolderName
+        $global:ChromeDriverDefaultFolderName                   = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDefaultFolderName
+        $global:ChromeDriverDefaultFolderNamePath               = "$global:ChromeDriverRessourcesFolderNamePath\$global:ChromeDriverDefaultFolderName"
+        $global:ChromeDriverDefaultSetupFileName                = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDefaultSetupFileName
+        $global:ChromeDriverDefaultSetupFileNamePath            = "$global:ChromeDriverDefaultFolderNamePath\$global:ChromeDriverDefaultSetupFileName"
+        $ChromeDriverDLLFolderNamePath                          = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ChromeDriverDLLFolderName
+        $global:ChromeDriverDefaultWebDriverDLLFileName         = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDefaultWebDriverDLLFileName
+        $global:ChromeDriverDefaultWebDriverDLLFileNamePath     = "$ChromeDriverDLLFolderNamePath\$global:ChromeDriverDefaultWebDriverDLLFileName"
+        $global:ChromeDriverDefaultWebDriverSupportFileName     = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDefaultWebDriverSupportFileName
+        $global:ChromeDriverDefaultWebDriverSupportFileNamePath = "$ChromeDriverDLLFolderNamePath\$global:ChromeDriverDefaultWebDriverSupportFileName"
+        $global:ChromeDriverLastStableVersionUrl                = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverLastStableVersionUrl
+        $global:ChromeDriverDownloadHomeUrl                     = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDownloadHomeUrl
+        $global:ChromeDriverDownloadPathUrl                     = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDownloadPathUrl
+        $global:ChromeDriverDownloadFileName                    = $global:JSONSettingsProgramContent.Path.Ressources.Applications.ChromeDriver.ChromeDriverDownloadFileName
         
         # Google Chrome Paths
-        $GoogleChromeRessourcesFolderName             = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeRessourcesFolderName
-        $global:GoogleChromeRessourcesFolderNamePath  = "$global:RessourcesFolderNamePath\" + $GoogleChromeRessourcesFolderName
-        $global:GoogleChromeDefaultFolderName         = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDefaultFolderName
-        $global:GoogleChromeDefaultFolderNamePath     = "$global:GoogleChromeRessourcesFolderNamePath\" + $global:GoogleChromeDefaultFolderName
-        $GoogleChromeDefaultSetupFileName             = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDefaultSetupFileName
-        $Global:GoogleChromeDefaultSetupFileNamePath  = "$global:GoogleChromeDefaultFolderNamePath\" + $GoogleChromeDefaultSetupFileName
-        $GoogleChromeDefaultProfileName               = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDefaultProfileName
-        $global:GoogleChromeDownloadHomeUrl           = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDownloadHomeUrl
-        $global:GoogleChromeDownloadPathUrl           = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDownloadPathUrl
-        $global:GoogleChromeDownloadFileName          = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDownloadFileName
-        $global:GoogleChromeDownloadFileNameExtention = $global:JSONSettingsProgramContent.GoogleChrome.GoogleChromeDownloadFileNameExtention
+        $global:GoogleChromeRessourcesFolderNamePath  = "$ApplicationsFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeRessourcesFolderName
+        $global:GoogleChromeDefaultFolderName         = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDefaultFolderName
+        $global:GoogleChromeDefaultFolderNamePath     = "$global:GoogleChromeRessourcesFolderNamePath\$global:GoogleChromeDefaultFolderName"
+        $GoogleChromeDefaultSetupFileName             = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDefaultSetupFileName
+        $Global:GoogleChromeDefaultSetupFileNamePath  = "$global:GoogleChromeDefaultFolderNamePath\$GoogleChromeDefaultSetupFileName"
+        $GoogleChromeDefaultProfileName               = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDefaultProfileName
+        $global:GoogleChromeDownloadHomeUrl           = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDownloadHomeUrl
+        $global:GoogleChromeDownloadPathUrl           = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDownloadPathUrl
+        $global:GoogleChromeDownloadFileName          = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDownloadFileName
+        $global:GoogleChromeDownloadFileNameExtention = $global:JSONSettingsProgramContent.Path.Ressources.Applications.GoogleChrome.GoogleChromeDownloadFileNameExtention
         
         # APIName
         $APINameAvailable                   = $global:JSONSettingsProgramContent.APIName.Available
@@ -695,7 +733,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         $global:UrlPrefixe                  = $global:JSONSettingsProgramContent.Box.UrlPrefixe
         
         # Various
-        $Mail = $global:JSONSettingsProgramContent.various.mail
+        $Mail          = $global:JSONSettingsProgramContent.various.mail
         $GitHubUrlSite = $global:JSONSettingsProgramContent.various.GitHubUrlSite
         
         # Notification Events
@@ -716,31 +754,31 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         $global:SleepBoxJournalDownload                       = $global:JSONSettingsProgramContent.Sleep.BoxJournalDownload
         
         # Values
-        $global:ValuesLANNetworkLocal  = $global:JSONSettingsProgramContent.Values.LANNetworkLocal
-        $global:ValuesLANNetworkRemote = $global:JSONSettingsProgramContent.Values.LANNetworkRemote
-        $global:ValuesOpenExportFolder = $global:JSONSettingsProgramContent.Values.OpenExportFolder
-        $global:ValuesDisplayFormat    = $global:JSONSettingsProgramContent.Values.DisplayFormat
-        $global:ValuesExportFormat     = $global:JSONSettingsProgramContent.Values.ExportFormat
-        $global:ValuesOpenHTMLReport   = $global:JSONSettingsProgramContent.Values.OpenHTMLReport
-        $global:ValuesResolveDnsName   = $global:JSONSettingsProgramContent.Values.ResolveDnsName
-        $global:ValuesLineNumber       = $global:JSONSettingsProgramContent.Values.LineNumber
+        $global:ValuesLANNetworkLocal               = $global:JSONSettingsProgramContent.Values.LANNetworkLocal
+        $global:ValuesLANNetworkRemote              = $global:JSONSettingsProgramContent.Values.LANNetworkRemote
+        $global:ValuesOpenExportFolder              = $global:JSONSettingsProgramContent.Values.OpenExportFolder
+        $global:ValuesDisplayFormat                 = $global:JSONSettingsProgramContent.Values.DisplayFormat
+        $global:ValuesExportFormat                  = $global:JSONSettingsProgramContent.Values.ExportFormat
+        $global:ValuesOpenHTMLReport                = $global:JSONSettingsProgramContent.Values.OpenHTMLReport
+        $global:ValuesResolveDnsName                = $global:JSONSettingsProgramContent.Values.ResolveDnsName
+        $global:ValuesLineNumber                    = $global:JSONSettingsProgramContent.Values.LineNumber
         $global:ValuesPowershellModuleFileExtention = $global:JSONSettingsProgramContent.Values.PowershellModuleFileExtention
         
         # Error
         $global:ErrorResolveDNSMessage = $global:JSONSettingsProgramContent.Error.ResolveDNS.Message
         
-        Write-Log -Type VALUE -Name 'Program initialisation - Load JSON Settings Program' -Message 'Successful' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Load JSON Settings Program' -Message "Failed, due to : $($_.ToString())"
-        Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         $global:TriggerExitSystem = 1
     }
 }
 Else {
-    Write-Log -Type ERROR -Name 'Program initialisation - Load JSON Settings Program' -Message 'Failed, to load JSON Settings Program'
-    Write-Log -Type INFO -Name 'Program initialisation - Load JSON Settings Program' -Message 'End Load JSON Settings Program' -NotDisplay
+    Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, to : $LogName"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 
     $global:TriggerExitSystem = 1
 }
@@ -750,47 +788,52 @@ Else {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Step 4/10) : Powershell Module Importation'
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'Start Powershell Module Importation' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $BoxModuleFileNamePath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Powershell Module Importation'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "Step 4/10) : $LogName"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Powershell Module Path : $BoxModuleFileNamePath" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName status : " -NotDisplay
     
     Try {
         Remove-Module -Name Box-Module -ErrorAction SilentlyContinue
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be removed, due to : $($_.ToString())"
-        $global:TriggerExitSystem = 1
-    }
-    Start-Sleep $global:SleepDefault
-    Try {
-        Import-Module -Name $BoxModuleFileNamePath -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Successful' -NotDisplay
-    }
-    Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be imported due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be removed, due to : $($_.ToString())"
         $global:TriggerExitSystem = 1
     }
     
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
+    Start-Sleep $global:SleepDefault
+    
+    Try {
+        Import-Module -Name $BoxModuleFileNamePath -ErrorAction Stop
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be imported due to : $($_.ToString())"
+        $global:TriggerExitSystem = 1
+    }
+    
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 }
 
 If ($Null -eq $global:TriggerExitSystem) {
 
-    $ModuleName = 'TUN.CredentialManager'
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'Start Powershell Module Importation' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message "Powershell Module Path : $ModuleName" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Powershell Module Importation' -Message 'Powershell Module Importation status : ' -NotDisplay
+    $ModuleName = $TUNCredentialManagerModuleFileName
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Powershell Module Path : $ModuleName" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName status : " -NotDisplay
     
     Try {
         Install-TUNCredentialManager -ModuleName $ModuleName -ErrorAction Stop
-        Write-Log -Type VALUE -Name 'Program initialisation - Powershell Module Importation' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Powershell Module Importation' -Message "Failed, Powershell Module $ModuleName can't be installed or imported, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Failed, Powershell Module $ModuleName can't be installed or imported, due to : $($_.ToString())"
         $global:TriggerExitSystem = 1
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Powershell Module Importation' -Message 'End Powershell Module Importation' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 }
 
 #endregion Import Functions with Module : 'Box-Module.psm1'
@@ -799,20 +842,23 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) { 
     
-    Write-Log -Type VALUE -Name 'Program initialisation -Ressources Folder Check' -Message 'Step 5/10) : Folder Ressources Check'
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message 'Start Folder Ressources Check' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message "Ressources Folder Path : $global:RessourcesFolderNamePath" -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Ressources Folder Check' -Message 'Ressources Folder State : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Ressources Folder Check'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Step 5/10) : Folder Ressources Checking'
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Folder Ressources Check' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Ressources Folder Path : $global:RessourcesFolderNamePath" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Ressources Folder State : ' -NotDisplay
     
     If (Test-Path -Path $global:RessourcesFolderNamePath -ErrorAction Stop) {
     
-        Write-Log -Type VALUE -Name 'Program initialisation - Ressources Folder Check' -Message 'Already Exist' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Already Exist' -NotDisplay
     }
     Else {
-        Write-Log -Type ERROR -Name 'Program initialisation - Ressources Folder Check' -Message 'Not found'
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message 'Not found'
         $global:TriggerExitSystem = 1
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Ressources Folder Check' -Message 'End Folder Ressources check' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Folder Ressources check' -NotDisplay
 }
 
 #endregion Check if ressources folder exist
@@ -821,8 +867,11 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Program Folders/Files check' -Message 'Step 6/10) : Program Folders/Files check'
-    Write-Log -Type INFO -Name 'Program initialisation - Program Folders/Files check' -Message 'Start Program Folders/Files check' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Program Folders/Files check'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Step 6/10) : Program Folders/Files checking'
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Program Folders/Files check' -NotDisplay
     
     # Folders test
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $ExportFolderNamePath                        -FolderName $ExportFolderNamePath                        -ErrorAction Stop
@@ -831,50 +880,61 @@ If ($Null -eq $global:TriggerExitSystem) {
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $JournalFolderNamePath                       -FolderName $JournalFolderNamePath                       -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $ReportFolderNamePath                        -FolderName $ReportFolderNamePath                        -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $JsonBoxconfigFolderNamePath                 -FolderName $JsonBoxconfigFolderNamePath                 -ErrorAction Stop
-    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverRessourcesFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath    -ErrorAction Stop
-    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeRessourcesFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $global:HelpFolderNamePath                   -FolderName $global:HelpFolderNamePath                   -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ScriptRootFolderPath                        -FolderPath $global:RessourcesFolderNamePath             -FolderName $global:RessourcesFolderNamePath             -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $ApplicationsFolderNamePath                  -FolderName $ApplicationsFolderNamePath                  -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $BoxRessourcesFolderNamePath                 -FolderName $BoxRessourcesFolderNamePath                 -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $ApplicationsFolderNamePath                  -FolderName $ApplicationsFolderNamePath                  -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $ChromeDriverDLLFolderNamePath               -FolderName $ChromeDriverDLLFolderNamePath               -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:RessourcesFolderNamePath             -FolderPath $ProgramRessourcesFolderNamePath             -FolderName $ProgramRessourcesFolderNamePath             -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ApplicationsFolderNamePath                  -FolderPath $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverRessourcesFolderNamePath -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ApplicationsFolderNamePath                  -FolderPath $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeRessourcesFolderNamePath -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath    -ErrorAction Stop
+    Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath    -ErrorAction Stop
     
     # Export folder by Box Type
-    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath -FolderPath $BBOXJsonBoxconfigFolderNamePath    -FolderName $BBOXJsonBoxconfigFolderNamePath    -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath -FolderPath $FREEBOXJsonBoxconfigFolderNamePath -FolderName $FREEBOXJsonBoxconfigFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ReportFolderNamePath        -FolderPath $BBOXReportFolderNamePath           -FolderName $BBOXReportFolderNamePath           -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ReportFolderNamePath        -FolderPath $FREEBOXReportFolderNamePath        -FolderName $FREEBOXReportFolderNamePath        -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath     -FolderPath $BBOXExportCSVFolderNamePath        -FolderName $BBOXExportCSVFolderNamePath        -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath     -FolderPath $FREEBOXExportCSVFolderNamePath     -FolderName $FREEBOXExportCSVFolderNamePath     -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath    -FolderPath $BBOXExportJSONFolderNamePath       -FolderName $BBOXExportJSONFolderNamePath       -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath    -FolderPath $FREEBOXExportJSONFolderNamePath    -FolderName $FREEBOXExportJSONFolderNamePath    -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JournalFolderNamePath       -FolderPath $BBOXJournalFolderNamePath          -FolderName $BBOXJournalFolderNamePath          -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JournalFolderNamePath       -FolderPath $FREEBOXJournalFolderNamePath       -FolderName $FREEBOXJournalFolderNamePath       -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $BBOXJsonBoxconfigFolderNamePath    -FolderName $BBOXJsonBoxconfigFolderNamePath    -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $FREEBOXJsonBoxconfigFolderNamePath -FolderName $FREEBOXJsonBoxconfigFolderNamePath -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ReportFolderNamePath            -FolderPath $BBOXReportFolderNamePath           -FolderName $BBOXReportFolderNamePath           -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ReportFolderNamePath            -FolderPath $FREEBOXReportFolderNamePath        -FolderName $FREEBOXReportFolderNamePath        -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath         -FolderPath $BBOXExportCSVFolderNamePath        -FolderName $BBOXExportCSVFolderNamePath        -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath         -FolderPath $FREEBOXExportCSVFolderNamePath     -FolderName $FREEBOXExportCSVFolderNamePath     -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath        -FolderPath $BBOXExportJSONFolderNamePath       -FolderName $BBOXExportJSONFolderNamePath       -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath        -FolderPath $FREEBOXExportJSONFolderNamePath    -FolderName $FREEBOXExportJSONFolderNamePath    -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $BBOXJournalFolderNamePath          -FolderName $BBOXJournalFolderNamePath          -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $FREEBOXJournalFolderNamePath       -FolderName $FREEBOXJournalFolderNamePath       -ErrorAction Stop
     
     # Files test
-    Test-FilePath   -FileRoot $global:ChromeDriverDefaultFolderNamePath -FilePath $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -FileName $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:ChromeDriverDefaultFolderNamePath -FilePath $global:ChromeDriverDefaultWebDriverSupportFileNamePath -FileName $global:ChromeDriverDefaultWebDriverSupportFileNamePath -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:RessourcesFolderNamePath          -FilePath $TestedEnvironnementFileNamePath                        -FileName $TestedEnvironnementFileNamePath                        -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:RessourcesFolderNamePath          -FilePath $CommonFunctionsFileNamePath                            -FileName $CommonFunctionsFileNamePath                            -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:RessourcesFolderNamePath          -FilePath $global:JSONSettingsDefaultUserFilePath                 -FileName $global:JSONSettingsDefaultUserFilePath                 -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:RessourcesFolderNamePath          -FilePath $BBoxAPISummaryFileNamePath                             -FileName $BBoxAPISummaryFileNamePath                             -ErrorAction Stop
-    Test-FilePath   -FileRoot $global:RessourcesFolderNamePath          -FilePath $FreeboxAPISummaryFileNamePath                          -FileName $FreeboxAPISummaryFileNamePath                          -ErrorAction Stop
+    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $TestedEnvironnementFileNamePath                        -FileName $TestedEnvironnementFileNamePath                        -ErrorAction Stop
+    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $CommonFunctionsFileNamePath                            -FileName $CommonFunctionsFileNamePath                            -ErrorAction Stop
+    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $global:JSONSettingsDefaultUserFileNamePath             -FileName $global:JSONSettingsDefaultUserFileNamePath             -ErrorAction Stop
+    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $global:ProgramConfigurationFileSettingsPath            -FileName $global:ProgramConfigurationFileSettingsPath            -ErrorAction Stop
+    Test-FilePath   -FileRoot $BBoxResssourcesFolderNamePath   -FilePath $BBoxAPISummaryFileNamePath                             -FileName $BBoxAPISummaryFileNamePath                             -ErrorAction Stop
+    Test-FilePath   -FileRoot $BBoxResssourcesFolderNamePath   -FilePath $global:PhoneNumberReferentialFileNamePath              -FileName $global:PhoneNumberReferentialFileNamePath              -ErrorAction Stop
+    Test-FilePath   -FileRoot $FREEBOXAPISummaryFileNamePath   -FilePath $FreeboxAPISummaryFileNamePath                          -FileName $FreeboxAPISummaryFileNamePath                          -ErrorAction Stop
+    Test-FilePath   -FileRoot $ChromeDriverDLLFolderNamePath   -FilePath $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -FileName $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -ErrorAction Stop
+    Test-FilePath   -FileRoot $ChromeDriverDLLFolderNamePath   -FilePath $global:ChromeDriverDefaultWebDriverSupportFileNamePath -FileName $global:ChromeDriverDefaultWebDriverSupportFileNamePath -ErrorAction Stop    
     
-    Write-Log -Type INFO -Name 'Program initialisation - Program Folders/Files check' -Message 'End Program Folders/Files check' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Program Folders/Files check' -NotDisplay
 }
 
 #endregion Create folders/files if not yet existing
 
 #region Check Internet connection
-Write-Log -Type VALUE -Name 'Program initialisation - Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
+Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
 #endregion Check Internet connection
 
 #region Get Lastest Stable Chrome Version Online
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'Step 8/10) : Get Lastest Stable Chrome Version Online'
-    Write-Log -Type INFO -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'Start Get Lastest Stable Chrome Version Online' -NotDisplay
-    Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl $Global:ChromeDriverLastStableVersionUrl -ErrorAction Stop
-    Write-Log -Type INFO -Name 'Program initialisation - Get Lastest Stable Chrome Version Online' -Message 'End Get Lastest Stable Chrome Version Online' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName  = 'Get Lastest Stable Chrome Version Online'
+        
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "Step 8/10) : $LogName"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Get-LastestStableChromeVersionOnline -ChromeDriverLastStableVersionUrl $global:ChromeDriverLastStableVersionUrl -ErrorAction Stop
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 }
 
 #endregion Get Lastest Stable Chrome Version Online
@@ -883,78 +943,87 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Step 9/10) : Default Chrome Driver Standalone Installation Check'
-    Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Start Default Chrome Driver Standalone Installation Check' -NotDisplay    
-    Write-Log -Type INFONO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Default Chrome Driver Standalone Installation Check status : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName     = 'Default Chrome Driver Standalone Installation Version Check'
+
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "Step 9/10) : $LogName"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay    
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName status : " -NotDisplay
     
     If ($(Test-Path -Path $global:ChromeDriverDefaultSetupFileNamePath) -eq $true) {
         
         Try {
             $ChromeDriverVersion = & $global:ChromeDriverDefaultSetupFileNamePath --version
             $ChromeDriverVersion = $($ChromeDriverVersion -split " ")[1]
-            Write-Log -Type VALUE -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'To be download and install' -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $LogName -Message 'To be download and install' -NotDisplay
             $ChromeDriverVersion = 'To be download and install'
         }
         
-        Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Chrome Driver Standalone Version Check' -Message 'Start Default Chrome Driver Standalone Installation Version Check' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Chrome Driver Standalone Version Check' -Message 'Default Chrome Driver Standalone Installation Version Check :' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Default Chrome Driver Standalone Version Check' -Message $ChromeDriverVersion -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Chrome Driver Standalone Version Check' -Message 'End Default Chrome Driver Standalone Installation Version Check' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'Start Control maching version Chrome Driver Standalone' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Control maching version' -Message 'Control maching version Chrome Driver Standalone Status : ' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName :" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message $ChromeDriverVersion -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        $LogName = 'Control maching version'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName Chrome Driver Standalone" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Chrome Driver Standalone Status : " -NotDisplay
             
         If ($global:ChromeDriverLastStableVersion -notmatch $ChromeDriverVersion) {
             
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message 'Failed' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'Updating Chrome Driver from version :' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $ChromeDriverVersion -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message ' to version :' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $global:ChromeDriverLastStableVersion -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Chrome Driver Standalone' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start stop Chrome Driver' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Failed' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Updating Chrome Driver from version :' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message $ChromeDriverVersion -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message ' to version :' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message $global:ChromeDriverLastStableVersion -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName Chrome Driver Standalone" -NotDisplay
+            $LogName = 'Update Chrome Driver'
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start stop Chrome Driver' -NotDisplay
             
             Stop-ChromeDriver
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End stop Chrome Driver' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End stop Chrome Driver' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
             Remove-FolderContent -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverDefaultFolderName
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End Remove Old Chrome Driver Version' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start update Chrome Driver' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Remove Old Chrome Driver Version' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start update Chrome Driver' -NotDisplay
             
             Update-ChromeDriver
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End update Chrome Driver' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End update Chrome Driver' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
         Else {
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message 'Up to date' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Chrome Driver Standalone' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
+            $LogName = 'Control maching version'
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Up to date' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName Chrome Driver Standalone" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'To be download and install' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start stop Chrome Driver' -NotDisplay
+        $LogName     = 'Default Chrome Driver Standalone Installation Version Check'
+        Write-Log -Type WARNING -Category $Category -Name $LogName -Message 'To be download and install' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        $LogName = 'Update Chrome Driver'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start stop Chrome Driver' -NotDisplay
         
         Stop-ChromeDriver
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End stop Chrome Driver' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End stop Chrome Driver' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Remove Old Chrome Driver Version' -NotDisplay
         
         Remove-FolderContent -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderName $global:ChromeDriverDefaultFolderName
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End Remove Old Chrome Driver Version' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'Start update Chrome Driver' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Remove Old Chrome Driver Version' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start update Chrome Driver' -NotDisplay
         
         Update-ChromeDriver
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Chrome Driver' -Message 'End update Chrome Driver' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Default Chrome Driver Standalone Installation Check' -Message 'End Default Chrome Driver Standalone Installation Check' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End update Chrome Driver' -NotDisplay
+        $LogName     = 'Default Chrome Driver Standalone Installation Version Check'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
     }
 }
 
@@ -964,79 +1033,87 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Step 10/10) : Default Google Chrome Standalone Installation Check'
-    Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Start Default Google Chrome Standalone Installation Check' -NotDisplay    
-    Write-Log -Type INFONO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Default Google Chrome Standalone Installation Check status : ' -NotDisplay
+    $Category = 'Program initialisation'
+    $LogName     = 'Default Google Chrome Standalone Installation Version Check'
+    
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "Step 10/10) : $LogName"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay    
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName status : " -NotDisplay
     
     If ($(Test-Path -Path $global:GoogleChromeDefaultSetupFileNamePath) -eq $true) {
         
         Try {
             $GoogleChromeVersion = $(Get-ItemProperty $Global:GoogleChromeDefaultSetupFileNamePath -ErrorAction Stop).VersionInfo.FileVersion
-            Write-Log -Type VALUE -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
         }
         Catch {
-            $GoogleChromeVersion = 'To be download and install'
-            Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'To be download and install' -NotDisplay
+            #$GoogleChromeVersion = 'To be download and install'
+            Write-Log -Type WARNING -Category $Category -Name $LogName -Message 'To be download and install' -NotDisplay
         }
         
-        Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Google Chrome Standalone Version Check' -Message 'Start Default Google Chrome Standalone Installation Version Check' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Google Chrome Standalone Version Check' -Message 'Default Google Chrome Standalone Installation Version Check :' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program initialisation - Default Google Chrome Standalone Version Check' -Message $GoogleChromeVersion -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Default Google Chrome Standalone Version Check' -Message 'End Default Google Chrome Standalone Installation Version Check' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'Start Control maching version Google Chrome Standalone' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program initialisation - Control maching version' -Message 'Control maching version Google Chrome Standalone Status : ' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "Start $LogName Check" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Check :" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message $GoogleChromeVersion -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "End $LogName Check" -NotDisplay
+        $LogName = 'Control maching version Google Chrome Standalone'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Status : " -NotDisplay
             
-        If ($global:GoogleChromeLastStableVersion -notmatch $GoogleChromeVersion) {
+        If ($($global:GoogleChromeLastStableVersion -split('.')[0]) -gt $($GoogleChromeVersion.split('.')[0])) {
             
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message 'Failed' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'Updating Google Chrome from version :' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $GoogleChromeVersion -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message ' to version :' -NotDisplay
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message $global:ChromeDriverLastStableVersion -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Google Chrome Standalone' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Failed' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Updating Google Chrome from version :' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message $GoogleChromeVersion -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message ' to version :' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message $global:ChromeDriverLastStableVersion -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+            $LogName = 'Update Google Chrome'
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start stop Google Chrome' -NotDisplay
             
             Stop-ChromeDriver
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End stop Google Chrome' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start Remove Old Google Chrome Version' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End stop Google Chrome' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Remove Old Google Chrome Version' -NotDisplay
             
             Remove-FolderContent -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeDefaultFolderName
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End Remove Old Google Chrome Version' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Remove Old Google Chrome Version' -NotDisplay
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
             Update-GoogleChrome
             
-            Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
         Else {
-            Write-Log -Type VALUE -Name 'Program initialisation - Control maching version' -Message 'Up to date' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Control maching version' -Message 'End Control maching version Google Chrome Standalone' -NotDisplay
-            Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
+            $LogName = 'Control maching version Google Chrome Standalone'
+            Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Up to date' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+            $LogName = 'Default Google Chrome Standalone Installation Version Check'
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'To be download and install' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start stop Google Chrome' -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $LogName -Message 'To be download and install' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        $LogName = 'Update Google Chrome'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start stop Google Chrome' -NotDisplay
         
         Stop-ChromeDriver
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End stop Google Chrome' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start Remove Old Google Chrome Version' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End stop Google Chrome' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Remove Old Google Chrome Version' -NotDisplay
         
         Remove-FolderContent -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeDefaultFolderName
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End Remove Old Google Chrome Version' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'Start update Google Chrome' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Remove Old Google Chrome Version' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
         
         Update-GoogleChrome
         
-        Write-Log -Type INFO -Name 'Program initialisation - Update Google Chrome' -Message 'End update Google Chrome' -NotDisplay
-        Write-Log -Type INFO -Name 'Program initialisation - Default Google Chrome Standalone Installation Check' -Message 'End Default Google Chrome Standalone Installation Check' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+        $LogName = 'Default Google Chrome Standalone Installation Version Check'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
     }
 }
 
@@ -1044,116 +1121,121 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region End Program Initialisation
 
-Write-Log -Type INFONO  -Name 'Program initialisation - Start Initialisation' -Message 'Status : '
+Write-Log -Type INFONO  -Category $Category -Name 'End Initialisation' -Message 'Status : '
 
 If ($Null -eq $global:TriggerExitSystem) {
-    Write-Log -Type VALUE -Name 'Program initialisation - Start Initialisation' -Message 'Finished without errors'
+    
+    Write-Log -Type VALUE -Category $Category -Name 'End Initialisation' -Message 'Finished without errors'
 }
 Else {
-    Write-Log -Type WARNING -Name 'Program initialisation - Start Initialisation' -Message 'Finished with errors'
+    Write-Log -Type WARNING -Category $Category -Name 'End Initialisation' -Message 'Finished with errors'
     Stop-Program -Context System -ErrorMessage 'Finished with errors'  -Reason 'All Program prerequisites were not satisfyed' -ErrorAction Stop 
 }
 
-Write-Log -Type INFO -Name 'Program initialisation - Start Initialisation' -Message 'End Program initialisation' -NotDisplay
-Write-Log -Type WARNING -Name 'Program initialisation - Start Initialisation' -Message '#################################################### Initialisation #####################################################'
+Write-Log -Type INFO -Category $Category -Name 'End Initialisation' -Message 'End Program initialisation' -NotDisplay
+Write-Log -Type WARNING -Category $Category -Name 'End Initialisation' -Message '#################################################### Initialisation #####################################################'
 
 #endregion End Program Initialisation
 
 #region Box user selection
 
-Write-Log -Type WARNING -Name 'Program initialisation - User Box Selection' -Message '################################################## User Box Selection ###################################################'
-
-Write-Log -Type INFO -Name 'Program initialisation - User Box Selection' -Message 'Start User Box Selection' -NotDisplay
-Write-Log -Type INFONO -Name 'Program initialisation - User Box Selection' -Message 'User Box Selection : '
-$global:BoxType = Show-WindowsFormDialogBox4ChoicesCancel -MainFormTitle "User Box selection" -LabelMessageText "Please select your box below :" -FirstOptionButtonText 'Bbox' -SecondOptionButtonText 'Freebox' -ThirdOptionButtonText 'OrangeBox' -FourOptionButtonText 'Cancel' -ErrorAction Stop
-Write-Log -Type VALUE -Name 'Program initialisation - User Box Selection' -Message "$global:BoxType"
-Write-Log -Type INFO -Name 'Program initialisation - User Box Selection' -Message 'End User Box Selection' -NotDisplay
-Write-Log -Type WARNING -Name 'Program initialisation - User Box Selection' -Message '################################################## User Box Selection ###################################################'
+$LogName = 'User Box Selection'
+Write-Log -Type WARNING -Category $Category -Name $LogName -Message '################################################## User Box Selection ###################################################'
+Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName : "
+$global:BoxType = Show-WindowsFormDialogBox5ChoicesCancel -MainFormTitle "$LogName" -LabelMessageText "Please select your box below :" -FirstOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Bbox -SecondOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Freebox -ThirdOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OrangeBox -FourOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.SFRBox -FiveOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -ErrorAction Stop
+Write-Log -Type VALUE -Category $Category -Name $LogName -Message "$global:BoxType"
+Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+Write-Log -Type WARNING -Category $Category -Name $LogName -Message '################################################## User Box Selection ###################################################'
 
 #endregion Box user selection
 
 #region Import User Json Configuration files
 
-If (($Null -eq $global:TriggerExitSystem) -and (Test-Path -Path $global:JSONSettingsCurrentUserFilePath)) {
+$Category = 'Program initialisation'
+$LogName     = 'Json Current User Settings Creation'
+If (($Null -eq $global:TriggerExitSystem) -and (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath)) {
     
     Get-JSONSettingsCurrentUserContent -ErrorAction Stop
 }
 Else {
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Creation' -Message 'Start Json Current User Settings Creation' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Json Current User Settings Creation' -Message 'Json Current User Settings Creation Status : ' -NotDisplay
+    Write-Log -Type INFO -Category $CategoryName -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFONO -Category $CategoryName -Name $LogName -Message "$LogName Status : " -NotDisplay
     Try {
-        Copy-Item -Path $global:JSONSettingsDefaultUserFilePath -Destination $global:JSONSettingsCurrentUserFilePath -Force  -ErrorAction Stop
+        Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force  -ErrorAction Stop
         Start-Sleep -Seconds $global:SleepChromeDriverNavigation
-        Write-Log -Type VALUE -Name 'Program initialisation - Json Current User Settings Creation' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $CategoryName -Name $LogName -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program initialisation - Json Current User Settings Creation' -Message "Failed, to create Json Current User Settings file, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $CategoryName -Name $LogName -Message "Failed, to create Json Current User Settings file, due to : $($_.ToString())"
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file was not be created' -ErrorAction Stop
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current User Settings Creation' -Message 'End Json Current User Settings Creation' -NotDisplay
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current/Default User Settings Importation' -Message 'Start Json Current/Default User Settings Importation' -NotDisplay
+    Write-Log -Type INFO -Category $CategoryName -Name $LogName -Message "End $LogName" -NotDisplay
+    $LogName = 'Json Current/Default User Settings Importation'
+    Write-Log -Type INFO -Category $CategoryName -Name $LogName -Message "Start $LogName" -NotDisplay
     
-    If (Test-Path -Path $global:JSONSettingsCurrentUserFilePath) {
+    If (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath) {
     
         Get-JSONSettingsCurrentUserContent -ErrorAction Stop
     }
-    Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFilePath) {
+    Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFileNamePath) {
         
         Get-JSONSettingsDefaultUserContent -ErrorAction Stop
     }
     Else {
-        Write-Log -Type ERROR -Name 'Program initialisation - Json Current/Default User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
-        Write-Log -Type INFO -Name 'Program initialisation - Json Current/Default User Settings Importation' -Message 'End Json Current/Default User Settings Importation' -NotDisplay
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'User settings configuration file can be found' -ErrorAction Stop
+        Write-Log -Type ERROR -Category $CategoryName -Name $LogName -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category $CategoryName -Name $LogName -Message "End $LogName" -NotDisplay
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'User settings configuration file can not be found' -ErrorAction Stop
     }
-    Write-Log -Type INFO -Name 'Program initialisation - Json Current/Default User Settings Importation' -Message 'End Json Current/Default User Settings Importation' -NotDisplay
+    Write-Log -Type INFO -Category $CategoryName -Name $LogName -Message "End $LogName" -NotDisplay
 }
 #endregion Import User Json Configuration files
 
 #region Load User Json Configuration files
 
-Write-Log -Type INFO -Name 'Program initialisation - User Box Selection' -Message 'Start box is take in charge' -NotDisplay
-Write-Log -Type INFONO -Name 'Program initialisation - User Box Selection' -Message 'Is box is take in charge ? : ' -NotDisplay
+$LogName = 'User Box Selection'
+Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start box is take in charge' -NotDisplay
+Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Is box is take in charge ? : ' -NotDisplay
 
 If ($global:BoxType -match $BoxTypeList) {
     
-    Write-Log -Type VALUE -Name 'Program initialisation - User Box Selection' -Message 'Yes' -NotDisplay
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Yes' -NotDisplay
     $global:JSONSettingsCurrentUserContent.Box.OldType = $global:JSONSettingsCurrentUserContent.Box.CurrentType
     $global:JSONSettingsCurrentUserContent.Box.CurrentType = $global:BoxType
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath -ErrorAction Stop
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath -ErrorAction Stop
 
     # Box
-    $global:APIVersion          = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIVersion
-    $global:DefaultRemotePort   = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultRemotePort
-    $global:DefaultLocalUrl     = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultLocalUrl
-    $DefaultLocalIPAddress      = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultLocalIPAddress
-    $BoxDns                     = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxDns
-    $global:BoxUrlRemote        = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlRemote
-    $global:BoxUrlFirewall      = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlFirewall
-    $global:BoxUrlDynDns        = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlDynDns
-    $BoxAPIUrlDocumentation     = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIUrlDocumentation
+    $global:APIVersion            = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIVersion
+    $global:DefaultRemotePort     = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultRemotePort
+    $global:DefaultLocalUrl       = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultLocalUrl
+    $DefaultLocalIPAddress        = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultLocalIPAddress
+    $BoxDns                       = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxDns
+    $global:BoxUrlRemote          = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlRemote
+    $global:BoxUrlFirewall        = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlFirewall
+    $global:BoxUrlDynDns          = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlDynDns
+    $BoxAPIUrlDocumentation       = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIUrlDocumentation
     
     # User Credentials
-    $global:CredentialsTarget   = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Target
-    $global:CredentialsUserName = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.UserName
-    $global:CredentialsComment  = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Comment
+    $global:CredentialsTarget     = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Target
+    $global:CredentialsUserName   = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.UserName
+    $global:CredentialsComment    = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Comment
     
     # APIName
     $APINameExclusionsBoxTypeFull = $global:JSONSettingsProgramContent.APIName.Exclusions.$global:BoxType.Full
     
     # Paths
-    $APISummaryFileNamePath     = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.$global:BoxType.APISummaryFileName
+    $APISummaryFileNamePath       = "$BoxRessourcesFolderNamePath\$global:BoxType\" + $global:JSONSettingsProgramContent.Path.Box.$global:BoxType.APISummaryFileName
 }
 Else {
-    Write-Log -Type ERROR -Name 'Program initialisation - User Box Selection' -Message 'No' -NotDisplay
-    Write-Log -Type ERROR -Name 'Program initialisation - User Box Selection' -Message "The Box : $global:BoxType is not take in charge by the program."
+    Write-Log -Type ERROR -Category $Category -Name $LogName -Message 'No' -NotDisplay
+    Write-Log -Type ERROR -Category $Category -Name $LogName -Message "The Box : $global:BoxType is not take in charge by the program."
     $Null = Show-WindowsFormDialogBox -Title "Box selection result" -Message "The Box : $global:BoxType is not take in charge by the program." -WarnIcon
     $global:JSONSettingsCurrentUserContent.Box.OldType     = $global:JSONSettingsCurrentUserContent.Box.CurrentType
     $global:JSONSettingsCurrentUserContent.Box.CurrentType = "Box Type not found in the referential"
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath -ErrorAction Stop
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath -ErrorAction Stop
     Stop-Program -Context User -ErrorMessage 'Box Type not found in the referential' -Reason 'This Box Type was not found in the referential' -ErrorAction Stop
 }
-Write-Log -Type INFO -Name 'Program initialisation - User Box Selection' -Message 'End box is take in charge' -NotDisplay
+Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End box is take in charge' -NotDisplay
 
 #endregion Load User Json Configuration files
 
@@ -1161,25 +1243,45 @@ Write-Log -Type INFO -Name 'Program initialisation - User Box Selection' -Messag
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    $Actions = @()
+    $Actions     = @()
+    $LogCategory = 'Program initialisation'
+    $LogName     = 'Referentiel Actions Availables Importation'
     
-    Write-Log -Type INFO -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message 'Start Referentiel Actions Availables Importation' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message "Importing Referentiel Actions Availables from : $CommonFunctionsFileNamePath : " -NotDisplay
-    $Actions += Import-Referential -ReferentialPath $CommonFunctionsFileNamePath -ErrorAction Stop
-    Write-Log -Type INFONO -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message "Importing Referentiel Actions Availables from : $APISummaryFileNamePath : " -NotDisplay
-    $Actions += Import-Referential -ReferentialPath $APISummaryFileNamePath -ErrorAction Stop
+    $Actions += Import-Referential -ReferentialPath $CommonFunctionsFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
     
-    Write-Log -Type INFO -Name 'Program initialisation - Referentiel Actions Availables Importation' -Message 'End Referentiel Actions Availables Importation' -NotDisplay
+    $Actions += Import-Referential -ReferentialPath $APISummaryFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
 }
 
 #endregion Import Actions available
+
+#region Import Phone Number referential
+
+If ($Null -eq $global:TriggerExitSystem) {
+    
+    $LogCategory = 'Program initialisation'
+    $LogName     = 'Referentiel Phone Number Importation'
+    
+    Write-Log INFO -Category $LogCategory -Name $LogName -Message "Start Referentiel Phone Number Importation" -NotDisplay
+    Write-Log INFONO -Category $LogCategory -Name $LogName -Message "Referentiel Phone Number Importation Status : " -NotDisplay
+
+    Try {
+        $global:PhoneNumberReferential = Import-Referential -ReferentialPath $global:PhoneNumberReferentialFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
+        Write-Log VALUE -Category $LogCategory -Name $LogName -Message "Successful" -NotDisplay
+    }
+    Catch {
+        Write-Log ERROR -Category $LogCategory -Name $LogName -Message "Failed, to import Referentiel Phone Number due to : $($_.ToString())"
+    }
+    Write-Log INFO -Category $LogCategory -Name $LogName -Message "End Referentiel Phone Number Importation" -NotDisplay
+}
+
+#endregion Import Phone Number referential
 
 #region Program Presentation
 
 Write-Host '###################################################### Description ######################################################' -ForegroundColor Yellow
 Write-Host 'This program is only available in English'
-Write-Host 'It allows you to get, modify and delete information on : '$global:BoxType
-Write-Host 'It displays advanced information that you will not see through the classic web interface of your : '$global:BoxType
+Write-Host 'It allows you to get, modify and delete information on :'$global:BoxType
+Write-Host 'It displays advanced information that you will not see through the classic web interface of your :'$global:BoxType
 Write-Host 'And this via a local or remote connection (Provided that you have activated the remote Box management => ' -NoNewline
 Write-Host "$global:BoxUrlRemote)" -ForegroundColor Green
 Write-Host 'The result can be displayed in HTML format or in table form (Gridview)'
@@ -1233,48 +1335,56 @@ Write-Host '##################################################### Description ##
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type WARNING -Name 'Program initialisation - User Box Selection' -Message '################################################ User Password Action ##################################################'
-    Write-Log -Type INFO -Name 'Program run - Password Status' -Message 'Start Password Status' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Password Status' -Message 'Password Status : ' -NotDisplay
+    $Category = 'Program run'
+    $LogName     = 'Password Status'
+    Write-Log -Type WARNING -Category $Category -Name 'User Password Action' -Message '################################################ User Password Action ##################################################'
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName : " -NotDisplay
 
     If ($null -eq ($(Get-StoredCredential -Target $global:CredentialsTarget -ErrorAction SilentlyContinue | Select-Object -Property Password -ErrorAction SilentlyContinue).password | ConvertFrom-SecureString -AsPlainText -ErrorAction SilentlyContinue)) {
         
-        Write-Log -Type WARNING -Name 'Program run - Password Status' -Message 'Not yet set' -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $LogName -Message 'Not yet set' -NotDisplay
         Try {
             Add-BoxCredential -ErrorAction Stop
+            $UserPasswordAction = 'Define new password'
         }
         Catch {
-            Write-Log -Type WARNING -Name 'Program run - Password Status' -Message "Password can't be set, du to : $($_.ToString())" -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $LogName -Message "Password can't be set, du to : $($_.ToString())" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
             Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Password can not be set' -ErrorAction Stop
         }
     }
     Else {
-        Write-Log -Type VALUE -Name 'Program run - Password Status' -Message 'Already Set' -NotDisplay
-        $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Password Status' -LabelMessageText "$global:BoxType password is already set.`nWhat do you want to do ? :`n- (U) Use existing Password`n- (D) Define new password`n- (Q) Quit the program" -FirstOptionButtonText 'U' -SecondOptionButtonText 'D' -ThirdOptionButtonText 'Q'
-        switch ($Answer) {
-            U       {$Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                     $UserPasswordAction = 'Use existing password'
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Already Set' -NotDisplay
+        $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle $LogName -LabelMessageText "$global:BoxType password is already set.`nWhat do you want to do ? :`n- (U) Use existing Password`n- (D) Define new password`n- (Q) Quit the program" -FirstOptionButtonText 'U' -SecondOptionButtonText 'D' -ThirdOptionButtonText 'Q'
+        
+        Switch ($Answer) {
+            
+            U       {$UserPasswordAction = 'Use existing password'
+                     $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
+                     
                      Break
                     }
-            D       {Add-BoxCredential -ErrorAction Stop
-                     $UserPasswordAction = 'Define new password'
+            D       {$UserPasswordAction = 'Define new password (Replace Existing)'
+                     Add-BoxCredential -ErrorAction Stop
                      Break
                     }
-            Q       {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
-                     $UserPasswordAction = 'Quit the program'
+            Q       {$UserPasswordAction = 'Quit the program'
+                     Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
                      Break
                     }
-            Default {$Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
-                     $UserPasswordAction = 'Default - Use existing password'
+            Default {$UserPasswordAction = 'Default - Use existing password'
+                     $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
                      Break
                     }
         }
     }
-    Write-Log -Type INFO -Name 'Program run - User Password Action' -Message 'Start User Password Action' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - User Password Action' -Message "User Password Action : "
-    Write-Log -Type VALUE -Name 'Program run - User Password Action' -Message "$UserPasswordAction"
-    Write-Log -Type INFO -Name 'Program run - User Password Action' -Message 'End User Password Action' -NotDisplay
-    Write-Log -Type WARNING -Name 'Program initialisation - User Box Selection' -Message '################################################ User Password Action ##################################################'
+    
+    $LogName = 'User Password Action'
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "User $LogName : "
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message $UserPasswordAction
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+    Write-Log -Type WARNING -Category $Category -Name $LogName -Message '################################################ User Password Action ##################################################'
 }
 
 #endregion Check if password already exist in Windows Credential Manager
@@ -1283,36 +1393,40 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'Start Check Box LAN network' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Checking Box LAN network : ' -NotDisplay
+    $Category = 'Program run'
+    $LogName  = 'Network connection'
+
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start Check Box LAN network' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Checking Box LAN network : ' -NotDisplay
     
     Try {
         $DnsName = Resolve-DnsName -Name $BoxDns -Type A -DnsOnly -ErrorAction Stop
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Name 'Program run - Network connection' -Message 'Failed' -NotDisplay
-        Write-Log -Type ERROR -Name 'Program run - Network connection' -Message "Unable to resolve $BoxDns, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message 'Failed' -NotDisplay
+        Write-Log -Type ERROR -Category $Category -Name $LogName -Message "Unable to resolve $BoxDns, due to : $($_.ToString())" -NotDisplay
     }
     If ($DnsName.IPAddress -eq $DefaultLocalIPAddress) {
         
-        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Connected to your Local Box Network' -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Network connection' -Message "$global:BoxType IP Address : " -NotDisplay
-        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message $($DnsName.Address) -NotDisplay
-        Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Localy' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Connected to your Local Box Network' -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$global:BoxType IP Address : " -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message $($DnsName.Address) -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Recommanded connection : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Localy' -NotDisplay
         $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl = $BoxDns
         $TriggerLANNetwork = 1
     }
     Else {
-        Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working" -WarnIcon | Out-Null
-        Write-Log -Type INFONO -Name 'Program run - Network connection' -Message 'Recommanded connection : ' -NotDisplay
-        Write-Log -Type VALUE -Name 'Program run - Network connection' -Message 'Remotely' -NotDisplay
+        $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working" -InfoIcon
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message 'Recommanded connection : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Remotely' -NotDisplay
         $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl = $global:ErrorResolveDNSMessage
         $TriggerLANNetwork = 0
     }
     
-    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFilePath
-    Write-Log -Type INFO -Name 'Program run - Network connection' -Message 'End Check Box LAN network' -NotDisplay
+    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message 'End Check Box LAN network' -NotDisplay
 }
 
 #endregion Check if user connect on the correct LAN Network
@@ -1321,9 +1435,12 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'Start Connexion Type' -NotDisplay
+    $Category = 'Program run'
+    $LogName     = 'Connexion Type'
+    
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
     $ConnexionType = Get-ConnexionType -TriggerLANNetwork $TriggerLANNetwork -ErrorAction Stop
-    Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'End Connexion Type' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 }
 
 #endregion Ask to the user how he want to connect to the Box
@@ -1332,7 +1449,9 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    Write-Log -Type WARNING -Name 'Program run - User Connexion Type' -Message '############################################# User Connexion Type Choice ###############################################'
+    $Category = 'Program run'
+    
+    Write-Log -Type WARNING -Category $Category -Name 'User Connexion Type' -Message '############################################# User Connexion Type Choice ###############################################'
     
     Switch ($ConnexionType[0]) {
         
@@ -1354,23 +1473,25 @@ If ($Null -eq $global:TriggerExitSystem) {
             }
         
         R   {$UserConnexionTypeChosen = 'Remotly'
-             Write-Log -Type INFO -Name 'Program run - Check Host' -Message 'Start Check Host' -NotDisplay
+             $LogName = 'Check Host'
+             Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
              $DYNDNS = Get-HostStatus
-             Write-Log -Type INFO -Name 'Program run - Check Host' -Message 'End Check Host' -NotDisplay
-             Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'Start Check Port' -NotDisplay
+             Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+             $LogName = 'Check Port'
+             Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
              $Port = Get-PortStatus -UrlRoot $DYNDNS
-             Write-Log -Type INFO -Name 'Program run - Check Port' -Message 'End Check Port' -NotDisplay
+             Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
              $UrlRoot = "$global:UrlPrefixe$DYNDNS`:$Port/$global:APIVersion"
             
                 Switch ($global:BoxType) {
                 
                     BBOX    {$UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.html"
-                                $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port/index.html"
-                                Break
+                             $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port/index.html"
+                             Break
                             }
                     FREEBOX {$UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.php"
-                                $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port"
-                                Break
+                             $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port"
+                             Break
                             }
                 }
             }
@@ -1382,30 +1503,35 @@ If ($Null -eq $global:TriggerExitSystem) {
             }
     }
     
-    Write-Log -Type INFO -Name 'Program run - User Connexion Type' -Message 'Start User Connexion Type' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - User Connexion Type' -Message "User Connexion Type Chosen : "
-    Write-Log -Type VALUE -Name 'Program run - User Connexion Type' -Message "$UserConnexionTypeChosen"
-    Write-Log -Type INFO -Name 'Program run - User Connexion Type' -Message 'End User Connexion Type' -NotDisplay
+    $LogName = 'User Connexion Type'
     
-    Write-Log -Type INFO -Name 'Program run - Remote User Url Connexion choice' -Message 'Start Remote User Url Connexion choice' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program run - Remote User Url Connexion choice' -Message "Remote User Url Connexion Chosen : "
-    Write-Log -Type VALUE -Name 'Program run - Remote User Url Connexion choice' -Message "$UrlHome"
-    Write-Log -Type INFO -Name 'Program run - Remote User Url Connexion choice' -Message 'End Remote User Url Connexion choice' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Chosen : "
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "$UserConnexionTypeChosen"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+    
+    $LogName = 'Remote User Url Connexion choice'
+    
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName : "
+    Write-Log -Type VALUE -Category $Category -Name $LogName -Message "$UrlHome"
+    Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
     
     If ($ConnexionType[0] -ne 'Q') {
         
-        Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "Root $global:BoxType Url : $UrlRoot"-NotDisplay
-        Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "Login $global:BoxType Url : $UrlAuth" -NotDisplay
-        Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "Home $global:BoxType Url : $UrlHome" -NotDisplay
+        $LogName = 'Connexion Type'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Root $global:BoxType Url : $UrlRoot"-NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Login $global:BoxType Url : $UrlAuth" -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Home $global:BoxType Url : $UrlHome" -NotDisplay
 
         If ($Port) {
-            Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message "Remote $global:BoxType - Port : $Port" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "Remote $global:BoxType - Port : $Port" -NotDisplay
         }
 
-        Write-Log -Type INFO -Name 'Program run - Connexion Type' -Message 'End Connexion Type' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
     }
 
-    Write-Log -Type WARNING -Name 'Program run - User Connexion Type' -Message '############################################# User Connexion Type Choice ###############################################'
+    Write-Log -Type WARNING -Category $Category -Name 'User Connexion Type' -Message '############################################# User Connexion Type Choice ###############################################'
 }
 
 #endregion Set Box connexion settings regarding user selection
@@ -1415,14 +1541,14 @@ If ($Null -eq $global:TriggerExitSystem) {
 $global:ChromeDriver = $Null
 #$global:WebRequest = $Null
 
-Write-Log -Type WARNING -Name 'Program Run - Program Run' -Message '####################################################### Program ########################################################'
+Write-Log -Type WARNING -Category $Category -Name 'Program Run' -Message '####################################################### Program ########################################################'
 
 While ($Null -eq $global:TriggerExitSystem) {
     
     # Ask user action he wants to do (Get/PUT/POST/REMOVE)
-    Write-Log -Type INFO -Name 'Program run - Action asked' -Message 'Please select an action in the list'
+    Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Please select an action in the list'
     $Action = $Actions | Where-Object {$_.Available -eq 'Yes'} | Out-GridView -Title 'Please select an action in the list :' -OutputMode Single -ErrorAction Stop
-    Write-Log -Type INFONO -Name 'Program run - Action asked' -Message 'Selected action : '
+    Write-Log -Type INFONO -Category $Category -Name 'Action asked' -Message 'Selected action : '
     
     If ($Null -ne $Action) {
         
@@ -1436,51 +1562,51 @@ While ($Null -eq $global:TriggerExitSystem) {
         $RemotePermissions = $Action.RemotePermissions
         $Scope             = $Action.Scope
         
-        Write-Log -Type VALUE -Name 'Program run - Action asked' -Message $Description
-        Write-Log -Type INFO -Name 'Program run - Action asked' -Message 'Is `"Program`" action chosen by user ?' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message $Description
+        Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Is `"Program`" action chosen by user ?' -NotDisplay
         
         If (($APIName -match $APINameExclusionsFull) -or ($Scope -notmatch $ScopeExclusionsFull)) {
             
-            Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Yes' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Yes' -NotDisplay
             
             #region Start in Background chromeDriver
-            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
                 
             If (-not $global:ChromeDriver) {
                 
-                Write-Log -Type INFONO -Name 'Program run - ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process : ' -NotDisplay
+                Write-Log -Type INFONO -Category $Category -Name 'ChromeDriver Launch' -Message 'Starting ChromeDriver as backgroung process ... : '
                 
                 Try {
                     Start-ChromeDriver -ChromeBinaryPath $Global:GoogleChromeDefaultSetupFileNamePath -DownloadPath $JournalFolderNamePath -LogsPath $global:LogDateFolderNamePath -ChromeDriverDefaultProfile $GoogleChromeDefaultProfileName -ErrorAction Stop
-                    Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'Started' -NotDisplay
+                    Write-Log -Type VALUE -Category $Category -Name 'ChromeDriver Launch' -Message 'Started'
                 }
                 Catch {
-                    Write-Log -Type ERROR -Name 'Program run - ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
+                    Write-Log -Type ERROR -Category $Category -Name 'ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
                     Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'ChromeDriver can not be started' -ErrorAction Stop
                 }
                 
-                Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
+                Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
             Else {
-                Write-Log -Type VALUE -Name 'Program run - ChromeDriver Launch' -Message 'No needed' -NotDisplay
-                Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name 'ChromeDriver Launch' -Message 'No needed' -NotDisplay
+                Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
             #endregion Start in Background chromeDriver
             
-            Write-Log -Type INFO -Name 'Program run - Action asked' -Message 'Is `"Private`" permissions need to access to data ?' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Is `"Private`" permissions need to access to data ?' -NotDisplay
             
             If (($RemotePermissions -eq 'private') -or ($LocalPermissions -eq 'private') -or ($RemotePermissions -eq 'computer') -or ($RemotePermissions -eq 'computer')) {
                 
-                Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'Yes' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Yes' -NotDisplay
                 
                 #region Start Box Authentification
-                Write-Log -Type INFONO -Name 'Program run - Box Authentification' -Message 'Is Box Authentification need ? :' -NotDisplay
+                Write-Log -Type INFONO -Category $Category -Name 'Box Authentification' -Message 'Is Box Authentification need ? :' -NotDisplay
                 
                 If ($Null -eq $global:TriggerAuthentification) {
                     
-                    Write-Log -Type VALUE -Name 'Program run - Box Authentification' -Message 'Required' -NotDisplay
-                    Write-Log -Type INFO -Name 'Program run - Box Authentification' -Message 'Start Box Authentification' -NotDisplay
-                    Write-Log -Type INFONO -Name 'Program run - Box Authentification' -Message 'Starting Box Authentification : ' -NotDisplay
+                    Write-Log -Type VALUE -Category $Category -Name 'Box Authentification' -Message 'Required' -NotDisplay
+                    Write-Log -Type INFO -Category $Category -Name 'Box Authentification' -Message 'Start Box Authentification' -NotDisplay
+                    Write-Log -Type INFONO -Category $Category -Name 'Box Authentification' -Message 'Starting Box Authentification : '
                     
                     Try {
                         $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password | ConvertFrom-SecureString -AsPlainText
@@ -1491,29 +1617,29 @@ While ($Null -eq $global:TriggerExitSystem) {
                             Freebox {Connect-FREEBOX -UrlAuth $UrlAuth -UrlHome $UrlHome -Password $Password -ErrorAction Stop;Break}
                         }
                         
-                        Write-Log -Type VALUE -Name 'Program run - Box Authentification' -Message 'Authentificated' -NotDisplay
+                        Write-Log -Type VALUE -Category $Category -Name 'Box Authentification' -Message 'Authentificated'
                         Clear-Variable -Name Password
                         $global:TriggerAuthentification = 1
                     }
                     Catch {
-                        Write-Log -Type ERROR -Name 'Program run - Box Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
+                        Write-Log -Type ERROR -Category $Category -Name 'Box Authentification' -Message "Failed, Authentification can't be done, due to : $($_.ToString())"
                         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Box Authentification can not be done' -ErrorAction Stop
                     }
-                    Write-Log -Type INFO -Name 'Program run - Box Authentification' -Message 'End Box Authentification' -NotDisplay
+                    Write-Log -Type INFO -Category $Category -Name 'Box Authentification' -Message 'End Box Authentification' -NotDisplay
                 }
                 Else {
-                    Write-Log -Type VALUE -Name 'Program run - Box Authentification' -Message 'Already done' -NotDisplay
+                    Write-Log -Type VALUE -Category $Category -Name 'Box Authentification' -Message 'Already done' -NotDisplay
                 }
                 #endregion Start Box Authentification
             }
             Else {
-                Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'No' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'No' -NotDisplay
             }
         }
         Else {
-            Write-Log -Type VALUE -Name 'Program run - Action asked' -Message 'No' -NotDisplay
-            Write-Log -Type INFO -Name 'Program run - ChromeDriver Launch' -Message 'No need to Start Chrome Driver as background process' -NotDisplay
-            Write-Log -Type INFO -Name 'Program run - Box Authentification' -Message 'No needed Box Authentification' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'No' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'No need to Start Chrome Driver as background process' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'Box Authentification' -Message 'No needed Box Authentification' -NotDisplay
         }
         
         #region Get data
@@ -1546,7 +1672,7 @@ While ($Null -eq $global:TriggerExitSystem) {
     }
 }
 
-Write-Log -Type WARNING -Name 'Program Run - Program Run' -Message '####################################################### Program ########################################################'
+Write-Log -Type WARNING -Category $Category -Name 'Program Run' -Message '####################################################### Program ########################################################'
 
 #endregion process
 
