@@ -397,7 +397,7 @@
     Update       : Update Connexion to the box and the 2 functions : 'Get-HostStatus' and 'Get-PortStatus' to better error management when user input is on error
     Update       : Update function : 'Switch-Info' with new functions
     Update       : Update configuration files : ".\Ressources\Common-Functions.csv" and ".\Ressources\BBox-API-Summary.csv" with new functions created
-    Update       : Add new function : 'Export-ModuleFunction' - To export all details of function stored in the file module : '.\BOX-Module.psm1'
+    Update       : Add new function : 'Export-ModuleFunctions' - To export all details of function stored in the file module : '.\BOX-Module.psm1'
     Update       : Modify configuration file : '.\Ressources\Settings-Program.json' and new settings lincked to the new function
     Update       : Add details about Module : '.\BOX-Module.psm1'
     Update       : Add new function : 'Export-ModuleHelp' - to get information regarding the module details
@@ -422,6 +422,7 @@
     Update       : Add new function : 'Get-BoxCredential' - To get All Box password registred in Windows Credential Manager
     Update       : Modify configuration file : '.\Ressources\Settings-Program.json' - Reorganize schema for better understanding
     Update       : Restructure folder and sub-folder of : "Ressources"
+    Update       : Update function : 'Export-ModuleFunctions' - Add new parameters for better export in CSV and txt format and separate level of details
     
 .LINKS
     
@@ -444,16 +445,17 @@
 
 # Imported by module : '.\BoxModule.psm1'
 
+function Write-Log {
+    
 <#
     .SYNOPSIS
     Write-Log allow to written fonctional execution logs
-    
+
     .DESCRIPTION
     Write log on the host console and a csv file
 #>
-function Write-Log {
     Param (
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory=$True)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
         $Type = 'INFO',
         
@@ -461,10 +463,10 @@ function Write-Log {
         [ValidateSet('Program initialisation','Program Run','Program Stop')]
         $Category = 'Program Run',
         
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$True)]
         $Name,
         
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory=$True)]
         $Message,
         
         [Parameter()]
@@ -1567,7 +1569,7 @@ While ($Null -eq $global:TriggerExitSystem) {
         
         If (($APIName -match $APINameExclusionsFull) -or ($Scope -notmatch $ScopeExclusionsFull)) {
             
-            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Yes' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'No' -NotDisplay
             
             #region Start in Background chromeDriver
             Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
@@ -1637,7 +1639,7 @@ While ($Null -eq $global:TriggerExitSystem) {
             }
         }
         Else {
-            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'No' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Yes' -NotDisplay
             Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'No need to Start Chrome Driver as background process' -NotDisplay
             Write-Log -Type INFO -Category $Category -Name 'Box Authentification' -Message 'No needed Box Authentification' -NotDisplay
         }

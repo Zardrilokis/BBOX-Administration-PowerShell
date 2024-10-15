@@ -96,7 +96,7 @@ function Write-Log {
 #>
 
     Param (
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory=$True)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
         $Type = 'INFO',
         
@@ -159,7 +159,7 @@ function Write-Log {
         If (-not (Test-Path $LogPath)) {
             Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "Date;PID;Computer-User;Type;Category;Name;Message" 
         }
-        Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.Category)$($Log.name);$($Log.Message)" 
+        Out-File -FilePath $LogPath -Encoding unicode -Append -InputObject "$($Log.date);$($Log.pid);$($Log.user);$($Log.type);$($Log.Category);$($Log.name);$($Log.Message)" 
     }
     Finally {
         $mtx.ReleaseMutex()
@@ -2366,8 +2366,77 @@ function Import-Referential {
     Return $Actions
 }
 
+# Get help regarding the PowerShell Module : '.\BOX-Module.'psm1
+function Export-ModuleHelp {
+
+    <#
+    .SYNOPSIS
+        Get all details that are in a module
+    
+    .DESCRIPTION
+        Get all details that are in a module
+    
+    .PARAMETER ModuleFileName
+        This is the name of the module
+    
+    .PARAMETER ExportFolderPath
+        This is the folder to export result
+    
+    .EXAMPLE
+        Export-ModuleHelp -ModuleFileName "BOX-Module" -ExportFolderPath "C:\temp\Get-Date"
+    
+    .INPUTS
+        $ModuleFileName
+    
+    .OUTPUTS
+        Export result to '.CSV', file
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+        
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$ModuleFileName,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ExportFolderPath
+    )
+    
+    # Create folder date if do not exist
+    $FolderDate = Get-Date -Format yyyyMMdd
+    $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
+    
+    If ($(Test-Path -Path "$ExportFolderFullPath") -eq $False) {
+        
+        $null = New-Item -Path $ExportFolderPath -Name $FolderDate -ItemType Directory -Force
+    }
+    
+    # Get all function associated to the module
+    $ModuleDetails = Get-Module -Name $ModuleFileName
+    
+    $Array = @()
+    $Date = Get-Date -Format yyyyMMdd-hhmmss
+    $SummaryDetailsModuleFilePath = "$ExportFolderFullPath\$Date-SummaryDetailsModule-$ModuleFileName.csv"
+    
+    $line = New-Object -TypeName PSObject
+    $Line | Add-Member -Name 'Name'                -MemberType NoteProperty -Value $ModuleDetails.Name
+    $Line | Add-Member -Name 'Path'                -MemberType NoteProperty -Value $ModuleDetails.Path
+    $Line | Add-Member -Name 'Description'         -MemberType NoteProperty -Value $ModuleDetails.Description
+    $Line | Add-Member -Name 'Module Type'         -MemberType NoteProperty -Value $ModuleDetails.ModuleType
+    $Line | Add-Member -Name 'Version'             -MemberType NoteProperty -Value $ModuleDetails.Version
+    $Line | Add-Member -Name 'Number of functions' -MemberType NoteProperty -Value $ModuleDetails.ExportedCommands.count
+    $Line | Add-Member -Name 'Exported Functions'  -MemberType NoteProperty -Value $($ModuleDetails.ExportedCommands.Keys -Join ",")
+    
+    $Array += $Line
+    $Array | Export-Csv -Path $SummaryDetailsModuleFilePath -Force -Encoding utf8 -Delimiter ';' -NoTypeInformation
+    Return $Array
+}
+
 # Get All help foreach functions in PowerShell Module : '.\BOX-Module.'psm1
-function Export-ModuleFunction {
+function Export-ModuleFunctions {
 
     <#
     .SYNOPSIS
@@ -2389,18 +2458,30 @@ function Export-ModuleFunction {
         This is the path where for all functions have got a dedicated file will be create.
     
     .EXAMPLE
-        Export-ModuleFunction -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp"
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp"
     
     .EXAMPLE
-        Export-ModuleFunction -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport
     
     .EXAMPLE
-        Export-ModuleFunction -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -DetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -DetailedExport
     
     .EXAMPLE
-        Export-ModuleFunction -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -DetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -FullDetailedExport
     
-    .INPUTS
+    .EXAMPLE
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -DetailedExport
+    
+    .EXAMPLE
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -FullDetailedExport
+    
+    .EXAMPLE
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -DetailedExport -FullDetailedExport
+    
+    .EXAMPLE
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -DetailedExport -FullDetailedExport
+    
+        .INPUTS
         $ModuleFolderPath
         $ModuleFileName
         $FileExtention
@@ -2435,205 +2516,199 @@ function Export-ModuleFunction {
         [switch]$SummaryExport,
         
         [Parameter(Mandatory=$False)]
-        [switch]$DetailedExport
+        [switch]$DetailedExport,
+        
+        [Parameter(Mandatory=$False)]
+        [switch]$FullDetailedExport
     )
+    
+    # Variables
+    $Array = @()
+    $Array1 = @()
+    $Date = Get-Date -Format yyyyMMdd-hhmmss
+    $FolderDate = Get-Date -Format yyyyMMdd
+    $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
     
     # Build Full Module Folder Path
     $FullModuleFolderPath = "$ModuleFolderPath\$ModuleFileName$FileExtention"
     
-    # Create folder date if do not exist
-    $FolderDate = Get-Date -Format yyyyMMdd
-    $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
-    
-    If ($(Test-Path -Path "$ExportFolderFullPath") -eq $False) {
-        
-        $null = New-Item -Path $ExportFolderPath -Name $FolderDate -ItemType Directory -Force
-    }
-    
     # Import Module
     Import-Module $FullModuleFolderPath -Force
+    
+    # Create folder date if do not exist
+    If ($(Test-Path -Path $ExportFolderFullPath) -eq $False) {
+        
+        $null = New-Item -Path $ExportFolderPath -Name $FolderDate -ItemType Directory -Force -ErrorAction Stop
+    }
     
     # Get all function associated to the module
     $FunctionList = $(Get-Command -Module $ModuleFileName) | Where-Object {$_.CommandType -eq 'Function' -and $_.ModuleName -eq $ModuleFileName}
     
-    $Array = @()
-    $Array1 = @()
-    $FunctionTotalCount = $FunctionList.Name.count
+    # Get Help foreach function and export it to separate text (.txt) file or in CSV Summay file
+    $FunctionTotalCount = $FunctionList.count
     $FunctionCount = 1
-    $Date = Get-Date -Format yyyyMMdd-hhmmss
     
-    $AllFunctionsDetailsFilePath = "$ExportFolderFullPath\$Date-Get-Help-AllFunctionsDetails.csv"
-    $AllFunctionsAllDetailsFilePath = "$ExportFolderFullPath\$Date-Get-Help-AllFunctionsAllDetails.csv"
-    
-    # Get Help foreach function and export it to separate text (.txt) file
-    Foreach ($Function in $FunctionList.Name) {
+    Foreach ($Function in $FunctionList) {
         
-        Write-Log VALUE -Name 'Programm run - Export All function in module : BOX-Module' -Message "($FunctionCount/$FunctionTotalCount) - Current function : $Function" -NotDisplay
+        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "($FunctionCount/$FunctionTotalCount) - Current function : " -NotDisplay
+        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "$Function" -NotDisplay
         
-        # Get-help of the current function
-        $FunctionListDetails = Get-Help $Function -Detailed
-        $Array += $FunctionListDetails
+        # Get-help Details of the current function
+        $FunctionListDetails     = Get-Help -Name $Function -Detailed
+        $FunctionListFullDetails = Get-Help -Name $Function -Full
+        
+        If ($SummaryExport) {
+        
+            # Command Function properties
+            $line = New-Object -TypeName PSObject
+            $line | Add-Member -Name 'Module'                     -MemberType Noteproperty -Value $Function.Module
+            $line | Add-Member -Name 'ModuleName'                 -MemberType Noteproperty -Value $Function.ModuleName
+            $line | Add-Member -Name 'Name'                       -MemberType Noteproperty -Value $Function.Name
+            $line | Add-Member -Name 'Namespace'                  -MemberType Noteproperty -Value $Function.Namespace
+            $line | Add-Member -Name 'Noun'                       -MemberType Noteproperty -Value $Function.Noun
+            $line | Add-Member -Name 'CmdletBinding'              -MemberType Noteproperty -Value $Function.CmdletBinding
+            $line | Add-Member -Name 'Verb'                       -MemberType Noteproperty -Value $Function.Verb
+            $line | Add-Member -Name 'Version'                    -MemberType Noteproperty -Value $Function.Version
+            $line | Add-Member -Name 'Visibility'                 -MemberType Noteproperty -Value $Function.Visibility
+            $line | Add-Member -Name 'CommandType'                -MemberType Noteproperty -Value $Function.CommandType
+            $line | Add-Member -Name 'DefaultParameterSet'        -MemberType Noteproperty -Value $Function.DefaultParameterSet
+            $line | Add-Member -Name 'Definition'                 -MemberType Noteproperty -Value $Function.Definition
+            $line | Add-Member -Name 'Description'                -MemberType Noteproperty -Value $Function.Description
+            $line | Add-Member -Name 'DisplayName'                -MemberType Noteproperty -Value $Function.DisplayName
+            $line | Add-Member -Name 'DLL'                        -MemberType Noteproperty -Value $Function.DLL
+            $line | Add-Member -Name 'Extension'                  -MemberType Noteproperty -Value $Function.Extension
+            $line | Add-Member -Name 'FileVersionInfo'            -MemberType Noteproperty -Value $Function.FileVersionInfo
+            $line | Add-Member -Name 'HelpFile'                   -MemberType Noteproperty -Value $Function.HelpFile
+            $line | Add-Member -Name 'HelpUri'                    -MemberType Noteproperty -Value $Function.HelpUri
+            $line | Add-Member -Name 'ImmediateBaseObject'        -MemberType Noteproperty -Value $Function.ImmediateBaseObject
+            $line | Add-Member -Name 'Members'                    -MemberType Noteproperty -Value $Function.Members
+            $line | Add-Member -Name 'Methods'                    -MemberType Noteproperty -Value $Function.Methods
+            $line | Add-Member -Name 'Options'                    -MemberType Noteproperty -Value $Function.Options
+            $line | Add-Member -Name 'OriginalEncoding'           -MemberType Noteproperty -Value $Function.OriginalEncoding
+            $line | Add-Member -Name 'OutputType'                 -MemberType Noteproperty -Value $Function.OutputType
+            $line | Add-Member -Name 'Parameters'                 -MemberType Noteproperty -Value $Function.Parameters
+            $line | Add-Member -Name 'ParameterSets'              -MemberType Noteproperty -Value $Function.ParameterSets
+            $line | Add-Member -Name 'Path'                       -MemberType Noteproperty -Value $Function.Path
+            $line | Add-Member -Name 'Properties'                 -MemberType Noteproperty -Value $Function.Properties
+            $line | Add-Member -Name 'PSSnapIn'                   -MemberType Noteproperty -Value $Function.PSSnapIn
+            $line | Add-Member -Name 'ReferencedCommand'          -MemberType Noteproperty -Value $Function.ReferencedCommand
+            $line | Add-Member -Name 'RemotingCapability'         -MemberType Noteproperty -Value $Function.RemotingCapability
+            $line | Add-Member -Name 'ResolvedCommand'            -MemberType Noteproperty -Value $Function.ResolvedCommand
+            $line | Add-Member -Name 'ResolvedCommandName'        -MemberType Noteproperty -Value $Function.ResolvedCommandName
+            $line | Add-Member -Name 'TypeNames'                  -MemberType Noteproperty -Value $Function.TypeNames
+            $line | Add-Member -Name 'BaseObject'                 -MemberType Noteproperty -Value $Function.BaseObject
+            $Array += $line
+            
+            # Export help summary for each function to text (.txt) file
+            $SummaryFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Summary-Get-Help-$Function.txt"
+            $FunctionListDetails | Out-File -FilePath $SummaryFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
+            
+            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help summary function details : $($Function.Name) is available here : " -NotDisplay
+            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $SummaryFunctionDetailsFilePath -NotDisplay
+        }
         
         If ($DetailedExport) {
-        
-            $Date = Get-Date -Format yyyyMMdd-hhmmss
             
-            # Export help message for all the function to text (.txt) file
-            $FunctionListDetails | Out-File -FilePath "$ExportFolderFullPath\$Date-Get-Help-$Function.txt" -Encoding utf8 -ErrorAction Stop
+            # Export help full details for each function to text (.txt) file
+            $DetailedFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Details-Get-Help-$Function.txt"
+            $FunctionListFullDetails | Out-File -FilePath $DetailedFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
             
-            # Export help message for all the function to CSV (.csv) file
-            $FunctionListDetails | Export-Csv -Path "$ExportFolderFullPath\$Function.csv" -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation -ErrorAction Stop
-            
-            # Export help message for all the function to JSON (.JSON) file
-            $FunctionListDetails | Out-File -Path "$ExportFolderFullPath\$Function.json" -Force -Encoding utf8 -ErrorAction Stop
+            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help full function details : $($Function.Name) is available here : " -NotDisplay
+            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $DetailedFunctionDetailsFilePath -NotDisplay                        
         }
         
-        $Parameters = $FunctionListDetails.parameters.parameter
-        $ParametersSyntaxe = $FunctionListDetails.syntax.syntaxItem.parameter
-        $ParameterFunctionTotalCount = $Parameters.count
-        $ParameterCount = 1
-        
-        Foreach ($Parameter in $Parameters) {
+        If ($FullDetailedExport) {
             
-            Write-Log VALUE -Name 'Programm run - Export All function in module : BOX-Module' -Message "($ParameterCount/$ParameterFunctionTotalCount) - Current Parameter : $($Parameter.Name)" -NotDisplay
+            # Export help full details for each function to text (.txt) file
+            $FullFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Full-Details-Get-Help-$Function.txt"
+            $Function.Definition | Out-File -FilePath $FullFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
             
-            # Commons properties
-            $line = New-Object -TypeName PSObject
-            $line | Add-Member -Name 'Name'                       -MemberType Noteproperty -Value $FunctionListDetails.Name
-            $line | Add-Member -Name 'Function Name'              -MemberType Noteproperty -Value $FunctionListDetails.details.Name
-            $line | Add-Member -Name 'Module Name'                -MemberType Noteproperty -Value $FunctionListDetails.ModuleName
-            $line | Add-Member -Name 'Category'                   -MemberType Noteproperty -Value $FunctionListDetails.Category
-            $line | Add-Member -Name 'Synopsis'                   -MemberType Noteproperty -Value $FunctionListDetails.Synopsis
-            $line | Add-Member -Name 'Sort Description'           -MemberType Noteproperty -Value $FunctionListDetails.description.text
-            $line | Add-Member -Name 'Long Description'           -MemberType Noteproperty -Value $FunctionListDetails.details.description.text
-            $line | Add-Member -Name 'Example Code'               -MemberType Noteproperty -Value $FunctionListDetails.examples.example.code
-            $line | Add-Member -Name 'Example Introduction'       -MemberType Noteproperty -Value $FunctionListDetails.examples.example.Introduction.text
-            $line | Add-Member -Name 'Example Title'              -MemberType Noteproperty -Value $FunctionListDetails.examples.example.Title
-            $line | Add-Member -Name 'Input Types'                -MemberType Noteproperty -Value $($FunctionListDetails.inputTypes.inputType.type.name -join '|')
-            $line | Add-Member -Name 'Return Values Name'         -MemberType Noteproperty -Value $FunctionListDetails.returnValues.returnValue.type.name
+            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help full details for function : $($Function.Name) is available here : " -NotDisplay
+            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $FullFunctionDetailsFilePath -NotDisplay
+
+            $Parameters = $FunctionListDetails.parameters.parameter
+            $ParametersSyntaxe = $FunctionListDetails.syntax.syntaxItem.parameter
+            $ParameterFunctionTotalCount = $Parameters.count
+            $ParameterCount = 1
             
-            # Function parameters
-            $line | Add-Member -Name "Parameter description"      -MemberType Noteproperty -Value $Parameter.description.text
-            $line | Add-Member -Name "Parameter default Value"    -MemberType Noteproperty -Value $Parameter.defaultValue
-            $line | Add-Member -Name "Parameter name"             -MemberType Noteproperty -Value $Parameter.name
-            $line | Add-Member -Name "Parameter type"             -MemberType Noteproperty -Value $Parameter.type.name
-            $line | Add-Member -Name "Parameter required"         -MemberType Noteproperty -Value $Parameter.required
-            $line | Add-Member -Name "Parameter globbing"         -MemberType Noteproperty -Value $Parameter.globbing
-            $line | Add-Member -Name "Parameter pipeline Input"   -MemberType Noteproperty -Value $Parameter.pipelineInput
-            $line | Add-Member -Name "Parameter position"         -MemberType Noteproperty -Value $Parameter.position
-            $line | Add-Member -Name "Parameter isDynamic"        -MemberType Noteproperty -Value $Parameter.isDynamic
-            $line | Add-Member -Name "Parameter parameterSet Name"-MemberType Noteproperty -Value $Parameter.parameterSetName
-            $line | Add-Member -Name "Parameter parameter Value"  -MemberType Noteproperty -Value $Parameter.parameterValue
-            $line | Add-Member -Name "Parameter aliases"          -MemberType Noteproperty -Value $Parameter.Aliases
-            
-            # Syntaxe Function parameters
-            $line | Add-Member -Name 'Parameter Syntaxe description'    -MemberType Noteproperty -Value $($ParametersSyntaxe.description.text -join ' | ')
-            $line | Add-Member -Name 'Parameter Syntaxe globbing'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].globbing
-            $line | Add-Member -Name 'Parameter Syntaxe name'           -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].name
-            $line | Add-Member -Name 'Parameter Syntaxe parameterValue' -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].parameterValue
-            $line | Add-Member -Name 'Parameter Syntaxe pipelineInput'  -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].pipelineInput
-            $line | Add-Member -Name 'Parameter Syntaxe position'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].position
-            $line | Add-Member -Name 'Parameter Syntaxe required'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].required
-            
-            # Others Informations
-            $line | Add-Member -Name 'Notes'                      -MemberType Noteproperty -Value $FunctionListDetails.alertSet.alert.text
-            $line | Add-Member -Name 'Functionality'              -MemberType Noteproperty -Value $FunctionListDetails.Functionality
-            $line | Add-Member -Name 'Role'                       -MemberType Noteproperty -Value $FunctionListDetails.Role
-            
-            $Array1 += $line
-            $ParameterCount ++
+            Foreach ($Parameter in $Parameters) {
+                
+                Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "($ParameterCount/$ParameterFunctionTotalCount) - Current Parameter : " -NotDisplay
+                Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "$($Parameter.Name)" -NotDisplay                
+                
+                # Function List properties
+                $Line1 = New-Object -TypeName PSObject
+                $Line1 | Add-Member -Name 'Name'                        -MemberType Noteproperty -Value $FunctionListDetails.Name
+                $Line1 | Add-Member -Name 'Function Name'               -MemberType Noteproperty -Value $FunctionListDetails.details.Name
+                $Line1 | Add-Member -Name 'Module Name'                 -MemberType Noteproperty -Value $FunctionListDetails.ModuleName
+                $Line1 | Add-Member -Name 'Category'                    -MemberType Noteproperty -Value $FunctionListDetails.Category
+                $Line1 | Add-Member -Name 'Synopsis'                    -MemberType Noteproperty -Value $FunctionListDetails.Synopsis
+                $Line1 | Add-Member -Name 'Sort Description'            -MemberType Noteproperty -Value $FunctionListDetails.description.text
+                $Line1 | Add-Member -Name 'Long Description'            -MemberType Noteproperty -Value $FunctionListDetails.details.description.text
+                $Line1 | Add-Member -Name 'Example Code'                -MemberType Noteproperty -Value $FunctionListDetails.examples.example.code
+                $Line1 | Add-Member -Name 'Example Introduction'        -MemberType Noteproperty -Value $FunctionListDetails.examples.example.Introduction.text
+                $Line1 | Add-Member -Name 'Example Title'               -MemberType Noteproperty -Value $FunctionListDetails.examples.example.Title
+                $Line1 | Add-Member -Name 'Input Types'                 -MemberType Noteproperty -Value $($FunctionListDetails.inputTypes.inputType.type.name -join '|')
+                $Line1 | Add-Member -Name 'Return Values Name'          -MemberType Noteproperty -Value $FunctionListDetails.returnValues.returnValue.type.name
+                
+                # Function parameters
+                $Line1 | Add-Member -Name "Parameter description"       -MemberType Noteproperty -Value $Parameter.description.text
+                $Line1 | Add-Member -Name "Parameter default Value"     -MemberType Noteproperty -Value $Parameter.defaultValue
+                $Line1 | Add-Member -Name "Parameter name"              -MemberType Noteproperty -Value $Parameter.name
+                $Line1 | Add-Member -Name "Parameter type"              -MemberType Noteproperty -Value $Parameter.type.name
+                $Line1 | Add-Member -Name "Parameter required"          -MemberType Noteproperty -Value $Parameter.required
+                $Line1 | Add-Member -Name "Parameter globbing"          -MemberType Noteproperty -Value $Parameter.globbing
+                $Line1 | Add-Member -Name "Parameter pipeline Input"    -MemberType Noteproperty -Value $Parameter.pipelineInput
+                $Line1 | Add-Member -Name "Parameter position"          -MemberType Noteproperty -Value $Parameter.position
+                $Line1 | Add-Member -Name "Parameter isDynamic"         -MemberType Noteproperty -Value $Parameter.isDynamic
+                $Line1 | Add-Member -Name "Parameter parameter Set Name"-MemberType Noteproperty -Value $Parameter.parameterSetName
+                $Line1 | Add-Member -Name "Parameter parameter Value"   -MemberType Noteproperty -Value $Parameter.parameterValue
+                $Line1 | Add-Member -Name "Parameter aliases"           -MemberType Noteproperty -Value $Parameter.Aliases
+                
+                # Syntaxe Function parameters
+                $Line1 | Add-Member -Name 'Parameter Syntaxe description'    -MemberType Noteproperty -Value $($ParametersSyntaxe.description.text -join ' | ')
+                $Line1 | Add-Member -Name 'Parameter Syntaxe globbing'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].globbing
+                $Line1 | Add-Member -Name 'Parameter Syntaxe name'           -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].name
+                $Line1 | Add-Member -Name 'Parameter Syntaxe parameterValue' -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].parameterValue
+                $Line1 | Add-Member -Name 'Parameter Syntaxe pipelineInput'  -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].pipelineInput
+                $Line1 | Add-Member -Name 'Parameter Syntaxe position'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].position
+                $Line1 | Add-Member -Name 'Parameter Syntaxe required'       -MemberType Noteproperty -Value $ParametersSyntaxe[$ParameterCount].required
+                
+                # Common Informations
+                $Line1 | Add-Member -Name 'Notes'                      -MemberType Noteproperty -Value $FunctionListDetails.alertSet.alert.text
+                $Line1 | Add-Member -Name 'Functionality'              -MemberType Noteproperty -Value $FunctionListDetails.Functionality
+                $Line1 | Add-Member -Name 'Role'                       -MemberType Noteproperty -Value $FunctionListDetails.Role
+                
+                $Array1 += $Line1
+                $ParameterCount ++
+            }
+
         }
         $FunctionCount ++
-    }
+    }    
     
     If ($SummaryExport) {
         
-        $Array | Export-Csv -Path $AllFunctionsDetailsFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
+        $AllFunctionsSummaryFilePath = "$ExportFolderFullPath\$Date-Get-Help-Summary-All-Functions.csv"
+        $Array | Export-Csv -Path $AllFunctionsSummaryFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
+        
+        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'Summary Get-Help details for all Functions are saved to : ' -NotDisplay
+        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $AllFunctionsSummaryFilePath -NotDisplay
+    }
+    
+    If ($FullDetailedExport) {
+        
+        $AllFunctionsAllDetailsFilePath = "$ExportFolderFullPath\$Date-Get-Help-Full-Details-All-Functions.csv"
         $Array1 | Export-Csv -Path $AllFunctionsAllDetailsFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
-    }
-    Write-Log INFONO -Name 'Programm run - Export All function in module : BOX-Module' -Message 'All files are save to the folder : '
-    Write-Log VALUE -Name 'Programm run - Export All function in module : BOX-Module' -Message $ExportFolderFullPath
-    Write-Log INFONO -Name 'Programm run - Export All function in module : BOX-Module' -Message 'Summary file is save to : '
-    Write-Log VALUE -Name 'Programm run - Export All function in module : BOX-Module' -Message $AllFunctionsDetailsFilePath
-    Write-Log INFONO -Name 'Programm run - Export All function in module : BOX-Module' -Message 'Summary details save to : '
-    Write-Log VALUE -Name 'Programm run - Export All function in module : BOX-Module' -Message $AllFunctionsAllDetailsFilePath
-}
-
-# Get help regarding the PowerShell Module : '.\BOX-Module.'psm1
-function Export-ModuleHelp {
-
-    <#
-    .SYNOPSIS
-        Get all details that are in a module
-    
-    .DESCRIPTION
-        Get all details that are in a module
-    
-    .PARAMETER ModuleFileName
-        This is the name of the module
-    
-    .EXAMPLE
-        Export-ModuleFunction -ModuleFileName "BOX-Module"
-    
-    .INPUTS
-        $ModuleFileName
-    
-    .OUTPUTS
-        Export result to '.CSV', file
-    
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to script(s): '.\Box-Administration.psm1'
-    
-    #>
         
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$ModuleFileName,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$ExportFolderPath
-    )
-    
-    # Create folder date if do not exist
-    $FolderDate = Get-Date -Format yyyyMMdd
-    $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
-    
-    If ($(Test-Path -Path "$ExportFolderFullPath") -eq $False) {
-        
-        $null = New-Item -Path $ExportFolderPath -Name $FolderDate -ItemType Directory -Force
+        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'Full Get-Help details for all Functions are saved to : ' -NotDisplay
+        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $AllFunctionsAllDetailsFilePath -NotDisplay
     }
     
-    # Get all function associated to the module
-    $ModuleDetails = Get-Module -Name BOX-module
+    Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'All files are save to the folder : '
+    Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $ExportFolderFullPath
     
-    $Array1 = @()
-    
-    $(Get-Module -Name BOX-module).ExportedCommands | ForEach-Object {
-        $_.GetEnumerator() | ForEach-Object {
-            
-            $line1 = New-Object -TypeName PSObject
-            $Line1 | Add-Member -Name 'Name' -MemberType NoteProperty -Value $_.Key
-            $Line1 | Add-Member -Name 'Value' -MemberType NoteProperty -Value $_.Value
-            $Array1 += $line1
-        }
-    }
-    
-    $Array = @()
-    
-    $line = New-Object -TypeName PSObject
-    $Line | Add-Member -Name 'Name'                -MemberType NoteProperty -Value $ModuleDetails.Name
-    $Line | Add-Member -Name 'Path'                -MemberType NoteProperty -Value $ModuleDetails.Path
-    $Line | Add-Member -Name 'Description'         -MemberType NoteProperty -Value $ModuleDetails.Description
-    $Line | Add-Member -Name 'ModuleType'          -MemberType NoteProperty -Value $ModuleDetails.ModuleType
-    $Line | Add-Member -Name 'Version'             -MemberType NoteProperty -Value $ModuleDetails.Version
-    $Line | Add-Member -Name 'Number of functions' -MemberType NoteProperty -Value $Array1.count
-    $Line | Add-Member -Name 'Exported Functions'  -MemberType NoteProperty -Value $($Array1.name -join ',')
-    
-    $Array += $Line
-    
-    $Date = Get-Date -Format yyyyMMdd-hhmmss
-    $Array | Export-Csv -Path "$ExportFolderFullPath\$Date-DetailsModule-$ModuleFileName.csv" -Force -Encoding utf8 -Delimiter ';' -NoTypeInformation
+    Return $Array1
 }
 
 #region Load user Json file configuration management
@@ -5614,16 +5689,26 @@ Function Switch-Info {
             # Reset-Current User Program Configuration
             Reset-CUPC           {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
             
-            # Export-Module Function
-            Export-MFS           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport}
-            
-            Export-MFD           {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport}
-            
-            Export-MFSD          {$FormatedData = Export-ModuleFunction -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport}
-            
             # Export-ModuleHelp
-            Export-MH            {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath}
+            Export-MH            {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath;Break}
             
+            # Export-Module Function
+            Export-MF            {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath;Break}
+            
+            Export-MFS           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport;Break}
+            
+            Export-MFD           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport;Break}
+            
+            Export-MFF           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -FullDetailedExport;Break}
+            
+            Export-MFSD          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport;Break}
+            
+            Export-MFSF          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -FullDetailedExport;Break}
+            
+            Export-MFDF          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport -FullDetailedExport;Break}
+            
+            Export-MFSDF         {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport -FullDetailedExport;Break}
+                        
             # Exit
             Q                    {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
             
@@ -5634,8 +5719,8 @@ Function Switch-Info {
             Uninstall-Program    {Uninstall-Program -ErrorAction Stop;Break}
             
             # Default
-            Default              {Write-log WARNING -Category 'Program run' -Name 'Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
-                                  Show-WindowsFormDialogBox -Title 'Program run - Action not yet developed' -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
+            Default              {Write-log WARNING -Category 'Program run' -Name "Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
+                                  Show-WindowsFormDialogBox -Title "Program run - Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
                                   $FormatedData = 'Program'
                                   Break
                                  }
@@ -7193,7 +7278,7 @@ Function Get-BoxJournal {
 }
 
 # Used only to manage errors when there is no data to Export/Display
-Function EmptyFormatedDATA {
+Function Get-EmptyFormatedDATA {
 
 <#
 .SYNOPSIS
@@ -7206,13 +7291,13 @@ Function EmptyFormatedDATA {
     Array with data or not
 
 .EXAMPLE
-    EmptyFormatedDATA -FormatedData $FormatedData
+    Get-EmptyFormatedDATA -FormatedData $FormatedData
 
 .INPUTS
     $FormatedData
 
 .OUTPUTS
-    Write log when when there is no data to Export/Display
+    Write log when there is no data to Export/Display
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
@@ -7299,7 +7384,7 @@ function Export-GlobalOutputData {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Switch-ExportFormat', 'Switch-DisplayFormat', 'Format-ExportResult', 'Format-DisplayResult', 'EmptyFormatedDATA', 'Set-ValueToJSONFile', 'Set-ValueToJSONFile'
+    Linked to function(s): 'Switch-ExportFormat', 'Switch-DisplayFormat', 'Format-ExportResult', 'Format-DisplayResult', 'Get-EmptyFormatedDATA', 'Set-ValueToJSONFile', 'Set-ValueToJSONFile'
     Linked to script(s): '.\Box-Administration.psm1'
 
 #>
@@ -7364,10 +7449,11 @@ function Export-GlobalOutputData {
         Format-DisplayResult -FormatedData $FormatedData -APIName $APIName -Exportfile $ExportFile -Description $Description -ReportType $ReportType -ReportPath $ReportPath -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     }
     Else {
-        EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        Get-EmptyFormatedDATA -FormatedData $FormatedData -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     }
 }
 
+# Used only to get Files count for each export folder
 function Export-ProgramFilesCount {
 
     <#
@@ -14563,7 +14649,7 @@ Function Set-BBOXDeviceResetFactory {
 
 #endregion Set function
 
-#region Others
+#region Referential Contact for BBox
 
 # To Show Referential Contact for BBox
 function Show-BBOXReferentialContact {
@@ -14634,10 +14720,10 @@ function Add-BBOXNewReferentialContact {
         No parameter, values are asked directly in function
         
     .EXAMPLE
-        Add-NewReferentialContact
+        Show-WindowsFormDialogBox8Inuput -MainFormTitle "Please complete this form :" -LabelMessageText0 "PhoneNumber :" -DefaultValue0 "+33102030405" -LabelMessageText1 "Prefixe :" -DefaultValue1 "+33" -LabelMessageText2 "Number :" -DefaultValue2 "0102030405" -LabelMessageText3 "Name :" -DefaultValue3 "DUPONT" -LabelMessageText4 "SurName :" -DefaultValue4 "Dupont" -LabelMessageText5 "Description :" -DefaultValue5 "This is the desciption of the contact" -LabelMessageText6 "Category :" -DefaultValue6 "Family / Friend / Others" -LabelMessageText7 "Type :" -DefaultValue7 "Mobile / Fixe" -OkButtonText "OK" -CancelButtonText "Cancel"
         
     .INPUTS
-        Show-WindowsFormDialogBox8Inuput -MainFormTitle "Please complete this form :" -LabelMessageText0 "PhoneNumber :" -DefaultValue0 "+33102030405" -LabelMessageText1 "Prefixe :" -DefaultValue1 "+33" -LabelMessageText2 "Number :" -DefaultValue2 "0102030405" -LabelMessageText3 "Name :" -DefaultValue3 "DUPONT" -LabelMessageText4 "SurName :" -DefaultValue4 "Dupont" -LabelMessageText5 "Description :" -DefaultValue5 "This is the desciption of the contact" -LabelMessageText6 "Category :" -DefaultValue6 "Family / Friend / Others" -LabelMessageText7 "Type :" -DefaultValue7 "Mobile / Fixe" -OkButtonText "OK" -CancelButtonText "Cancel"
+        User inputs
         
     .OUTPUTS
         [PSCustomObject]@{
@@ -14764,7 +14850,7 @@ function Remove-BBOXReferentialContact {
     Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'End Export New Referential Contact' -NotDisplay    
 }
 
-#endregion Others
+#endregion Referential Contact for BBox
 
 #endregion BBox
 
