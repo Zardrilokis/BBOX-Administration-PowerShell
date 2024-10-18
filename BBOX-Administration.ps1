@@ -271,7 +271,7 @@
     Update       : Debug function : Switch-OpenExportFolder
 
     Version 2.7 - Box version 23.7.12
-    Updated Date : 2024/10/06
+    Updated Date : 2024/10/17
     Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
     Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
     Update       : Update function : 'Get-WIRELESSACL' - Add parameter 'Rules Count'
@@ -423,6 +423,9 @@
     Update       : Modify configuration file : '.\Ressources\Settings-Program.json' - Reorganize schema for better understanding
     Update       : Restructure folder and sub-folder of : "Ressources"
     Update       : Update function : 'Export-ModuleFunctions' - Add new parameters for better export in CSV and txt format and separate level of details
+    Update       : Update and correct 'Write-Log' function and add Logs 'Start/End' comments for better reading and understantding
+    Update       : Add new function : 'Show-WindowsFormDialogBox6ChoicesCancel' - New WindowsForm with 6 Choices (Last is Cancel)
+    Update       : Add new button 'Program' to have access only to 'program' actions without box action in the same toolbox
     
 .LINKS
     
@@ -441,6 +444,8 @@
     
 #>
 
+#region Initialisation
+
 #region function
 
 # Imported by module : '.\BoxModule.psm1'
@@ -457,23 +462,23 @@ function Write-Log {
     Param (
         [Parameter(Mandatory=$True)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
-        $Type = 'INFO',
+        [String]$Type,
         
         [Parameter(Mandatory=$True)]
         [ValidateSet('Program initialisation','Program Run','Program Stop')]
-        $Category = 'Program Run',
+        [String]$Category,
         
         [Parameter(Mandatory=$True)]
-        $Name,
+        [String]$Name,
         
         [Parameter(Mandatory=$True)]
-        $Message,
+        [String]$Message,
         
         [Parameter()]
         [switch]$NotDisplay,
         
         [Parameter(Mandatory=$false)]
-        $Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
+        [String]$Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
     )
     
     $LogPath = $Logname + '.csv'
@@ -969,9 +974,9 @@ If ($Null -eq $global:TriggerExitSystem) {
         Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName :" -NotDisplay
         Write-Log -Type VALUE -Category $Category -Name $LogName -Message $ChromeDriverVersion -NotDisplay
         Write-Log -Type INFONO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
-        $LogName = 'Control maching version'
-        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName Chrome Driver Standalone" -NotDisplay
-        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Chrome Driver Standalone Status : " -NotDisplay
+        $LogName = 'Control maching version Chrome Driver Standalone'
+        Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName Status : " -NotDisplay
             
         If ($global:ChromeDriverLastStableVersion -notmatch $ChromeDriverVersion) {
             
@@ -980,7 +985,7 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type VALUE -Category $Category -Name $LogName -Message $ChromeDriverVersion -NotDisplay
             Write-Log -Type INFO -Category $Category -Name $LogName -Message ' to version :' -NotDisplay
             Write-Log -Type VALUE -Category $Category -Name $LogName -Message $global:ChromeDriverLastStableVersion -NotDisplay
-            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName Chrome Driver Standalone" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
             $LogName = 'Update Chrome Driver'
             Write-Log -Type INFO -Category $Category -Name $LogName -Message 'Start stop Chrome Driver' -NotDisplay
             
@@ -998,9 +1003,9 @@ If ($Null -eq $global:TriggerExitSystem) {
             Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
         Else {
-            $LogName = 'Control maching version'
+            $LogName = 'Control maching version Chrome Driver Standalone'
             Write-Log -Type VALUE -Category $Category -Name $LogName -Message 'Up to date' -NotDisplay
-            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName Chrome Driver Standalone" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
             Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
         }
     }
@@ -1139,13 +1144,17 @@ Write-Log -Type WARNING -Category $Category -Name 'End Initialisation' -Message 
 
 #endregion End Program Initialisation
 
+#endregion Initialisation
+
+#region User Actions
+
 #region Box user selection
 
 $LogName = 'User Box Selection'
 Write-Log -Type WARNING -Category $Category -Name $LogName -Message '################################################## User Box Selection ###################################################'
 Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
 Write-Log -Type INFONO -Category $Category -Name $LogName -Message "$LogName : "
-$global:BoxType = Show-WindowsFormDialogBox5ChoicesCancel -MainFormTitle "$LogName" -LabelMessageText "Please select your box below :" -FirstOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Bbox -SecondOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Freebox -ThirdOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OrangeBox -FourOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.SFRBox -FiveOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -ErrorAction Stop
+$global:BoxType = Show-WindowsFormDialogBox6ChoicesCancel -MainFormTitle "$LogName" -LabelMessageText "Please select your box below :" -FirstOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Bbox -SecondOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Freebox -ThirdOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OrangeBox -FourOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.SFRBox -FiveOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Program -SixOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -ErrorAction Stop
 Write-Log -Type VALUE -Category $Category -Name $LogName -Message "$global:BoxType"
 Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
 Write-Log -Type WARNING -Category $Category -Name $LogName -Message '################################################## User Box Selection ###################################################'
@@ -1251,7 +1260,9 @@ If ($Null -eq $global:TriggerExitSystem) {
     
     $Actions += Import-Referential -ReferentialPath $CommonFunctionsFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
     
-    $Actions += Import-Referential -ReferentialPath $APISummaryFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
+    If ($global:BoxType -notmatch 'Program') {
+        $Actions += Import-Referential -ReferentialPath $APISummaryFileNamePath -LogCategory $LogCategory -LogName $LogName -ErrorAction Stop
+    }
 }
 
 #endregion Import Actions available
@@ -1335,7 +1346,7 @@ Write-Host '##################################################### Description ##
 
 #region Check if password already exist in Windows Credential Manager
 
-If ($Null -eq $global:TriggerExitSystem) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
     
     $Category = 'Program run'
     $LogName     = 'Password Status'
@@ -1393,7 +1404,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region Check if user connect on the correct LAN Network
 
-If ($Null -eq $global:TriggerExitSystem) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
     
     $Category = 'Program run'
     $LogName  = 'Network connection'
@@ -1435,7 +1446,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region Ask to the user how he want to connect to the Box
 
-If ($Null -eq $global:TriggerExitSystem) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
     
     $Category = 'Program run'
     $LogName     = 'Connexion Type'
@@ -1449,7 +1460,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region Set Box connexion settings regarding user selection
 
-If ($Null -eq $global:TriggerExitSystem) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
     
     $Category = 'Program run'
     
@@ -1479,6 +1490,7 @@ If ($Null -eq $global:TriggerExitSystem) {
              Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
              $DYNDNS = Get-HostStatus
              Write-Log -Type INFO -Category $Category -Name $LogName -Message "End $LogName" -NotDisplay
+             
              $LogName = 'Check Port'
              Write-Log -Type INFO -Category $Category -Name $LogName -Message "Start $LogName" -NotDisplay
              $Port = Get-PortStatus -UrlRoot $DYNDNS
@@ -1538,6 +1550,10 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #endregion Set Box connexion settings regarding user selection
 
+#endregion User Actions
+
+#region Program
+
 #region process
 
 $global:ChromeDriver = $Null
@@ -1565,11 +1581,13 @@ While ($Null -eq $global:TriggerExitSystem) {
         $Scope             = $Action.Scope
         
         Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message $Description
+        Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Start Is `"Program`" action chosen by user ?' -NotDisplay
         Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Is `"Program`" action chosen by user ?' -NotDisplay
         
         If (($APIName -match $APINameExclusionsFull) -or ($Scope -notmatch $ScopeExclusionsFull)) {
             
             Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'No' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'End Is `"Program`" action chosen by user ?' -NotDisplay
             
             #region Start in Background chromeDriver
             Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'Start ChromeDriver as backgroung process' -NotDisplay
@@ -1583,16 +1601,18 @@ While ($Null -eq $global:TriggerExitSystem) {
                     Write-Log -Type VALUE -Category $Category -Name 'ChromeDriver Launch' -Message 'Started'
                 }
                 Catch {
-                    Write-Log -Type ERROR -Category $Category -Name 'ChromeDriver Launch' -Message "Failed. ChromeDriver can't be started, due to : $($_.ToString())"
+                    Write-Log -Type ERROR -Category $Category -Name 'ChromeDriver Launch' -Message "Failed, ChromeDriver can't be started, due to : $($_.ToString())"
                     Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'ChromeDriver can not be started' -ErrorAction Stop
                 }
                 
                 Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
             Else {
-                Write-Log -Type VALUE -Category $Category -Name 'ChromeDriver Launch' -Message 'No needed' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name 'ChromeDriver Launch' -Message 'Not needed' -NotDisplay
                 Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             }
+            
+            Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'End ChromeDriver as backgroung process' -NotDisplay
             #endregion Start in Background chromeDriver
             
             Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'Is `"Private`" permissions need to access to data ?' -NotDisplay
@@ -1640,8 +1660,7 @@ While ($Null -eq $global:TriggerExitSystem) {
         }
         Else {
             Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Yes' -NotDisplay
-            Write-Log -Type INFO -Category $Category -Name 'ChromeDriver Launch' -Message 'No need to Start Chrome Driver as background process' -NotDisplay
-            Write-Log -Type INFO -Category $Category -Name 'Box Authentification' -Message 'No needed Box Authentification' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name 'Action asked' -Message 'End Is `"Program`" action chosen by user ?' -NotDisplay
         }
         
         #region Get data
@@ -1683,3 +1702,5 @@ Write-Log -Type WARNING -Category $Category -Name 'Program Run' -Message '######
 Stop-Program -Context System -ErrorMessage '' -Reason '' -ErrorAction SilentlyContinue
 
 #endregion Close Program
+
+#endregion Program

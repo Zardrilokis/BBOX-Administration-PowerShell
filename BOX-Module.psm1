@@ -98,23 +98,23 @@ function Write-Log {
     Param (
         [Parameter(Mandatory=$True)]
         [ValidateSet('INFO','INFONO','VALUE','WARNING','ERROR','DEBUG')]
-        $Type = 'INFO',
+        [String]$Type,
         
         [Parameter(Mandatory=$True)]
         [ValidateSet('Program initialisation','Program Run','Program Stop')]
-        $Category = 'Program Run',
+        [String]$Category,
         
         [Parameter(Mandatory=$True)]
-        $Name,
+        [String]$Name,
         
         [Parameter(Mandatory=$True)]
-        $Message,
+        [String]$Message,
         
         [Parameter(Mandatory=$False)]
         [switch]$NotDisplay,
         
         [Parameter(Mandatory=$False)]
-        $Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
+        [String]$Logname = "$global:LogDateFolderNamePath\$global:LogFileName"
     )
     
     $LogPath = $Logname + '.csv'
@@ -448,7 +448,7 @@ function Add-BoxCredential {
     $Credentialbuild = $null
     Write-Log -Type INFO -Category 'Program run' -Name 'Password Status' -Message 'Asking password to the user ...' -NotDisplay
     
-    While ([string]::IsNullOrEmpty($Credential.Password) -or [string]::IsNullOrEmpty($Credential.UserName)) {
+    While ([String]::IsNullOrEmpty($Credential.Password) -or [String]::IsNullOrEmpty($Credential.UserName)) {
         
         # Ask user to provide Box Web Interface Password
         $Credential = Get-Credential -Message "Please enter your $global:BoxType Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future" -UserName $global:CredentialsTarget
@@ -579,19 +579,19 @@ function Show-WindowsFormDialogBoxInuput {
     
         Param (
             [Parameter(Mandatory=$True)]
-            [string]$MainFormTitle,
+            [String]$MainFormTitle,
     
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText,
+            [String]$LabelMessageText,
     
             [Parameter(Mandatory=$True)]
-            [string]$OkButtonText,
+            [String]$OkButtonText,
     
             [Parameter(Mandatory=$True)]
-            [string]$CancelButtonText,
+            [String]$CancelButtonText,
     
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue
+            [String]$DefaultValue
         )
         
         $MainFormSizeX = 330
@@ -725,61 +725,61 @@ function Show-WindowsFormDialogBox8Inuput {
     
         Param (
             [Parameter(Mandatory=$True)]
-            [string]$MainFormTitle,
+            [String]$MainFormTitle,
 
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText0,
+            [String]$LabelMessageText0,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue0,
+            [String]$DefaultValue0,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText1,
+            [String]$LabelMessageText1,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue1,
+            [String]$DefaultValue1,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText2,
+            [String]$LabelMessageText2,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue2,
+            [String]$DefaultValue2,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText3,
+            [String]$LabelMessageText3,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue3,
+            [String]$DefaultValue3,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText4,
+            [String]$LabelMessageText4,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue4,
+            [String]$DefaultValue4,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText5,
+            [String]$LabelMessageText5,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue5,
+            [String]$DefaultValue5,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText6,
+            [String]$LabelMessageText6,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue6,
+            [String]$DefaultValue6,
             
             [Parameter(Mandatory=$True)]
-            [string]$LabelMessageText7,
+            [String]$LabelMessageText7,
             
             [Parameter(Mandatory=$False)]
-            [string]$DefaultValue7,
+            [String]$DefaultValue7,
             
             [Parameter(Mandatory=$True)]
-            [string]$OkButtonText,
+            [String]$OkButtonText,
             
             [Parameter(Mandatory=$True)]
-            [string]$CancelButtonText
+            [String]$CancelButtonText
         )
         
         $MainFormSizeX = 260
@@ -1042,8 +1042,8 @@ function Show-WindowsFormDialogBox {
 #>
 
     Param (
-        [string]$Message = 'Fill in the message',
-        [string]$Title = 'WindowTitle',
+        [String]$Message = 'Fill in the message',
+        [String]$Title = 'WindowTitle',
         [switch]$OKCancel,
         [switch]$AbortRetryIgnore,
         [switch]$YesNoCancel,
@@ -1122,16 +1122,16 @@ function Show-WindowsFormDialogBox2Choices {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
 
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
 
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
 
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText
+        [String]$SecondOptionButtonText
     )
     
     $MainFormSizeX = 400
@@ -1234,16 +1234,16 @@ function Show-WindowsFormDialogBox2ChoicesCancel {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
         
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText
+        [String]$SecondOptionButtonText
     )
     
     $MainFormSizeX = 400
@@ -1350,19 +1350,19 @@ function Show-WindowsFormDialogBox3Choices {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
         
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText,
+        [String]$SecondOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$ThirdOptionButtonText
+        [String]$ThirdOptionButtonText
     )
     
     $MainFormSizeX = 300
@@ -1483,19 +1483,19 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
         
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText,
+        [String]$SecondOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$ThirdOptionButtonText
+        [String]$ThirdOptionButtonText
     )   
     
     $MainFormSizeX = 300
@@ -1570,7 +1570,7 @@ function Show-WindowsFormDialogBox3ChoicesCancel {
     }
 }
 
-# Used only to force user to make a choice between three options where one is "Cancel"
+# Used only to force user to make a choice between Four options where one is "Cancel"
 function Show-WindowsFormDialogBox4ChoicesCancel {
 
 <#
@@ -1620,22 +1620,22 @@ function Show-WindowsFormDialogBox4ChoicesCancel {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
         
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText,
+        [String]$SecondOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$ThirdOptionButtonText,
+        [String]$ThirdOptionButtonText,
 
         [Parameter(Mandatory=$True)]
-        [string]$FourOptionButtonText
+        [String]$FourOptionButtonText
     )   
     
     $MainFormSizeX = 395
@@ -1724,7 +1724,7 @@ function Show-WindowsFormDialogBox4ChoicesCancel {
     }
 }
 
-# Used only to force user to make a choice between four options where one is "Cancel"
+# Used only to force user to make a choice between Five options where one is "Cancel"
 function Show-WindowsFormDialogBox5ChoicesCancel {
 
 <#
@@ -1778,25 +1778,25 @@ function Show-WindowsFormDialogBox5ChoicesCancel {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [string]$MainFormTitle,
+        [String]$MainFormTitle,
         
         [Parameter(Mandatory=$True)]
-        [string]$LabelMessageText,
+        [String]$LabelMessageText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FirstOptionButtonText,
+        [String]$FirstOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$SecondOptionButtonText,
+        [String]$SecondOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$ThirdOptionButtonText,
+        [String]$ThirdOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FourOptionButtonText,
+        [String]$FourOptionButtonText,
         
         [Parameter(Mandatory=$True)]
-        [string]$FiveOptionButtonText
+        [String]$FiveOptionButtonText
     )   
     
     $MainFormSizeX = 480
@@ -1899,6 +1899,202 @@ function Show-WindowsFormDialogBox5ChoicesCancel {
     }
 }
 
+# Used only to force user to make a choice between six options where one is "Cancel"
+function Show-WindowsFormDialogBox6ChoicesCancel {
+
+    <#
+    .SYNOPSIS
+        To display a Standard System Windows Forms MessageBox to force user to make a choice between five options where one is "Cancel"
+    
+    .DESCRIPTION
+        To display a Standard System Windows Forms MessageBox to force user to make a choice between five options where one is "Cancel"
+    
+    .PARAMETER LabelMessageText
+        Text to display in the System Windows Forms MessageBox
+    
+    .PARAMETER MainFormTitle
+        This is the text display in the header of the message box
+    
+    .PARAMETER FirstOptionButtonText
+        Text to display to validate user action 1
+    
+    .PARAMETER SecondOptionButtonText
+        Text to display to validate user action 2
+    
+    .PARAMETER ThirdOptionButtonText
+        Text to display to validate user action 3
+    
+    .PARAMETER FourOptionButtonText
+        Text to display to validate user action 4
+    
+    .PARAMETER FiveOptionButtonText
+        Text to display to validate user action 5
+    
+    .PARAMETER SixOptionButtonText
+        Text to display to cancel action
+    
+    .EXAMPLE
+        Show-WindowsFormDialogBox6ChoicesCancel -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -FirstOptionButtonText "Action 1" -SecondOptionButtonText "Action 2" -ThirdOptionButtonText "Action 3" -FourOptionButtonText "Action 4" -FiveOptionButtonText "Action 5" -SixOptionButtonText "Cancel"
+    
+    .INPUTS
+        $MainFormTitle
+        $LabelMessageText
+        $FirstOptionButtonText
+        $SecondOptionButtonText
+        $ThirdOptionButtonText
+        $FourOptionButtonText
+        $FiveOptionButtonText
+        $SixOptionButtonText
+    
+    .OUTPUTS
+        Standard System Windows Forms MessageBox with bouton user action
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): '',
+    
+    #>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$MainFormTitle,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$LabelMessageText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$FirstOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$SecondOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$ThirdOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$FourOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$FiveOptionButtonText,
+        
+        [Parameter(Mandatory=$True)]
+        [String]$SixOptionButtonText
+    )   
+    
+    $MainFormSizeX = 565
+    $MainFormSizeY = 200
+    
+    $LabelMessageSizeX = 300
+    $LabelMessageSizeY = 90
+    
+    $LabelMessageLocationX = 20
+    $LabelMessageLocationY = 20
+    
+    $FirstOptionButtonSizeX = 75
+    $FirstOptionButtonSizeY = 25
+    
+    $SecondOptionButtonSizeX = 75
+    $SecondOptionButtonSizeY = 25
+    
+    $ThirdOptionButtonSizeX = 75
+    $ThirdOptionButtonSizeY = 25
+    
+    $FourOptionButtonSizeX = 75
+    $FourOptionButtonSizeY = 25
+    
+    $FiveOptionButtonSizeX = 75
+    $FiveOptionButtonSizeY = 25
+    
+    $SixOptionButtonSizeX = 75
+    $SixOptionButtonSizeY = 25
+    
+    $FirstOptionButtonLocationX = 20
+    $FirstOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $SecondOptionButtonLocationX = $FirstOptionButtonLocationX + $FirstOptionButtonSizeX + 10
+    $SecondOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $ThirdOptionButtonLocationX = $SecondOptionButtonLocationX + $SecondOptionButtonSizeX + 10
+    $ThirdOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $FourOptionButtonLocationX = $ThirdOptionButtonLocationX + $ThirdOptionButtonSizeX + 10
+    $FourOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $FiveOptionButtonLocationX = $FourOptionButtonLocationX + $FourOptionButtonSizeX + 10
+    $FiveOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $SixOptionButtonLocationX = $FiveOptionButtonLocationX + $FiveOptionButtonSizeX + 10
+    $SixOptionButtonLocationY = $LabelMessageSizeY + $LabelMessageLocationY
+    
+    $MainForm = New-Object System.Windows.Forms.Form
+    $MainForm.Text = $MainFormTitle
+    $MainForm.Size = New-Object System.Drawing.Size($MainFormSizeX,$MainFormSizeY)
+    $MainForm.StartPosition = 'CenterScreen'
+    
+    $LabelMessage = New-Object System.Windows.Forms.Label
+    $LabelMessage.Location = New-Object System.Drawing.Point($LabelMessageLocationX,$LabelMessageLocationY)
+    $LabelMessage.Size = New-Object System.Drawing.Size($LabelMessageSizeX,$LabelMessageSizeY)
+    $LabelMessage.Text = $LabelMessageText
+    $MainForm.Controls.Add($LabelMessage)
+    
+    $FirstOptionButton = New-Object System.Windows.Forms.Button
+    $FirstOptionButton.Location = New-Object System.Drawing.Point($FirstOptionButtonLocationX,$FirstOptionButtonLocationY)
+    $FirstOptionButton.Size = New-Object System.Drawing.Size($FirstOptionButtonSizeX,$FirstOptionButtonSizeY)
+    $FirstOptionButton.Text = $FirstOptionButtonText
+    $FirstOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.AcceptButton = $FirstOptionButton
+    $MainForm.Controls.Add($FirstOptionButton)
+    
+    $SecondOptionButton = New-Object System.Windows.Forms.Button
+    $SecondOptionButton.Location = New-Object System.Drawing.Point($SecondOptionButtonLocationX,$SecondOptionButtonLocationY)
+    $SecondOptionButton.Size = New-Object System.Drawing.Size($SecondOptionButtonSizeX,$SecondOptionButtonSizeY)
+    $SecondOptionButton.Text = $SecondOptionButtonText
+    $SecondOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $SecondOptionButton
+    $MainForm.Controls.Add($SecondOptionButton)
+    
+    $ThirdOptionButton = New-Object System.Windows.Forms.Button
+    $ThirdOptionButton.Location = New-Object System.Drawing.Point($ThirdOptionButtonLocationX,$ThirdOptionButtonLocationY)
+    $ThirdOptionButton.Size = New-Object System.Drawing.Size($ThirdOptionButtonSizeX,$ThirdOptionButtonSizeY)
+    $ThirdOptionButton.Text = $ThirdOptionButtonText
+    $ThirdOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $ThirdOptionButton
+    $MainForm.Controls.Add($ThirdOptionButton)
+    
+    $FourOptionButton = New-Object System.Windows.Forms.Button
+    $FourOptionButton.Location = New-Object System.Drawing.Point($FourOptionButtonLocationX,$FourOptionButtonLocationY)
+    $FourOptionButton.Size = New-Object System.Drawing.Size($FourOptionButtonSizeX,$FourOptionButtonSizeY)
+    $FourOptionButton.Text = $FourOptionButtonText
+    $FourOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $FourOptionButton
+    $MainForm.Controls.Add($FourOptionButton)
+    
+    $FiveOptionButton = New-Object System.Windows.Forms.Button
+    $FiveOptionButton.Location = New-Object System.Drawing.Point($FiveOptionButtonLocationX,$FiveOptionButtonLocationY)
+    $FiveOptionButton.Size = New-Object System.Drawing.Size($FiveOptionButtonSizeX,$FiveOptionButtonSizeY)
+    $FiveOptionButton.Text = $FiveOptionButtonText
+    $FiveOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::OK
+    $MainForm.CancelButton = $FiveOptionButton
+    $MainForm.Controls.Add($FiveOptionButton)
+    
+    $SixOptionButton = New-Object System.Windows.Forms.Button
+    $SixOptionButton.Location = New-Object System.Drawing.Point($SixOptionButtonLocationX,$SixOptionButtonLocationY)
+    $SixOptionButton.Size = New-Object System.Drawing.Size($SixOptionButtonSizeX,$SixOptionButtonSizeY)
+    $SixOptionButton.Text = $SixOptionButtonText
+    $SixOptionButton.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+    $MainForm.CancelButton = $SixOptionButton
+    $MainForm.Controls.Add($SixOptionButton)
+    
+    $MainForm.Topmost = $true
+    
+    If ($MainForm.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+        Return $MainForm.ActiveControl.Text
+    }
+    Else {
+        Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+    }
+}
+
 #endregion User Display Box
 
 #endregion Windows Form Dialog Box
@@ -1938,13 +2134,13 @@ Function Stop-Program {
     Param (
         [Parameter(Mandatory=$False)]
         [ValidateSet("User","System")]
-        $Context,
+        [String]$Context,
         
         [Parameter(Mandatory=$False)]
-        $ErrorMessage,
+        [String]$ErrorMessage,
         
         [Parameter(Mandatory=$False)]
-        $Reason
+        [String]$Reason
     )
     
     Switch ($Context) {
@@ -3748,7 +3944,7 @@ Function Edit-Date {
         [String]$Date
     )
     
-    If (-not ([string]::IsNullOrEmpty($Date))) {
+    If (-not ([String]::IsNullOrEmpty($Date))) {
     
         $Temp = $Date.replace("-","/")
         $Temp = $Temp.replace("T"," ")
@@ -3842,7 +4038,7 @@ function Format-Date1970 {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$Seconds
+        [Int]$Seconds
     )
     
     $Date = (Get-Date -Date '01/01/1970').addseconds($Seconds)
@@ -4025,7 +4221,7 @@ Function Get-PhoneLine {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$Phoneline
+        [Int]$Phoneline
     )
     
     Switch ($Phoneline) {
@@ -4250,7 +4446,7 @@ Function Get-DynDnsStatusValidMessageDetail {
             
             nochg   {$Value = "No change have made since last synchronisation with your DNS provider - Answered DNS Server : $($Temp[2])";Break}
             nohos   {$Value = 'Your credentials are valid, but it seems; you miss to register the DNS hostname to your DNS provider console';Break}
-            good    {$Value = "Good job, the hostname that you just declare here are well synchronize for the first time with your DNS provider - Answered DNS Server : $($Temp[2])";Break}
+            good    {$Value = "Good job, the hostname that you just declare here is well synchronize for the first time with your DNS provider - Answered DNS Server : $($Temp[2])";Break}
             Default {$Value = 'Unknow / Dev Error';Break}
         }
         
@@ -4428,16 +4624,16 @@ Function Get-ConnexionType {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$TriggerLANNetwork
+        [Int]$TriggerLANNetwork
     )
     
     Switch ($TriggerLANNetwork) {
     
-        '1'        {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
+        1        {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
         
-        '0'        {$ConnexionTypeChoice = $global:ValuesLANNetworkRemote;Break}
+        0        {$ConnexionTypeChoice = $global:ValuesLANNetworkRemote;Break}
         
-        Default    {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
+        Default  {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
     }
     
     Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message "How do you want to connect to the $global:BoxType ?" -NotDisplay
@@ -4509,10 +4705,10 @@ Function Get-HostStatus {
     
     Else {
 
-        If (-not [string]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
+        If (-not [String]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
             $DefaultValue = $global:SiteCurrentLocalUrl
         }
-        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
+        Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
             $DefaultValue = $global:SiteOldRemoteUrl
         }
         Else {
@@ -4534,7 +4730,7 @@ Function Get-HostStatus {
                 Break
             }
             
-            If (-not ([string]::IsNullOrEmpty($UrlRoot))) {
+            If (-not ([String]::IsNullOrEmpty($UrlRoot))) {
                 
                 Try {
                     $BoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
@@ -4623,10 +4819,10 @@ Function Get-PortStatus {
     }
     Else {
         
-        If (-not [string]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+        If (-not [String]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
             $DefaultValue = $global:SiteCurrentRemotePort
         }
-        Elseif (-not [string]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+        Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
             $DefaultValue = $global:SiteOldRemotePort
         }
         Else {
@@ -4634,7 +4830,7 @@ Function Get-PortStatus {
         }
         
         $PortStatus = $null
-        While ([string]::IsNullOrEmpty($PortStatus) -or [string]::IsNullOrEmpty($Port)) {
+        While ([String]::IsNullOrEmpty($PortStatus) -or [String]::IsNullOrEmpty($Port)) {
             
             [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
             Write-Log -Type INFONO -Category 'Program run' -Name 'Check Port' -Message "Port `"$Port`" status : " -NotDisplay
@@ -4662,7 +4858,7 @@ Function Get-PortStatus {
                 }
                 Else {
                     
-                    If ([string]::IsNullOrEmpty($global:SiteOldRemotePort)) {
+                    If ([String]::IsNullOrEmpty($global:SiteOldRemotePort)) {
                         $OldRemotePort = $global:SiteOldRemotePort
                     }
                     Else {
@@ -4722,7 +4918,7 @@ Function Get-LanPortState {
 
     Param (
         [Parameter(Mandatory=$True)]
-        [String]$LanPortState
+        [Int]$LanPortState
     )
     
     Switch ($LanPortState) {
@@ -4926,7 +5122,7 @@ Function Get-BBOXInformation {
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
     Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-BBOXErrorCode', 'ConvertFrom-Json'
-    linked to many functions in the module : '.\Box-Modules.psm1'
+    linked to many functions in the module : '.\Box-Module.psm1'
 
 #>
 
@@ -5071,7 +5267,34 @@ Function Get-BBOXInformation {
 
 # Used only to get information from API page content for FREEBOX
 Function Get-FREEBOXInformation {
-    
+
+<#
+.SYNOPSIS
+    To get information from API page content
+
+.DESCRIPTION
+    To get information from API page content
+
+.PARAMETER UrlToGo
+    This is the url that you want to collect data
+
+.EXAMPLE
+    Get-FREEBOXInformation -UrlToGo "https://mafreebox.freebox.fr/v4/api_version"
+    Get-FREEBOXInformation -UrlToGo "https://exemple.com:8560/api/v4/api_version"
+    Get-FREEBOXInformation -UrlToGo "https://exemple.com:80/v4/api_version"
+
+.INPUTS
+    UrlToGo
+
+.OUTPUTS
+    PSCustomObject = $Json
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-FREEBOXErrorCode', 'ConvertFrom-Json'
+    linked to many functions in the module : '.\Box-Module.psm1'
+
+#>
     Param(
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -5290,8 +5513,23 @@ Function Switch-Info {
 .DESCRIPTION
     To select function to get data from Box web API or do actions
 
-.PARAMETER 
-    
+.PARAMETER Label
+    This the key to link the function and the user request
+
+.PARAMETER UrlToGo
+    This is the url where data will be get
+
+.PARAMETER APIName
+    This is the name of the API path used to collect data
+
+.PARAMETER Mail
+    This is the mail to contact is case devloppement issue or bug
+
+.PARAMETER JournalPath
+    This is the journal path to save data from the BBOX journal
+
+.PARAMETER GitHubUrlSite
+    This the web link that used to get the last version of this application
 
 .EXAMPLE
     Switch-Info -Label "Get-BBOXDEVICEFLOG" -UrlToGo "https://mabbox.bytel.fr/api/v1/device/log" -APIName "device/log" -Mail "Tom78_91_45@yahoo.fr" -JournalPath "C:\Journal" -GitHubUrlSite "https://github.com/Zardrilokis/BBOX-Administration-Powershell"
@@ -5929,7 +6167,7 @@ Function Switch-DisplayFormat {
 
 #>
 
-    Param(  )
+    Param()
     
     # Choose Display Format : HTML or Table
     Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message 'Start data display format' -NotDisplay
@@ -6037,6 +6275,8 @@ Function Switch-OpenHTMLReport {
 
 #>
 
+    Param ()
+    
     Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
     Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
     $global:OpenHTMLReport = ''
@@ -6087,7 +6327,7 @@ Function Switch-ResolveDnsName {
     
     #>
     
-        Param(  )
+        Param()
         
         # Switch Resolve Dns Name : Yes or No
         Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message 'Start Switch Resolve Dns Name' -NotDisplay
@@ -6141,6 +6381,8 @@ Function Switch-ExportFormat {
     Linked to script(s): '.\Box-Administration.psm1'
 
 #>
+
+    Param ()
 
     # Choose Export Format : CSV or JSON
     Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'Start data export format' -NotDisplay
@@ -6735,26 +6977,26 @@ Function Open-HTMLReport {
         [String]$Path
     )
     
-    Write-Log -Type INFO -Category 'Program initialisation' -Name "Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
-    Write-Log -Type INFONO -Category 'Program initialisation' -Name "Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name "Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name "Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
     
     If ($global:OpenHTMLReport -eq "Y") {
         
         Try {
             Invoke-Item -Path $Path
-            Write-Log -Type VALUE -Category 'Program initialisation' -Name "Open HTML Report" -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category 'Program run' -Name "Open HTML Report" -Message 'Successful' -NotDisplay
             Write-Log -Type INFONO -Name $WriteLogName -Message "Opening HTML Report : "
             Write-Log -Type VALUE -Name $WriteLogName -Message $Path
         }
         Catch {
-            Write-Log -Type WARNING -Category 'Program initialisation' -Name "Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
+            Write-Log -Type WARNING -Category 'Program run' -Name "Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type VALUE -Category 'Program initialisation' -Name "Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name "Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
     }
     
-    Write-Log -Type INFO -Category 'Program initialisation' -Name "Open HTML Report" -Message "End Open HTML Report" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name "Open HTML Report" -Message "End Open HTML Report" -NotDisplay
 }
 
 # Used only to open Export Folder
@@ -6797,7 +7039,7 @@ Function Open-ExportFolder {
         [String]$ExportFolderPath
     )
     
-    Set-TriggerOpenExportFolder
+    Set-TriggerOpenExportFolder -ErrorAction SilentlyContinue
     
     $DateShort = Get-Date -Format yyyyMMdd
     $ExportFolderPath = "$ExportFolderPath\$global:BoxType\$DateShort"
@@ -6981,7 +7223,7 @@ function Export-BoxConfiguration {
         Test-FolderPath -FolderRoot "$CSVFolderPath\$global:BoxType" -FolderPath "$CSVFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
         $FormatedData = Switch-Info -Label $APIName.label -UrlToGo $UrlToGo -APIName $APIName.APIName -Mail $Mail -JournalPath $JournalPath -GitHubUrlSite $GitHubUrlSite
         
-        If (-not ([string]::IsNullOrEmpty($FormatedData))) {
+        If (-not ([String]::IsNullOrEmpty($FormatedData))) {
         
             Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Start Export Box Configuration To CSV' -NotDisplay
             Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Export Box Configuration To CSV status : ' -NotDisplay 
@@ -7212,7 +7454,7 @@ Function Get-BoxJournal {
     }
     
     Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Download Box Journal status : ' -NotDisplay
-    If (-not ([string]::IsNullOrEmpty($UserDownloadFileFullPath))) {
+    If (-not ([String]::IsNullOrEmpty($UserDownloadFileFullPath))) {
         
         If (Test-Path -Path $UserDownloadFileFullPath) {
             
@@ -7310,24 +7552,24 @@ Function Get-EmptyFormatedDATA {
         [array]$FormatedData
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Display/Export Result' -Message 'Start display/export result' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name 'Display / Export Result' -Message 'Start Display / Export Result' -NotDisplay
     
     Switch ($FormatedData) {
         
-        $Null     {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        $Null     {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        ''        {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        ''        {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        ' '       {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        ' '       {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        'Domain'  {Write-Log -Type WARNING -Category 'Program initialisation' -Name "Display / Export Result" -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
+        'Domain'  {Write-Log -Type WARNING -Category 'Program run' -Name "Display / Export Result" -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
                 
-        'Program' {Write-Log -Type INFO -Category 'Program initialisation' -Name "Display / Export Result" -Message 'No data need to be exported or displayed' -NotDisplay;Break}
+        'Program' {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data need to be exported or displayed' -NotDisplay;Break}
         
-        Default   {Write-Log -Type WARNING -Category 'Program initialisation' -Name "Display / Export Result" -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
+        Default   {Write-Log -Type WARNING -Category 'Program run' -Name "Display / Export Result" -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
     }
 
-    Write-Log -Type INFO -Category 'Program initialisation' -Name "Export/Display Result" -Message 'End export/display result' -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'End Display / Export Result' -NotDisplay
 }
 
 # Used only to manage data Export/Display
@@ -7394,25 +7636,25 @@ function Export-GlobalOutputData {
         [array]$FormatedData,
         
         [Parameter(Mandatory=$True)]
-        [string]$APIName,
+        [String]$APIName,
         
         [Parameter(Mandatory=$True)]
-        [string]$ExportCSVPath,
+        [String]$ExportCSVPath,
         
         [Parameter(Mandatory=$True)]
-        [string]$ExportJSONPath,
+        [String]$ExportJSONPath,
         
         [Parameter(Mandatory=$False)]
-        [string]$ExportFile,
+        [String]$ExportFile,
         
         [Parameter(Mandatory=$True)]
-        [string]$Description,
+        [String]$Description,
         
         [Parameter(Mandatory=$False)]
-        [string]$ReportType,
+        [String]$ReportType,
         
         [Parameter(Mandatory=$True)]
-        [string]$ReportPath
+        [String]$ReportPath
     )
     
     # Format data before choose output format
@@ -7484,7 +7726,7 @@ function Export-ProgramFilesCount {
     
         Param (
             [Parameter(Mandatory=$False)]
-            [string]$FolderRoot
+            [String]$FolderRoot
         )
         
         # Create array
@@ -7582,15 +7824,15 @@ Function Get-BBOXErrorCodeTest {
     .DESCRIPTION
         Get Error code and convert it to human readable
 
-    .PARAMETER Json
-        This the Json error code to convert
+    .PARAMETER $UrlToGo
+        This is the url to get information
 
     .EXAMPLE
-        Get-BBOXErrorCodeTest -Json $JSON
+        Get-BBOXErrorCodeTest -UrlToGo $UrlToGo
 
     .INPUTS
-        [Array]$Json
-        This the Json error code to convert
+        [String]$UrlToGo
+        This is the url to get information
 
     .OUTPUTS
         [PSObject]$Array
@@ -7882,7 +8124,7 @@ Function Get-BBOXBackupList {
         $Authorized                = $(Get-YesNoAsk -YesNoAsk $CloudSynchronisationState.$APIName.authorized)
         $Datelastsave              = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastsave)
         $Datelastrestore           = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
-        If ([string]::IsNullOrEmpty($Datelastrestore)) {$Datelastrestore = "Never"}
+        If ([String]::IsNullOrEmpty($Datelastrestore)) {$Datelastrestore = "Never"}
         
         Write-Log -Type WARNING -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'No local backups were found'
         
@@ -8034,7 +8276,7 @@ Function Get-BBOXCPLDeviceList {
             $CPLLine | Add-Member -Name 'Master Version'           -MemberType Noteproperty -Value $Json[$Index].list.version
             $CPLLine | Add-Member -Name 'Master Port'              -MemberType Noteproperty -Value $Json[$Index].list.port
             
-            If (-not ([string]::IsNullOrEmpty($Json[$Index].list.active))) {
+            If (-not ([String]::IsNullOrEmpty($Json[$Index].list.active))) {
                 $CPLLine | Add-Member -Name 'Master State'         -MemberType Noteproperty -Value (Get-State -State $Json[$Index].list.active)
                 $CPLLine | Add-Member -Name 'Plug State'           -MemberType Noteproperty -Value (Get-State -State $Json[$Index].list.associateddevice.active)
             }
@@ -8086,7 +8328,7 @@ Function Get-BBOXDevice {
     # Select $JSON header
     $Json = $Json.$APIName
     
-    If (-not ([string]::IsNullOrEmpty($Json.temperature.status))) {
+    If (-not ([String]::IsNullOrEmpty($Json.temperature.status))) {
         $TemperatureStatus = Get-Status -Status $Json.temperature.status
     }
     Else {
@@ -8157,7 +8399,7 @@ Function Get-BBOXDeviceLog {
         
         $Date = $(Edit-Date -Date $($Json[$Line].date))
         
-        If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';' )) {
+        If ((-not (([String]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';' )) {
             
             $Params = ($Json[$Line].param).split(';')
         }
@@ -8651,7 +8893,7 @@ Function Get-BBOXDeviceFullLog {
             
             $Date = $(Edit-Date -Date $Json[$Line].date)
             
-            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
+            If ((-not (([String]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
                 
                 $Params = ($Json[$Line].param).split(';')
             }
@@ -9152,7 +9394,7 @@ Function Get-BBOXDeviceFullTechnicalLog {
             
             $Date = $(Edit-Date -Date $Json[$Line].date)
             
-            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
+            If ((-not (([String]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
                 
                 $Params = ($Json[$Line].param).split(';')
             }
@@ -9297,7 +9539,7 @@ Function Get-BBOXDeviceConnectionHistoryLog {
             
                 $Date = $(Edit-Date -Date $($Json[$Line].date))
                 
-                If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
+                If ((-not (([String]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';')) {
                     
                     $Params = ($Json[$Line].param).split(';')
                 }
@@ -10529,7 +10771,7 @@ Function Get-BBOXHOSTS {
             $DeviceLine | Add-Member -Name 'IPV4 Date Last Connexion'            -MemberType Noteproperty -Value $(Get-LastSeenDate -Seconds $Json[$Device].lastseen)
             
             # If IPV6 part
-            If (-not ([string]::IsNullOrEmpty($Json.ip6address))) {
+            If (-not ([String]::IsNullOrEmpty($Json.ip6address))) {
         
                 $IPV6Line = 0
                 $IPAddress = @()
@@ -10592,7 +10834,7 @@ Function Get-BBOXHOSTS {
             $DeviceLine | Add-Member -Name 'Detected Active Services'            -MemberType Noteproperty -Value $($Json[$Device].scan.services -join ',')
             
             <# If Services part
-            If (-not ([string]::IsNullOrEmpty($Json[$Device].scan.services))) {
+            If (-not ([String]::IsNullOrEmpty($Json[$Device].scan.services))) {
                 
                 $DeviceLine | Add-Member -Name 'Detected Protocol'               -MemberType Noteproperty -Value $Json[$Device].scan.services.protocol
                 $DeviceLine | Add-Member -Name 'Detected Port'                   -MemberType Noteproperty -Value $Json[$Device].scan.services.port
@@ -10704,7 +10946,7 @@ Function Get-BBOXHOSTSME {
     # Select $JSON header
     $Json = $Json.host
     
-    If (-not ([string]::IsNullOrEmpty($Json.hostname))) {
+    If (-not ([String]::IsNullOrEmpty($Json.hostname))) {
     
         # Create New PSObject and add values to array
         $DeviceLine = New-Object -TypeName PSObject
@@ -10738,7 +10980,7 @@ Function Get-BBOXHOSTSME {
         }
 
         # If IPV6 part
-        If (-not ([string]::IsNullOrEmpty($Json.ip6address))) {
+        If (-not ([String]::IsNullOrEmpty($Json.ip6address))) {
             
             $IPV6Line = 0
             $IPAddress = @()
@@ -11274,7 +11516,7 @@ Function Get-BBOXLANAlerts {
         While ($Line -lt $Json.count) {
             
             # $RecoveryDate formatting
-            If (-not ([string]::IsNullOrEmpty($Json[$Line].param))) {
+            If (-not ([String]::IsNullOrEmpty($Json[$Line].param))) {
                 $RecoveryDate = $Json[$Line].recovery_date
             }
             Else {
@@ -11291,7 +11533,7 @@ Function Get-BBOXLANAlerts {
             }
             
             # $Params formatting
-            If ((-not (([string]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';' )) {
+            If ((-not (([String]::IsNullOrEmpty($Json[$Line].param)))) -and ($Json[$Line].param -match ';' )) {
                 
                 $Params = ($Json[$Line].param).split(';')
             }
@@ -14921,15 +15163,15 @@ Function Get-FREEBOXErrorCodeTest {
     .DESCRIPTION
         Get Error code and convert it to human readable
 
-    .PARAMETER Json
-        This the Json error code to convert
+    .PARAMETER $UrlToGo
+        This is the url to get information
 
     .EXAMPLE
-        Get-FREEBOXErrorCodeTest -Json $JSON
+        Get-FREEBOXErrorCodeTest -UrlToGo $UrlToGo
 
     .INPUTS
-        [Array]$Json
-        This the Json error code to convert
+        [String]$UrlToGo
+        This is the url to get information
 
     .OUTPUTS
         [PSObject]$Array
