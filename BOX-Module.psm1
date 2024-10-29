@@ -33,7 +33,7 @@
 .NOTES
     Version : 2.7
     Creation Date : 2020/04/30
-    Updated Date  : 2024/10/06
+    Updated Date  : 2024/10/30
     Updated By    : @Zardrilokis => Tom78_91_45@yahoo.fr
     Author        : @Zardrilokis => Tom78_91_45@yahoo.fr
 
@@ -2653,6 +2653,18 @@ function Export-ModuleFunctions {
     .PARAMETER ExportFolderPath
         This is the path where for all functions have got a dedicated file will be create.
     
+    .PARAMETER SummaryExport
+        Add this parameter if you want to get only a CSV file with Function summary details
+        Can be combined with DetailedExport and FullDetailedExport
+    
+    .PARAMETER DetailedExport
+        Add this parameter if you want to get only a CSV file with Function summary details and separate txt with Function summary details
+        Can be combined with SummaryExport and FullDetailedExport
+    
+    .PARAMETER FullDetailedExport
+        Add this parameter if you want to get only a CSV file with Function Full details and separate txt with Function Full details
+        Can be combined with SummaryExport and DetailedExport
+    
     .EXAMPLE
         Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp"
     
@@ -2684,6 +2696,7 @@ function Export-ModuleFunctions {
         $ExportFolderPath
         $SummaryExport
         $DetailedExport
+        $FullDetailedExport
     
     .OUTPUTS
         List and export result to '.Json', '.CSV', '.txt' 
@@ -2697,7 +2710,7 @@ function Export-ModuleFunctions {
     Param (
         [Parameter(Mandatory=$True)]
         [String]$ModuleFolderPath,
-    
+        
         [Parameter(Mandatory=$True)]
         [String]$ModuleFileName,
     
@@ -2952,11 +2965,11 @@ Function Get-JSONSettingsCurrentUserContent {
         $global:TriggerDisplayFormat    = $global:JSONSettingsCurrentUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsCurrentUserContent.Trigger.OpenHTMLReport
         $global:TriggerOpenExportFolder = $global:JSONSettingsCurrentUserContent.Trigger.OpenExportFolder
-        $global:SiteOldRemotePort       = $global:JSONSettingsCurrentUserContent.Site.OldRemotePort
-        $global:SiteOldRemoteUrl        = $global:JSONSettingsCurrentUserContent.Site.OldRemoteUrl
-        $global:SiteCurrentLocalUrl     = $global:JSONSettingsCurrentUserContent.Site.CurrentLocalUrl
-        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl
-        $global:SiteCurrentRemotePort   = $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort
+        $global:SiteOldRemotePort       = $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentRemotePort
         
         Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Successful' -NotDisplay
     }
@@ -3010,11 +3023,11 @@ Function Get-JSONSettingsDefaultUserContent {
         $global:TriggerDisplayFormat    = $global:JSONSettingsDefaultUserContent.Trigger.DisplayFormat
         $global:TriggerOpenHTMLReport   = $global:JSONSettingsDefaultUserContent.Trigger.OpenHTMLReport
         $global:TriggerOpenExportFolder = $global:JSONSettingsDefaultUserContent.Trigger.OpenExportFolder
-        $global:SiteOldRemotePort       = $global:JSONSettingsDefaultUserContent.Site.OldRemotePort
-        $global:SiteOldRemoteUrl        = $global:JSONSettingsDefaultUserContent.Site.OldRemoteUrl
-        $global:SiteCurrentLocalUrl     = $global:JSONSettingsDefaultUserContent.Site.CurrentLocalUrl
-        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsDefaultUserContent.Site.CurrentRemoteUrl
-        $global:SiteCurrentRemotePort   = $global:JSONSettingsDefaultUserContent.Site.CurrentRemotePort
+        $global:SiteOldRemotePort       = $global:JSONSettingsDefaultUserContent.Site.$global:BoxType.OldRemotePort
+        $global:SiteOldRemoteUrl        = $global:JSONSettingsDefaultUserContent.Site.$global:BoxType.OldRemoteUrl
+        $global:SiteCurrentLocalUrl     = $global:JSONSettingsDefaultUserContent.Site.$global:BoxType.CurrentLocalUrl
+        $global:SiteCurrentRemoteUrl    = $global:JSONSettingsDefaultUserContent.Site.$global:BoxType.CurrentRemoteUrl
+        $global:SiteCurrentRemotePort   = $global:JSONSettingsDefaultUserContent.Site.$global:BoxType.CurrentRemotePort
         
         Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Successful'
     }
@@ -3058,18 +3071,18 @@ Function Reset-CurrentUserProgramConfiguration {
 
     Param(    )
     
-    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
-    Write-Log -Type INFONO -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
+    Write-Log -Type INFONO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force
         Start-Sleep -Seconds $global:SleepDefault
-        Write-Log -Type VALUE -Name 'Program - Reset Json Current User Settings' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
+        Write-Log -Type WARNING -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file reset has failed' -ErrorAction Stop
     }
-    Write-Log -Type INFO -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
+    Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
 
     If (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath) {
 
@@ -3080,8 +3093,8 @@ Function Reset-CurrentUserProgramConfiguration {
         Get-JSONSettingsDefaultUserContent
     }
     Else {
-        Write-Log -Type WARNING -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
-        Write-Log -Type INFO -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
+        Write-Log -Type WARNING -Category 'Program Run' -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user settings configuration file has failed' -ErrorAction Stop
     }
 }
@@ -3677,6 +3690,87 @@ Function Update-GoogleChrome {
 #endregion Chrome Driver / Google Chrome
 
 #region Common functions
+
+# Used only to convert HTML page to TXT
+Function ConvertFrom-HtmlToText {
+
+<#
+.SYNOPSIS
+    Convert HTML page to TXT
+
+.DESCRIPTION
+    Convert HTML page to TXT
+
+.PARAMETER $Html
+    This is the HTML code content from the Web API content
+
+.EXAMPLE
+    ConvertFrom-HtmlToText -Html $Html
+
+.INPUTS
+    $Html
+
+.OUTPUTS
+    $Html
+
+.NOTES
+    Author : Winston - 2010/09/21
+    Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
+    Linked to function(s): 'Get-BBOXInformation', 'Update-ChromeDriver'
+
+#>
+    
+    Param (
+        [Parameter(Mandatory=$True)]
+        [System.String]$Html
+    )
+    
+    # remove line breaks, replace with spaces
+    $Html = $Html -replace "(`r|`n|`t)", ' '
+    # write-verbose "removed line breaks: `n`n$Html`n"
+    
+    # remove invisible content
+    @('head', 'style', 'script', 'object', 'embed', 'applet', 'noframes', 'noscript', 'noembed') | Foreach-object {
+    $Html = $Html -replace "<$_[^>]*?>.*?</$_>", ''
+    }
+    # write-verbose "removed invisible blocks: `n`n$Html`n"
+    
+    # Condense extra whitespace
+    $Html = $Html -replace "( )+", ' '
+    # write-verbose "condensed whitespace: `n`n$Html`n"
+    
+    # Add line breaks
+    @('div','p','blockquote','h[1-9]') | Foreach-object { $Html = $Html -replace "</?$_[^>]*?>.*?</$_>", ("`n" + '$0' )} 
+    # Add line breaks for self-closing tags
+    @('div','p','blockquote','h[1-9]','br') | Foreach-object { $Html = $Html -replace "<$_[^>]*?/>", ('$0' + "`n")} 
+    # write-verbose "added line breaks: `n`n$Html`n"
+    
+    #strip tags 
+    $Html = $Html -replace "<[^>]*?>", ''
+    # write-verbose "removed tags: `n`n$Html`n"
+    
+    # replace common entities
+    @( 
+    @("&amp;bull;", " * "),
+    @("&amp;lsaquo;", "<"),
+    @("&amp;rsaquo;", ">"),
+    @("&amp;(rsquo|lsquo);", "'"),
+    @("&amp;(quot|ldquo|rdquo);", '"'),
+    @("&amp;trade;", "(tm)"),
+    @("&amp;frasl;", "/"),
+    @("&amp;(quot|#34|#034|#x22);", '"'),
+    @('&amp;(amp|#38|#038|#x26);', "&amp;"),
+    @("&amp;(lt|#60|#060|#x3c);", "<"),
+    @("&amp;(gt|#62|#062|#x3e);", ">"),
+    @('&amp;(copy|#169);', "(c)"),
+    @("&amp;(reg|#174);", "(r)"),
+    @("&amp;nbsp;", ' '),
+    @("&amp;(.{2,6});", '')
+    ) | Foreach-object { $Html = $Html -replace $_[0], $_[1] }
+    # write-verbose "replaced entities: `n`n$Html`n"
+    
+    Return $Html
+}
 
 # used only to Get the state
 Function Get-State {
@@ -4497,101 +4591,6 @@ Function Get-DynDnsRecordDetail {
         Return $Value
 }
 
-# Used only to set (PUT/POST) information
-Function Set-BBOXInformation {
-
-<#
-.SYNOPSIS
-    To set (PUT/POST) information
-
-.DESCRIPTION
-    To set (PUT/POST) information
-
-.PARAMETER UrlHome
-    Box login url
-
-.PARAMETER Password
-    Box Web administration password
-
-.PARAMETER UrlToGo
-    Web request to sent to the API
-
-.EXAMPLE
-    Set-BBOXInformation -UrlHome "https://mabbox.bytel.fr/login.html" -Password "password" -UrlToGo ""
-
-.INPUTS
-    $UrlHome
-    $Password
-    $UrlToGo
-
-.OUTPUTS
-    Return result of the resquest send to API
-
-.NOTES
-    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): '', ''
-    Linked to script(s): '.\Box-Administration.psm1'
-
-#>
-
-    Param (
-        [Parameter(Mandatory=$True)]
-        [String]$UrlHome,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$Password,
-        
-        [Parameter(Mandatory=$True)]
-        [String]$UrlToGo
-    )
-    
-    Write-Log -Type ERROR -Category 'Program run' -Name 'Set Box Information' -Message "`nConnexion à la Box : "
-    
-    # Add path for ChromeDriver.exe to the environmental variable 
-    $env:PATH += $PSScriptRoot
-    
-    # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
-    Add-Type -Path "$PSScriptRoot\ChromeDriver\WebDriver.dll"
-    
-    # Hide the ChromeDriver
-    #$chromeoption = New-Object OpenQA.Selenium.Chrome.ChromeOptions
-    #$chromeoption.AddArguments('headless')
-    
-    # Start the ChromeDriver
-    $global:ChromeDriver = New-Object OpenQA.Selenium.Chrome.ChromeDriver #($chromeoption)
-    
-    # Open Web Site Home Page 
-    $global:ChromeDriver.Navigate().GoToURL($UrlHome)
-    
-    # Enter the password to connect (# Methods to find the input textbox for the password)
-    $global:ChromeDriver.FindElementByName('password').SendKeys("$Password") 
-    Start-Sleep $global:SleepDefault
-    
-    # Click on the connect button
-    $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
-    Start-Sleep $global:SleepChromeDriverNavigation
-    
-    Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message  'OK'
-    Write-Log -Type INFO -Category 'Program run' -Name 'Set Box Information' -Message  'Application des modifications souhaitées : '
-    
-    # Go to the web page to get information we need
-    $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-    
-    # Get Web page Content
-    $Html = $global:ChromeDriver.PageSource
-    
-    # Close all ChromeDriver instances openned
-    $global:ChromeDriver.Close()
-    $global:ChromeDriver.Dispose()
-    $global:ChromeDriver.Quit()
-    
-    Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
-    
-    Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message 'OK'
-    
-    Return $Html
-}    
-
 # Used only to define Box connexion type
 Function Get-ConnexionType {
 
@@ -4697,81 +4696,81 @@ Function Get-HostStatus {
 
     Param ()
     
-    If ($global:BoxType -eq "Freebox") {
-        
-        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
-        Return $UrlRoot
+    If (-not [String]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
+        $DefaultValue = $global:SiteCurrentLocalUrl
+    }
+    Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
+        $DefaultValue = $global:SiteOldRemoteUrl
+    }
+    Else {
+        $DefaultValue = $global:DefaultLocalUrl
     }
     
-    Else {
-
-        If (-not [String]::IsNullOrEmpty($global:SiteCurrentLocalUrl) -and ($global:SiteCurrentLocalUrl -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteCurrentLocalUrl
-        }
-        Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemoteUrl) -and ($global:SiteOldRemoteUrl -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteOldRemoteUrl
-        }
-        Else {
-            $DefaultValue = $global:DefaultLocalUrl
-        }
+    $BoxDnsStatus = $null
+    $UrlRoot      = $null
+    $Category = 'Program run'
+    $Name = 'Check Host'
+    
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "Host `"$UrlRoot`" status : " -NotDisplay
+    
+    While ($null -eq $BoxDnsStatus) {
         
-        $BoxDnsStatus = $null
-        While ($null -eq $BoxDnsStatus) {
+        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+        
+        While ([String]::IsNullOrEmpty($UrlRoot)) {
             
-            $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Host' -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OK -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Check Host' -Message "Host `"$UrlRoot`" status : " -NotDisplay
-            
+            Write-Log -Type WARNING -Category 'Program initialisation' -Name $Name -Message "This field can't be empty or null"
+            Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "This field can't be empty or null" -WarnIcon
+            $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue    
+
             If ($global:TriggerDialogBox -eq 1) {
-                
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Host' -Message 'User Cancel the action' -NotDisplay
+                        
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'User Cancel the action'
                 Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
-                $UrlRoot = $null
-                Return $UrlRoot
                 Break
             }
-            
-            If (-not ([String]::IsNullOrEmpty($UrlRoot))) {
-                
-                Try {
-                    $BoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
-                }
-                
-                Catch {
-                    Write-Log -Type ERROR -Category 'Program run' -Name 'Check Host' -Message "Failed to resolve / Access to : $UrlRoot, due to : $($_.ToString())"
-                    #$global:TriggerExitSystem = 1
-                }
-                
-                If ($BoxDnsStatus -eq $true) {
+        }
+        
+        Try {
+            $BoxDnsStatus = Test-Connection -ComputerName $UrlRoot -Quiet
+        }
+        Catch {
+            Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed to resolve / Access to : $UrlRoot, due to : $($_.ToString())"
+            $UrlRoot      = $null
+            $BoxDnsStatus = $null
+            #$global:TriggerExitSystem = 1
+        }
+        
+        If ($global:TriggerDialogBox -eq 1) {
+                        
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'User Cancel the action'
+            Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+            Break
+        }
+        
+        If ($BoxDnsStatus -eq $true) {
                     
-                    Write-Log -Type VALUE -Category 'Program run' -Name 'Check Host' -Message 'Online' -NotDisplay
-                    $global:JSONSettingsCurrentUserContent.Site.oldRemoteUrl = $global:SiteCurrentRemoteUrl
-                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemoteUrl = $UrlRoot
-                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
-                    Return $UrlRoot
-                    Break
-                }
-                Else {
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message 'Offline' -NotDisplay
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- You are connected to internet"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- You enter a valid DNS address or IP address"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Host' -Message "- If you use a proxy, that do not block the connection to your public dyndns"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns" -WarnIcon
-                    $BoxDnsStatus = $null
-                    $UrlRoot = $null
-                }
-            }
-            Else {
-                Write-Log -Type WARNING -Category 'Program initialisation' -Name 'Check Host' -Message "This field can't be empty or null"
-                Show-WindowsFormDialogBox -Title 'Program run - Check Host' -Message "This field can't be empty or null" -WarnIcon
-                $BoxDnsStatus = $null
-                $UrlRoot = $null
-            }
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Online' -NotDisplay
+            $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.oldRemoteUrl = $global:SiteCurrentRemoteUrl
+            $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentRemoteUrl = $UrlRoot
+            Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
+            Break
+        }
+        Else {
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Offline' -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Host : $UrlRoot , seems OffLine ; please make sure :"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- You are connected to internet"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- You enter a valid DNS address or IP address"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- If you use a proxy, that do not block the connection to your public dyndns"
+            Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns" -WarnIcon
+            $BoxDnsStatus = $null
+            $UrlRoot = $null
         }
     }
+    Return $UrlRoot
 }
 
 # Used only to check if external Box Port is open
@@ -4813,76 +4812,74 @@ Function Get-PortStatus {
         [String]$UrlRoot
     )
 
-    If ($global:BoxType -eq "Freebox") {
-        
-        [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $global:DefaultRemotePort
+    If (-not [String]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+            $DefaultValue = $global:SiteCurrentRemotePort
+    }
+    Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
+        $DefaultValue = $global:SiteOldRemotePort
     }
     Else {
+        $DefaultValue = $global:DefaultRemotePort
+    }
+    
+    $PortStatus = $null
+    $Port = $null
+    $Category = 'Program run'
+    $Name = 'Check Port'
+    
+    While ([String]::IsNullOrEmpty($PortStatus) -or [String]::IsNullOrEmpty($Port)) {
         
-        If (-not [String]::IsNullOrEmpty($global:SiteCurrentRemotePort) -and ($global:SiteCurrentRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteCurrentRemotePort
-        }
-        Elseif (-not [String]::IsNullOrEmpty($global:SiteOldRemotePort) -and ($global:SiteOldRemotePort -notcontains $global:ErrorResolveDNSMessage)) {
-            $DefaultValue = $global:SiteOldRemotePort
-        }
-        Else {
-            $DefaultValue = $global:DefaultRemotePort
+        [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "Port `"$Port`" status : " -NotDisplay
+        
+        If ($global:TriggerDialogBox -eq 1) {
+            
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'User Cancel the action' -NotDisplay
+            Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+            Break
         }
         
-        $PortStatus = $null
-        While ([String]::IsNullOrEmpty($PortStatus) -or [String]::IsNullOrEmpty($Port)) {
+        If (($Port -ge 1) -and ($Port -le 65535)) {
             
-            [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle 'Program run - Check Port' -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Check Port' -Message "Port `"$Port`" status : " -NotDisplay
+            $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
             
-            If ($global:TriggerDialogBox -eq 1) {
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $PortStatus.TcpTestSucceeded -NotDisplay
+            
+            If ($PortStatus.TcpTestSucceeded -eq $true) {
                 
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message 'User Cancel the action' -NotDisplay
-                Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Opened' -NotDisplay
+                $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.OldRemotePort = $global:SiteCurrentRemotePort
+                $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentRemotePort = $Port
+                Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
                 Break
             }
-            
-            If (($Port -ge 1) -and ($Port -le 65535)) {
+            Else {
                 
-                $PortStatus = Test-NetConnection -ComputerName $UrlRoot -Port $Port -InformationLevel Detailed
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message $PortStatus.TcpTestSucceeded -NotDisplay
-                
-                If ($PortStatus.TcpTestSucceeded -eq $true) {
-                    
-                    Write-Log -Type VALUE -Category 'Program run' -Name 'Check Port' -Message 'Opened' -NotDisplay
-                    $global:JSONSettingsCurrentUserContent.Site.OldRemotePort = $global:SiteCurrentRemotePort
-                    $global:JSONSettingsCurrentUserContent.Site.CurrentRemotePort = $Port
-                    Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
-                    Return $Port
-                    Break
+                If ([String]::IsNullOrEmpty($global:SiteOldRemotePort)) {
+                    $OldRemotePort = $global:SiteOldRemotePort
                 }
                 Else {
-                    
-                    If ([String]::IsNullOrEmpty($global:SiteOldRemotePort)) {
-                        $OldRemotePort = $global:SiteOldRemotePort
-                    }
-                    Else {
-                        $OldRemotePort = $global:DefaultRemotePort
-                    }
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message 'Closed' -NotDisplay
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "Port $Port seems closed, please make sure :"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- You enter a valid port number"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- None Firewall rule(s) block this port ($global:BoxUrlFirewall)"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message "- For remember you use the port : $OldRemotePort the last time"
-                    Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number between 1 and 65535`n- None Firewall rule(s) block this port ($global:BoxUrlFirewall)`n- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- For remember you use the port : $OldRemotePort the last time" -WarnIcon
-                    $Port = $null
-                    $PortStatus = $null
+                    $OldRemotePort = $global:DefaultRemotePort
                 }
-            }
-            Else {
-                Write-Log -Type WARNING -Category 'Program run' -Name 'Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565'
-                Show-WindowsFormDialogBox -Title 'Program run - Check Port' -Message 'This field cant be empty or null or must be in the range between 1 and 65565' -WarnIcon
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Closed' -NotDisplay
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "Port $Port seems closed, please make sure :"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "- You enter a valid port number"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "- None Firewall rule(s) block this port ($global:BoxUrlFirewall)"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "- For remember you use the port : $OldRemotePort the last time"
+                Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Port $Port seems closed, please make sure :`n`n- You enter a valid port number between 1 and 65535`n- None Firewall rule(s) block this port ($global:BoxUrlFirewall)`n- `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- For remember you use the port : $OldRemotePort the last time" -WarnIcon
                 $Port = $null
                 $PortStatus = $null
             }
         }
+        Else {
+            Write-Log -Type WARNING -Category $Category -Name $name -Message 'This field can nott be empty or null or must be in the range between 1 and 65565'
+            Show-WindowsFormDialogBox -Title "$Category - $Name" -Message 'This field can not be empty or null or must be in the range between 1 and 65565' -WarnIcon
+            $Port = $null
+            $PortStatus = $null
+        }
     }
+    Return $Port
 }
 
 # Used only to get Box LAN Switch Port State
@@ -5139,8 +5136,8 @@ Function Get-BBOXInformation {
         
         $global:PreviousUrlToGo = $UrlToGo
         
-        If (($global:TriggerAuthentification -eq 1) -or ($UrlToGo -match $global:APINameExclusionsChrome)) {
-        
+        If (($global:TriggerAuthentification -eq 1) -and ($UrlToGo -match $global:APINameExclusionsChrome)) {
+            
             Try {
                 # Go to the web page to get information we need
                 $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
@@ -5182,29 +5179,6 @@ Function Get-BBOXInformation {
                 Break
             }
             Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
-            
-            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
-                
-                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
-                Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
-                
-                Try {
-                    $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
-                    Return $ErrorCode.String()
-                    Break
-                }
-                Catch {
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
-                    Return $null
-                }
-                
-                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
-            }
-            Else {
-                Return $Global:Json
-            }
         }
         Else {
         
@@ -5233,34 +5207,33 @@ Function Get-BBOXInformation {
             }
             
             Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
+        }
+
+        If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne $global:ErrorExceptiondomain)) {
+                
+            Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
+            Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
             
-            If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne "v1/device/log")) {
-                
-                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
-                Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
-                
-                Try {
-                    $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
-                    Return $ErrorCode.String()
-                    Break
-                }
-                Catch {
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
-                    Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
-                    Return $null
-                }
-                
-                Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
+            Try {
+                $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
+                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
+                Return $ErrorCode.String()
+                Break
             }
-            Else {
-                Return $Global:Json
+            Catch {
+                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
+                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+                Return $null
             }
+            
+            Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
+        }
+        Else {
+            Return $Global:Json
         }
     }
     Else {
         Write-Log -Type VALUE -Category 'Program run' -Name 'Get Information' -Message "Data already loaded in cache" -NotDisplay
-        $global:PreviousUrlToGo = $UrlToGo
         Return $Global:Json
     }
 }
@@ -5309,7 +5282,7 @@ Function Get-FREEBOXInformation {
     }
     Catch {
         Write-Log -Type ERROR -Category 'Program run' -Name "Get Information" -Message "Failed - Due to : $($_.ToString())"
-        Write-Host "Please check your local/internet network connection" -ForegroundColor Yellow
+        Write-Log -Type WARNING -Category 'Program run' -Name "Get Information" -Message "Please check your local/internet network connection" -NotDisplay
         Return "0"
         Break
     }
@@ -5327,7 +5300,7 @@ Function Get-FREEBOXInformation {
         Write-Log -Type VALUE -Category 'Program run' -Name 'Convert HTML' -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert to HTML, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert HTML to plaintxt format, due to : $($_.ToString())"
         Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End converting data from Html to plaintxt format" -NotDisplay
         Return "0"
         Break
@@ -5359,7 +5332,7 @@ Function Get-FREEBOXInformation {
         Catch {
             Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
         }
-
+        
         Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End getting API error code" -NotDisplay
     }
     Else {
@@ -5367,86 +5340,100 @@ Function Get-FREEBOXInformation {
     }
 }
 
-# Used only to convert HTML page to TXT
-Function ConvertFrom-HtmlToText {
+# Used only to set (PUT/POST) information
+Function Set-BBOXInformation {
 
-<#
-.SYNOPSIS
-    Convert HTML page to TXT
-
-.DESCRIPTION
-    Convert HTML page to TXT
-
-.PARAMETER $Html
-    This is the HTML code content from the Web API content
-
-.EXAMPLE
-    ConvertFrom-HtmlToText -Html $Html
-
-.INPUTS
-    $Html
-
-.OUTPUTS
-    $Html
-
-.NOTES
-    Author : Winston - 2010/09/21
-    Function get from internet : http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
-    Linked to function(s): 'Get-BBOXInformation', 'Update-ChromeDriver'
-
-#>
+    <#
+    .SYNOPSIS
+        To set (PUT/POST) information
     
-    Param (
-        [Parameter(Mandatory=$True)]
-        [System.String]$Html
-    )
+    .DESCRIPTION
+        To set (PUT/POST) information
     
-    # remove line breaks, replace with spaces
-    $Html = $Html -replace "(`r|`n|`t)", ' '
-    # write-verbose "removed line breaks: `n`n$Html`n"
+    .PARAMETER UrlHome
+        Box login url
     
-    # remove invisible content
-    @('head', 'style', 'script', 'object', 'embed', 'applet', 'noframes', 'noscript', 'noembed') | Foreach-object {
-    $Html = $Html -replace "<$_[^>]*?>.*?</$_>", ''
-    }
-    # write-verbose "removed invisible blocks: `n`n$Html`n"
+    .PARAMETER Password
+        Box Web administration password
     
-    # Condense extra whitespace
-    $Html = $Html -replace "( )+", ' '
-    # write-verbose "condensed whitespace: `n`n$Html`n"
+    .PARAMETER UrlToGo
+        Web request to sent to the API
     
-    # Add line breaks
-    @('div','p','blockquote','h[1-9]') | Foreach-object { $Html = $Html -replace "</?$_[^>]*?>.*?</$_>", ("`n" + '$0' )} 
-    # Add line breaks for self-closing tags
-    @('div','p','blockquote','h[1-9]','br') | Foreach-object { $Html = $Html -replace "<$_[^>]*?/>", ('$0' + "`n")} 
-    # write-verbose "added line breaks: `n`n$Html`n"
+    .EXAMPLE
+        Set-BBOXInformation -UrlHome "https://mabbox.bytel.fr/login.html" -Password "password" -UrlToGo ""
     
-    #strip tags 
-    $Html = $Html -replace "<[^>]*?>", ''
-    # write-verbose "removed tags: `n`n$Html`n"
+    .INPUTS
+        $UrlHome
+        $Password
+        $UrlToGo
     
-    # replace common entities
-    @( 
-    @("&amp;bull;", " * "),
-    @("&amp;lsaquo;", "<"),
-    @("&amp;rsaquo;", ">"),
-    @("&amp;(rsquo|lsquo);", "'"),
-    @("&amp;(quot|ldquo|rdquo);", '"'),
-    @("&amp;trade;", "(tm)"),
-    @("&amp;frasl;", "/"),
-    @("&amp;(quot|#34|#034|#x22);", '"'),
-    @('&amp;(amp|#38|#038|#x26);', "&amp;"),
-    @("&amp;(lt|#60|#060|#x3c);", "<"),
-    @("&amp;(gt|#62|#062|#x3e);", ">"),
-    @('&amp;(copy|#169);', "(c)"),
-    @("&amp;(reg|#174);", "(r)"),
-    @("&amp;nbsp;", ' '),
-    @("&amp;(.{2,6});", '')
-    ) | Foreach-object { $Html = $Html -replace $_[0], $_[1] }
-    # write-verbose "replaced entities: `n`n$Html`n"
+    .OUTPUTS
+        Return result of the resquest send to API
     
-    Return $Html
-}
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): '', ''
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+    
+        Param (
+            [Parameter(Mandatory=$True)]
+            [String]$UrlHome,
+            
+            [Parameter(Mandatory=$True)]
+            [String]$Password,
+            
+            [Parameter(Mandatory=$True)]
+            [String]$UrlToGo
+        )
+        
+        Write-Log -Type ERROR -Category 'Program run' -Name 'Set Box Information' -Message "`nConnexion à la Box : "
+        
+        # Add path for ChromeDriver.exe to the environmental variable 
+        $env:PATH += $PSScriptRoot
+        
+        # Adding Selenium's .NET assembly (dll) to access it's classes in this PowerShell session
+        Add-Type -Path "$PSScriptRoot\ChromeDriver\WebDriver.dll"
+        
+        # Hide the ChromeDriver
+        #$chromeoption = New-Object OpenQA.Selenium.Chrome.ChromeOptions
+        #$chromeoption.AddArguments('headless')
+        
+        # Start the ChromeDriver
+        $global:ChromeDriver = New-Object OpenQA.Selenium.Chrome.ChromeDriver #($chromeoption)
+        
+        # Open Web Site Home Page 
+        $global:ChromeDriver.Navigate().GoToURL($UrlHome)
+        
+        # Enter the password to connect (# Methods to find the input textbox for the password)
+        $global:ChromeDriver.FindElementByName('password').SendKeys("$Password") 
+        Start-Sleep $global:SleepDefault
+        
+        # Click on the connect button
+        $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
+        Start-Sleep $global:SleepChromeDriverNavigation
+        
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message  'OK'
+        Write-Log -Type INFO -Category 'Program run' -Name 'Set Box Information' -Message  'Application des modifications souhaitées : '
+        
+        # Go to the web page to get information we need
+        $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
+        
+        # Get Web page Content
+        $Html = $global:ChromeDriver.PageSource
+        
+        # Close all ChromeDriver instances openned
+        $global:ChromeDriver.Close()
+        $global:ChromeDriver.Dispose()
+        $global:ChromeDriver.Quit()
+        
+        Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
+        
+        Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message 'OK'
+        
+        Return $Html
+}   
 
 # Used only to Set value(s) to JSON File
 Function Set-ValueToJSONFile {
@@ -6628,25 +6615,31 @@ Function Export-toCSV {
         [String]$Exportfile
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result CSV' -Message 'Start export result as CSV' -NotDisplay
+    $Name     = 'Export Result CSV'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start export result as CSV' -NotDisplay
     
     Try {
         # Define Export file path
         $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
         $DateShort = $(Get-Date -UFormat %Y%m%d)
-        Test-FolderPath -FolderRoot "$ExportCSVPath\$global:BoxType" -FolderPath "$ExportCSVPath\$global:BoxType\$DateShort" -FolderName $DateShort
-        $ExportPath = "$ExportCSVPath\$global:BoxType\$DateShort\$Date-$Exportfile.csv"
-        $FormatedData | Export-Csv -Path $ExportPath -Encoding unicode -Delimiter ";" -NoTypeInformation -Force        
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Result CSV' -Message 'CSV Data have been exported to : ' -NotDisplay
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Export Result CSV' -Message $ExportPath -NotDisplay
+        $RootFolder = "$ExportCSVPath\$global:BoxType"
+        $FolderPath = "$RootFolder\$DateShort"
+        $ExportPath = "$FolderPath\$Date-$Exportfile.csv"
         
-        Open-ExportFolder -WriteLogName 'Program run - Export Result CSV' -ExportFolderPath $ExportCSVPath
+        Test-FolderPath -FolderRoot $RootFolder -FolderPath $FolderPath -FolderName $DateShort
+        $FormatedData | Export-Csv -Path $ExportPath -Encoding unicode -Delimiter ";" -NoTypeInformation -Force        
+        
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'CSV Data have been exported to : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $ExportPath -NotDisplay
+        
+        Open-ExportFolder -WriteLogName "$Category - $Name" -ExportFolderPath $ExportCSVPath
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program run' -Name 'Export Result CSV' -Message "Failed, to export data to : `"$ExportPath`", due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, to export data to : `"$ExportPath`", due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result CSV' -Message 'End export result as CSV' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End export result as CSV' -NotDisplay
 }
 
 # Used only to export result to JSON File
@@ -6703,7 +6696,10 @@ Function Export-toJSON {
         [String]$Exportfile
     )
     
-     Write-Log -Type INFO -Category 'Program run' -Name 'Export Result JSON' -Message 'Start export result as JSON' -NotDisplay
+    $Name     = 'Export Result JSON'
+    $Category = 'Program run'
+
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start export result as JSON' -NotDisplay
      
      Try {
         # Define Export file path
@@ -6712,16 +6708,16 @@ Function Export-toJSON {
         Test-FolderPath -FolderRoot "$ExportJSONPath\$global:BoxType" -FolderPath "$ExportJSONPath\$global:BoxType\$DateShort" -FolderName $DateShort
         $FullPath = "$ExportJSONPath\$global:BoxType\$DateShort\$Date-$Exportfile.json"
         $FormatedData | ConvertTo-Json -depth 10 | Out-File -FilePath $FullPath -Force
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Result JSON' -Message 'JSON Data have been exported to : ' -NotDisplay
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Export Result JSON' -Message $FullPath -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'JSON Data have been exported to : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $FullPath -NotDisplay
         
-        Open-ExportFolder -WriteLogName 'Program run - Export Result JSON' -ExportFolderPath $ExportJSONPath
+        Open-ExportFolder -WriteLogName "$Category - $Name" -ExportFolderPath $ExportJSONPath
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program run' -Name 'Export Result JSON' -Message "Failed to export data to : `"$FullPath`", due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed to export data to : `"$FullPath`", due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Export Result JSON' -Message 'End export result as JSON' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End export result as JSON' -NotDisplay
 }
 
 # Used only to create HTML Report
@@ -6977,26 +6973,29 @@ Function Open-HTMLReport {
         [String]$Path
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name "Open HTML Report" -Message "Start Open HTML Report" -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name "Open HTML Report" -Message "Open HTML Report Status : " -NotDisplay
+    $Name = 'Open HTML Report'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
     
     If ($global:OpenHTMLReport -eq "Y") {
         
         Try {
             Invoke-Item -Path $Path
-            Write-Log -Type VALUE -Category 'Program run' -Name "Open HTML Report" -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Name $WriteLogName -Message "Opening HTML Report : "
-            Write-Log -Type VALUE -Name $WriteLogName -Message $Path
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $WriteLogName -Message "Opening HTML Report : "
+            Write-Log -Type VALUE -Category $Category -Name $WriteLogName -Message $Path
         }
         Catch {
-            Write-Log -Type WARNING -Category 'Program run' -Name "Open HTML Report" -Message "Failed to open HTML report : $Path, due to $($_.tostring())" -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed to $Name : $Path, due to $($_.tostring())" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type VALUE -Category 'Program run' -Name "Open HTML Report" -Message "User don't want to open HTML report" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "User don't want to $Name" -NotDisplay
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name "Open HTML Report" -Message "End Open HTML Report" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 
 # Used only to open Export Folder
@@ -7045,8 +7044,10 @@ Function Open-ExportFolder {
     $ExportFolderPath = "$ExportFolderPath\$global:BoxType\$DateShort"
     
     If ($global:OpenExportFolder -eq 'Y') {
-        Write-Log -Type INFONO -Name $WriteLogName -Message "Opening folder : "
-        Write-Log -Type VALUE -Name $WriteLogName -Message $ExportFolderPath
+        
+        $Category = 'Program Run'
+        Write-Log -Type INFONO -Category $Category -Name $WriteLogName -Message "Opening folder : "
+        Write-Log -Type VALUE -Category $Category -Name $WriteLogName -Message $ExportFolderPath
         Invoke-Item -Path $ExportFolderPath
     }
 }
@@ -7098,9 +7099,12 @@ Function Out-GridviewDisplay {
         [String]$Description
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Out-Gridview Display' -Message 'Start Out-Gridview Display' -NotDisplay
+    $Name = 'Out-Gridview Display'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     $FormatedData | Out-GridView -Title $Description -Wait
-    Write-Log -Type INFO -Category 'Program run' -Name 'Out-Gridview Display' -Message 'End Out-Gridview Display' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name-Message "End $Name" -NotDisplay
 }
 
 #endregion Manage Output Display
@@ -7934,6 +7938,32 @@ Function Get-BBOXPasswordRecoveryVerify {
 
 function Get-BBOXAirties {
     
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/airties
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/airties
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/airties
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/airties
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $JSON
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -7949,7 +7979,34 @@ function Get-BBOXAirties {
 }
 
 function Get-BBOXAirtiesLANMode {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/airties/lanmode
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/airties/lanmode
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/airties/lanmode
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/airties/lanmode
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $JSON
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -7980,7 +8037,34 @@ function Get-BBOXAirtiesLANMode {
 #region API Ressources Map
 
 Function Get-BBOXAPIRessourcesMap {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/map
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/map
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/map
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/map
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $Array
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo
@@ -8070,7 +8154,34 @@ Function Get-BBOXAPIRessourcesMap {
 #region BACKUP
 
 Function Get-BBOXBackupList {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/configs
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/configs
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/configs
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/configs
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $Array
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
@@ -8164,7 +8275,34 @@ Function Get-BBOXBackupList {
 #region USERSAVE
 
 Function Get-BBOXUSERSAVE {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/usersave
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/usersave
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/usersave
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/usersave
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $Array
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
@@ -8213,7 +8351,34 @@ Function Get-BBOXUSERSAVE {
 #region CPL
 
 Function Get-BBOXCPL {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/cpl
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/cpl
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/cpl
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/cpl
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $Array
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
@@ -8244,7 +8409,34 @@ Function Get-BBOXCPL {
 }
 
 Function Get-BBOXCPLDeviceList {
-    
+
+<#
+.SYNOPSIS
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/cpl
+
+.DESCRIPTION
+    This is the function that you need to collect data from https://mabbox.bytel.fr/api/v1/cpl
+
+.PARAMETER Urltogo
+    This the API url where you want to collect data
+
+.EXAMPLE
+    Get-BBOXAirties -Urltogo https://mabbox.bytel.fr/api/v1/cpl
+    Get-BBOXAirties -Urltogo https://exemple.com:8560/api/v1/cpl
+
+.INPUTS
+    $UrlToGo
+
+.OUTPUTS
+    $Array
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    linked to functions : '', ''
+    linked to script : '.\BBOX-Administration.psm1'
+
+#>
+
     Param (
         [Parameter(Mandatory=$True)]
         [String]$UrlToGo,
