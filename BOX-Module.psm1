@@ -342,18 +342,20 @@ Function Remove-BoxCredential {
 
     Param ()
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Remove Box Credential' -Message 'Start Remove Box Credential' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Remove Box Credential' -Message 'Remove Box Credential status : ' -NotDisplay
+    $Name = 'Remove Box Credential'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
     
     Try {
         $null = Remove-StoredCredential -Target $global:CredentialsTarget -ErrorAction Stop
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Remove Box Credential' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Remove Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Remove Box Credential' -Message 'End Remove Box Credential' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 
 # Show Box Credential stored in Windows Credential Manager
@@ -386,8 +388,11 @@ Function Show-BoxCredential {
 
     Param ()
 
-    Write-Log -Type INFO -Category 'Program run' -Name 'Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Show Box Credential' -Message 'Show Box Credential status : ' -NotDisplay
+    $Name = 'Show Box Credential'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
 
     Try {
         $Password = $(Get-StoredCredential -Target $global:CredentialsTarget | Select-Object -Property Password).password
@@ -395,22 +400,22 @@ Function Show-BoxCredential {
         If ($Password) {
             
             $Password = $Password | ConvertFrom-SecureString -AsPlainText
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Show Box Credential' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Show Box Credential' -Message "Actual $global:BoxType Stored Password : **********" -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "Actual $global:BoxType Stored Password : **********" -NotDisplay
         }
         Else {
             $Password = 'None password was found, please set it, before to show it'
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Show Box Credential' -Message $Password -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $Password -NotDisplay
         }
         
-        $null = Show-WindowsFormDialogBox -Title 'Program run - Show Box Credential' -Message "Actual $global:BoxType Password stored in Windows Credential Manager : $Password" -InfoIcon
+        $null = Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Actual $global:BoxType Password stored in Windows Credential Manager : $Password" -InfoIcon
         Clear-Variable -Name Password
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Show Box Credential' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
 
-    Write-Log -Type INFO -Category 'Program run' -Name 'Show Box Credential' -Message 'Start Show Box Credential' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
 }
 
 # Add Box Credential in Windows Credential Manager
@@ -446,7 +451,10 @@ function Add-BoxCredential {
     
     $Credential = $null
     $Credentialbuild = $null
-    Write-Log -Type INFO -Category 'Program run' -Name 'Password Status' -Message 'Asking password to the user ...' -NotDisplay
+    $Name = 'Password Status'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Asking password to the user ...' -NotDisplay
     
     While ([String]::IsNullOrEmpty($Credential.Password) -or [String]::IsNullOrEmpty($Credential.UserName)) {
         
@@ -454,18 +462,18 @@ function Add-BoxCredential {
         $Credential = Get-Credential -Message "Please enter your $global:BoxType Admin password use for the web portal interface. It will store securly in Windows Credential Manager to be used in future" -UserName $global:CredentialsTarget
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Password Status' -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Password Status' -Message 'Windows Credential Manager status : ' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Set new password to Windows Credential Manager in progress ...' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Windows Credential Manager status : ' -NotDisplay
 
     Try {
         $Comment = $global:CredentialsComment + " - Last modification : $(Get-Date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
         $Password = $Credential.Password | ConvertFrom-SecureString -AsPlainText
         $Credentialbuild = New-StoredCredential -Target $global:CredentialsTarget -UserName $global:CredentialsUserName -Password $Password -Comment $Comment -Type Generic -Persist Session | Out-Null
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Password Status' -Message 'Set - $Comment' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Set - $Comment' -NotDisplay
         Clear-Variable -Name Password
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Password Status' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
     
     Show-BoxCredential
@@ -477,55 +485,58 @@ function Add-BoxCredential {
 # Get Box Credential stored in Windows Credential Manager
 Function Get-BoxCredential {
 
-    <#
-    .SYNOPSIS
-        To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+<#
+.SYNOPSIS
+    To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+
+.DESCRIPTION
+    To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+
+.PARAMETER 
     
-    .DESCRIPTION
-        To display Box Credential stored in the Windows Credential Manager to Standard System Windows Forms MessageBox
+
+.EXAMPLE
+    Get-BoxCredential
+
+.INPUTS
+    Credentials from Windows Credential Manager
+
+.OUTPUTS
+    Standard System Windows Forms MessageBox
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'Get-StoredCredential'
+
+#>
+
+    Param ()
+
+    $Name = 'Get Box Credential'
+    $Category = 'Program run'
     
-    .PARAMETER 
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+
+    Try {
+        $Password = Get-StoredCredential -Type 'Generic' -AsCredentialObject
+        $Password = $Password | Where-Object {($_.UserName -match "Admin") -and ($null -eq $_.SecurePassword) -and ($_.persist -eq 'session')}
         
-    
-    .EXAMPLE
-        Get-BoxCredential
-    
-    .INPUTS
-        Credentials from Windows Credential Manager
-    
-    .OUTPUTS
-        Standard System Windows Forms MessageBox
-    
-    .NOTES
-        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-        Linked to function(s): 'Get-StoredCredential'
-    
-    #>
-    
-        Param ()
-    
-        Write-Log -Type INFO -Category 'Program run' -Name 'Get Box Credential' -Message 'Start Get Box Credential' -NotDisplay
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Credential' -Message 'Get Box Credential status : ' -NotDisplay
-    
-        Try {
-            $Password = Get-StoredCredential -Type 'Generic' -AsCredentialObject
-            $Password = $Password | Where-Object {($_.UserName -match "Admin") -and ($null -eq $_.SecurePassword) -and ($_.persist -eq 'session')}
-            
-            If ($Password) {
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Credential' -Message 'Successful' -NotDisplay
-                $Password | Select-Object -Property UserName,TargetName,Comment,LastWritten,Persist,Password | Out-GridView -Title "Admin Box Password Stored in Windows Credantial Management :" -Wait
-            }
-            Else {
-                $Password = 'None password was found, please set it, before to Get it'
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Credential' -Message $Password
-                $null = Show-WindowsFormDialogBox -Title 'Program run - Get Box Credential' -Message "Actual box Password stored in Windows Credential Manager : $Password" -InfoIcon
-            }
+        If ($Password) {
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            $Password | Select-Object -Property UserName,TargetName,Comment,LastWritten,Persist,Password | Out-GridView -Title "Admin Box Password Stored in Windows Credantial Management :" -Wait
         }
-        Catch {
-            Write-Log -Type WARNING -Category 'Program run' -Name 'Get Box Credential' -Message "Failed, due to : $($_.ToString())"
+        Else {
+            $Password = 'None password was found, please set it, before to Get it'
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $Password
+            $null = Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Actual box Password stored in Windows Credential Manager : $Password" -InfoIcon
         }
-    
-        Write-Log -Type INFO -Category 'Program run' -Name 'Get Box Credential' -Message 'Start Get Box Credential' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+    }
+
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
 }
 
 #endregion Windows Credential Manager
@@ -2143,16 +2154,18 @@ Function Stop-Program {
         [String]$Reason
     )
     
+    $Category = 'Program Stop'
+    
     Switch ($Context) {
         
-        User    {Write-Log -Type VALUE -Category 'Program Stop' -Name 'Action asked' -Message 'Cancelled by user'
-                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to User cancelled action `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -InfoIcon
+        User    {Write-Log -Type VALUE -Category $Category -Name 'Action asked' -Message 'Cancelled by user'
+                    $null = Show-WindowsFormDialogBox -Title $Category -Message "Program exiting due to User cancelled action `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -InfoIcon
                 }
-        System  {Write-Log -Type ERROR -Category 'Program Stop' -Name 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
-                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to : $ErrorMessage -Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
+        System  {Write-Log -Type ERROR -Category $Category -Name $Category -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
+                    $null = Show-WindowsFormDialogBox -Title $Category -Message "Program exiting due to : $ErrorMessage -Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
                 }
-        Default {Write-Log -Type ERROR -Category 'Program Stop' -Name 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
-                    $null = Show-WindowsFormDialogBox -Title 'Program Stop' -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
+        Default {Write-Log -Type ERROR -Category $Category -Name $Category -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..."
+                    $null = Show-WindowsFormDialogBox -Title $Category -Message "Program exiting due to : $ErrorMessage - Reason : $Reason `nPlease dont close windows manually !`nWe are closing background processes before to quit the program`nPlease wait ..." -WarnIcon
                 }
     }
     
@@ -2165,13 +2178,14 @@ Function Stop-Program {
     
     Start-Sleep $global:SleepChromeDriverNavigation
     Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
-    $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-    Write-Log -Type INFONO -Category 'Program Stop' -Name 'Program Stop' -Message 'Detailed Log file is available here : '
-    Write-Log -Type VALUE -Category 'Program Stop' -Name 'Program Stop' -Message $Current_Log_File
-    Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Don't forget to close the log files before to launch again the program"
-    Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Else the program failed to start the next time"
-    Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'Program Closed' -NotDisplay
-    Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'End Program' -NotDisplay
+    $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName   
+    
+    Write-Log -Type INFONO -Category $Category -Name $Category -Message 'Detailed Log file is available here : '
+    Write-Log -Type VALUE -Category $Category -Name $Category -Message $Current_Log_File
+    Write-Log -Type WARNING -Category $Category -Name $Category -Message "Don't forget to close the log files before to launch again the program"
+    Write-Log -Type WARNING -Category $Category -Name $Category -Message "Else the program failed to start the next time"
+    Write-Log -Type INFO -Category $Category -Name $Category -Message 'Program Closed' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Category -Message 'End Program' -NotDisplay
     
     Stop-Transcript -ErrorAction Stop
     
@@ -2214,11 +2228,13 @@ Function Uninstall-Program {
         # Stop All ChromeDriver and StandAlone Google Chrome Processes
         Get-Process -ErrorAction SilentlyContinue | Select-Object -Property ProcessName, Id, CPU, Path -ErrorAction SilentlyContinue | Where-Object {$_.Path -like "$global:RessourcesFolderNamePath*"} -ErrorAction SilentlyContinue | Sort-Object -Property ProcessName -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
         $Current_Log_File = "$global:LogDateFolderNamePath\" + (Get-ChildItem -Path $global:LogDateFolderNamePath -Name "$global:LogFileName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
-        Write-Log -Type INFONO -Category 'Program Stop' -Name 'Program Stop' -Message 'Detailed Log file is available here : '
-        Write-Log -Type VALUE -Category 'Program Stop' -Name 'Program Stop' -Message $Current_Log_File
-        Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Don't forget to close the log files before to launch again the program"
-        Write-Log -Type WARNING -Category 'Program Stop' -Name 'Program Stop' -Message "Else the program failed to start the next time"
-        Write-Log -Type INFO -Category 'Program Stop' -Name 'Program Stop' -Message 'Program Closed' -NotDisplay 
+        $Category = 'Program Stop'
+        
+        Write-Log -Type INFONO -Category $Category -Name $Category -Message 'Detailed Log file is available here : '
+        Write-Log -Type VALUE -Category $Category -Name $Category -Message $Current_Log_File
+        Write-Log -Type WARNING -Category $Category -Name $Category -Message "Don't forget to close the log files before to launch again the program"
+        Write-Log -Type WARNING -Category $Category -Name $Category -Message "Else the program failed to start the next time"
+        Write-Log -Type INFO -Category $Category -Name $Category -Message 'Program Closed' -NotDisplay 
         
         # Remove Stored Credential
         Remove-StoredCredential -Target 'AdminBBox' -ErrorAction Continue
@@ -2282,25 +2298,27 @@ Function Remove-FolderContent {
     )
     
     $FolderPath = "$FolderRoot\$FolderName\*"
+    $Name = 'Clean folder content'
+    $Category = 'Program run'
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Clean folder content' -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start Clean `"$FolderPath`" folder" -NotDisplay
     
     If (Test-Path -Path $FolderPath) {
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Clean folder content' -Message "Cleaning `"$FolderPath`" folder content Status : " -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "Cleaning `"$FolderPath`" folder content Status : " -NotDisplay
         Try {
             $Null = Remove-Item -Path $FolderPath -Recurse -Exclude $global:TranscriptFileName
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Clean folder content' -Message 'Successful' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
         }
         Catch {
-            Write-Log -Type ERROR -Category 'Program run' -Name 'Clean folder content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
+            Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
         }
     }
     Else {
-         Write-Log -Type INFONO -Category 'Program run' -Name 'Clean folder content' -Message "`"$FolderPath`" folder state : " -NotDisplay
-         Write-Log -Type VALUE -Category 'Program run' -Name 'Clean folder content' -Message 'Do no exist' -NotDisplay
+         Write-Log -Type INFONO -Category $Category -Name $Name -Message "`"$FolderPath`" folder state : " -NotDisplay
+         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Do no exist' -NotDisplay
     }
-    Write-Log -Type INFO -Category 'Program run' -Name 'Clean folder content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
 }
 
 # Clean All folder content
@@ -2343,21 +2361,27 @@ Function Remove-FolderContentAll {
             [String]$FoldersName
         )
         
+        $Name = 'Clean folder content'
+        $Category = 'Program run'
         $TempFoldersName = $($FoldersName.Split(","))
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start Clean `"$FolderPath`" folder content" -NotDisplay
         
         Foreach ($FolderName in $TempFoldersName) {
             
             $FolderPath = "$FolderRoot\$FolderName\*"
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "Clean `"$FolderPath`" folder content Status : " -NotDisplay
             
             Try {
                 Remove-FolderContent -FolderRoot $FolderRoot -FolderName $FolderName -ErrorAction SilentlyContinue
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name 'Clean folders content' -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, `"$FolderPath`" folder can't be cleaned due to : $($_.ToString())"
             }
         }
         
-        Write-Log -Type INFO -Category 'Program run' -Name 'Clean folders content' -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End Clean `"$FolderPath`" folder content" -NotDisplay
 }
 
 # Test and create folder if not yet existing
@@ -2737,12 +2761,24 @@ function Export-ModuleFunctions {
     $Date = Get-Date -Format yyyyMMdd-hhmmss
     $FolderDate = Get-Date -Format yyyyMMdd
     $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
+    $Name = "Import module : $ModuleFileName"
+    $Category = 'Program run'
     
     # Build Full Module Folder Path
     $FullModuleFolderPath = "$ModuleFolderPath\$ModuleFileName$FileExtention"
     
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type  VALUE -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     # Import Module
-    Import-Module $FullModuleFolderPath -Force
+    Try {
+        Import-Module $FullModuleFolderPath -Force -ErrorAction Stop
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+    }
+    
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
     # Create folder date if do not exist
     If ($(Test-Path -Path $ExportFolderFullPath) -eq $False) {
@@ -2751,16 +2787,19 @@ function Export-ModuleFunctions {
     }
     
     # Get all function associated to the module
-    $FunctionList = $(Get-Command -Module $ModuleFileName) | Where-Object {$_.CommandType -eq 'Function' -and $_.ModuleName -eq $ModuleFileName}
+    $FunctionList = $(Get-Command -Module $ModuleFileName -ErrorAction Stop) | Where-Object {$_.CommandType -eq 'Function' -and $_.ModuleName -eq $ModuleFileName}
     
     # Get Help foreach function and export it to separate text (.txt) file or in CSV Summay file
     $FunctionTotalCount = $FunctionList.count
     $FunctionCount = 1
+    $Name = "Export All function in module : $ModuleFileName"
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     
     Foreach ($Function in $FunctionList) {
         
-        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "($FunctionCount/$FunctionTotalCount) - Current function : " -NotDisplay
-        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "$Function" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "($FunctionCount/$FunctionTotalCount) - Current function : " -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "$Function" -NotDisplay
         
         # Get-help Details of the current function
         $FunctionListDetails     = Get-Help -Name $Function -Detailed
@@ -2770,50 +2809,50 @@ function Export-ModuleFunctions {
         
             # Command Function properties
             $line = New-Object -TypeName PSObject
-            $line | Add-Member -Name 'Module'                     -MemberType Noteproperty -Value $Function.Module
-            $line | Add-Member -Name 'ModuleName'                 -MemberType Noteproperty -Value $Function.ModuleName
-            $line | Add-Member -Name 'Name'                       -MemberType Noteproperty -Value $Function.Name
-            $line | Add-Member -Name 'Namespace'                  -MemberType Noteproperty -Value $Function.Namespace
-            $line | Add-Member -Name 'Noun'                       -MemberType Noteproperty -Value $Function.Noun
-            $line | Add-Member -Name 'CmdletBinding'              -MemberType Noteproperty -Value $Function.CmdletBinding
-            $line | Add-Member -Name 'Verb'                       -MemberType Noteproperty -Value $Function.Verb
-            $line | Add-Member -Name 'Version'                    -MemberType Noteproperty -Value $Function.Version
-            $line | Add-Member -Name 'Visibility'                 -MemberType Noteproperty -Value $Function.Visibility
-            $line | Add-Member -Name 'CommandType'                -MemberType Noteproperty -Value $Function.CommandType
-            $line | Add-Member -Name 'DefaultParameterSet'        -MemberType Noteproperty -Value $Function.DefaultParameterSet
-            $line | Add-Member -Name 'Definition'                 -MemberType Noteproperty -Value $Function.Definition
-            $line | Add-Member -Name 'Description'                -MemberType Noteproperty -Value $Function.Description
-            $line | Add-Member -Name 'DisplayName'                -MemberType Noteproperty -Value $Function.DisplayName
-            $line | Add-Member -Name 'DLL'                        -MemberType Noteproperty -Value $Function.DLL
-            $line | Add-Member -Name 'Extension'                  -MemberType Noteproperty -Value $Function.Extension
-            $line | Add-Member -Name 'FileVersionInfo'            -MemberType Noteproperty -Value $Function.FileVersionInfo
-            $line | Add-Member -Name 'HelpFile'                   -MemberType Noteproperty -Value $Function.HelpFile
-            $line | Add-Member -Name 'HelpUri'                    -MemberType Noteproperty -Value $Function.HelpUri
-            $line | Add-Member -Name 'ImmediateBaseObject'        -MemberType Noteproperty -Value $Function.ImmediateBaseObject
-            $line | Add-Member -Name 'Members'                    -MemberType Noteproperty -Value $Function.Members
-            $line | Add-Member -Name 'Methods'                    -MemberType Noteproperty -Value $Function.Methods
-            $line | Add-Member -Name 'Options'                    -MemberType Noteproperty -Value $Function.Options
-            $line | Add-Member -Name 'OriginalEncoding'           -MemberType Noteproperty -Value $Function.OriginalEncoding
-            $line | Add-Member -Name 'OutputType'                 -MemberType Noteproperty -Value $Function.OutputType
-            $line | Add-Member -Name 'Parameters'                 -MemberType Noteproperty -Value $Function.Parameters
-            $line | Add-Member -Name 'ParameterSets'              -MemberType Noteproperty -Value $Function.ParameterSets
-            $line | Add-Member -Name 'Path'                       -MemberType Noteproperty -Value $Function.Path
-            $line | Add-Member -Name 'Properties'                 -MemberType Noteproperty -Value $Function.Properties
-            $line | Add-Member -Name 'PSSnapIn'                   -MemberType Noteproperty -Value $Function.PSSnapIn
-            $line | Add-Member -Name 'ReferencedCommand'          -MemberType Noteproperty -Value $Function.ReferencedCommand
-            $line | Add-Member -Name 'RemotingCapability'         -MemberType Noteproperty -Value $Function.RemotingCapability
-            $line | Add-Member -Name 'ResolvedCommand'            -MemberType Noteproperty -Value $Function.ResolvedCommand
-            $line | Add-Member -Name 'ResolvedCommandName'        -MemberType Noteproperty -Value $Function.ResolvedCommandName
-            $line | Add-Member -Name 'TypeNames'                  -MemberType Noteproperty -Value $Function.TypeNames
-            $line | Add-Member -Name 'BaseObject'                 -MemberType Noteproperty -Value $Function.BaseObject
+            $line | Add-Member -Name 'Module'              -MemberType Noteproperty -Value $Function.Module
+            $line | Add-Member -Name 'ModuleName'          -MemberType Noteproperty -Value $Function.ModuleName
+            $line | Add-Member -Name 'Name'                -MemberType Noteproperty -Value $Function.Name
+            $line | Add-Member -Name 'Namespace'           -MemberType Noteproperty -Value $Function.Namespace
+            $line | Add-Member -Name 'Noun'                -MemberType Noteproperty -Value $Function.Noun
+            $line | Add-Member -Name 'CmdletBinding'       -MemberType Noteproperty -Value $Function.CmdletBinding
+            $line | Add-Member -Name 'Verb'                -MemberType Noteproperty -Value $Function.Verb
+            $line | Add-Member -Name 'Version'             -MemberType Noteproperty -Value $Function.Version
+            $line | Add-Member -Name 'Visibility'          -MemberType Noteproperty -Value $Function.Visibility
+            $line | Add-Member -Name 'CommandType'         -MemberType Noteproperty -Value $Function.CommandType
+            $line | Add-Member -Name 'DefaultParameterSet' -MemberType Noteproperty -Value $Function.DefaultParameterSet
+            $line | Add-Member -Name 'Definition'          -MemberType Noteproperty -Value $Function.Definition
+            $line | Add-Member -Name 'Description'         -MemberType Noteproperty -Value $Function.Description
+            $line | Add-Member -Name 'DisplayName'         -MemberType Noteproperty -Value $Function.DisplayName
+            $line | Add-Member -Name 'DLL'                 -MemberType Noteproperty -Value $Function.DLL
+            $line | Add-Member -Name 'Extension'           -MemberType Noteproperty -Value $Function.Extension
+            $line | Add-Member -Name 'FileVersionInfo'     -MemberType Noteproperty -Value $Function.FileVersionInfo
+            $line | Add-Member -Name 'HelpFile'            -MemberType Noteproperty -Value $Function.HelpFile
+            $line | Add-Member -Name 'HelpUri'             -MemberType Noteproperty -Value $Function.HelpUri
+            $line | Add-Member -Name 'ImmediateBaseObject' -MemberType Noteproperty -Value $Function.ImmediateBaseObject
+            $line | Add-Member -Name 'Members'             -MemberType Noteproperty -Value $Function.Members
+            $line | Add-Member -Name 'Methods'             -MemberType Noteproperty -Value $Function.Methods
+            $line | Add-Member -Name 'Options'             -MemberType Noteproperty -Value $Function.Options
+            $line | Add-Member -Name 'OriginalEncoding'    -MemberType Noteproperty -Value $Function.OriginalEncoding
+            $line | Add-Member -Name 'OutputType'          -MemberType Noteproperty -Value $Function.OutputType
+            $line | Add-Member -Name 'Parameters'          -MemberType Noteproperty -Value $Function.Parameters
+            $line | Add-Member -Name 'ParameterSets'       -MemberType Noteproperty -Value $Function.ParameterSets
+            $line | Add-Member -Name 'Path'                -MemberType Noteproperty -Value $Function.Path
+            $line | Add-Member -Name 'Properties'          -MemberType Noteproperty -Value $Function.Properties
+            $line | Add-Member -Name 'PSSnapIn'            -MemberType Noteproperty -Value $Function.PSSnapIn
+            $line | Add-Member -Name 'ReferencedCommand'   -MemberType Noteproperty -Value $Function.ReferencedCommand
+            $line | Add-Member -Name 'RemotingCapability'  -MemberType Noteproperty -Value $Function.RemotingCapability
+            $line | Add-Member -Name 'ResolvedCommand'     -MemberType Noteproperty -Value $Function.ResolvedCommand
+            $line | Add-Member -Name 'ResolvedCommandName' -MemberType Noteproperty -Value $Function.ResolvedCommandName
+            $line | Add-Member -Name 'TypeNames'           -MemberType Noteproperty -Value $Function.TypeNames
+            $line | Add-Member -Name 'BaseObject'          -MemberType Noteproperty -Value $Function.BaseObject
             $Array += $line
             
             # Export help summary for each function to text (.txt) file
             $SummaryFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Summary-Get-Help-$Function.txt"
             $FunctionListDetails | Out-File -FilePath $SummaryFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
             
-            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help summary function details : $($Function.Name) is available here : " -NotDisplay
-            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $SummaryFunctionDetailsFilePath -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "Get help summary function details : $($Function.Name) is available here : " -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $SummaryFunctionDetailsFilePath -NotDisplay
         }
         
         If ($DetailedExport) {
@@ -2822,8 +2861,8 @@ function Export-ModuleFunctions {
             $DetailedFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Details-Get-Help-$Function.txt"
             $FunctionListFullDetails | Out-File -FilePath $DetailedFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
             
-            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help full function details : $($Function.Name) is available here : " -NotDisplay
-            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $DetailedFunctionDetailsFilePath -NotDisplay                        
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "Get help full function details : $($Function.Name) is available here : " -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $DetailedFunctionDetailsFilePath -NotDisplay                        
         }
         
         If ($FullDetailedExport) {
@@ -2832,8 +2871,8 @@ function Export-ModuleFunctions {
             $FullFunctionDetailsFilePath = "$ExportFolderFullPath\$Date-Full-Details-Get-Help-$Function.txt"
             $Function.Definition | Out-File -FilePath $FullFunctionDetailsFilePath -Encoding utf8 -ErrorAction Stop
             
-            Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "Get help full details for function : $($Function.Name) is available here : " -NotDisplay
-            Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $FullFunctionDetailsFilePath -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "Get help full details for function : $($Function.Name) is available here : " -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $FullFunctionDetailsFilePath -NotDisplay
 
             $Parameters = $FunctionListDetails.parameters.parameter
             $ParametersSyntaxe = $FunctionListDetails.syntax.syntaxItem.parameter
@@ -2842,8 +2881,8 @@ function Export-ModuleFunctions {
             
             Foreach ($Parameter in $Parameters) {
                 
-                Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "($ParameterCount/$ParameterFunctionTotalCount) - Current Parameter : " -NotDisplay
-                Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message "$($Parameter.Name)" -NotDisplay                
+                Write-Log -Type INFONO -Category $Category -Name $Name -Message "($ParameterCount/$ParameterFunctionTotalCount) - Current Parameter : " -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message "$($Parameter.Name)" -NotDisplay                
                 
                 # Function List properties
                 $Line1 = New-Object -TypeName PSObject
@@ -2901,8 +2940,8 @@ function Export-ModuleFunctions {
         $AllFunctionsSummaryFilePath = "$ExportFolderFullPath\$Date-Get-Help-Summary-All-Functions.csv"
         $Array | Export-Csv -Path $AllFunctionsSummaryFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
         
-        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'Summary Get-Help details for all Functions are saved to : ' -NotDisplay
-        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $AllFunctionsSummaryFilePath -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Summary Get-Help details for all Functions are saved to : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $AllFunctionsSummaryFilePath -NotDisplay
     }
     
     If ($FullDetailedExport) {
@@ -2910,12 +2949,13 @@ function Export-ModuleFunctions {
         $AllFunctionsAllDetailsFilePath = "$ExportFolderFullPath\$Date-Get-Help-Full-Details-All-Functions.csv"
         $Array1 | Export-Csv -Path $AllFunctionsAllDetailsFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
         
-        Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'Full Get-Help details for all Functions are saved to : ' -NotDisplay
-        Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $AllFunctionsAllDetailsFilePath -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Full Get-Help details for all Functions are saved to : ' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $AllFunctionsAllDetailsFilePath -NotDisplay
     }
     
-    Write-Log INFONO -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message 'All files are save to the folder : '
-    Write-Log VALUE -Category 'Program run' -Name 'Export All function in module : BOX-Module' -Message $ExportFolderFullPath
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'All files are save to the folder : '
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message $ExportFolderFullPath
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
     Return $Array1
 }
@@ -3071,18 +3111,21 @@ Function Reset-CurrentUserProgramConfiguration {
 
     Param(    )
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Start Reset Json Current User Settings' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Reset Json Current User Settings Status : ' -NotDisplay
+    $Name = 'Reset Json Current User Settings'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Nam -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force
         Start-Sleep -Seconds $global:SleepDefault
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'Successful' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message "Failed, to Reset Json Current User Settings file, due to : $($_.ToString())"
-        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file reset has failed' -ErrorAction Stop
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason "Reset Json Current User Settings file has failed" -ErrorAction Stop
     }
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Reset Json Current User Settings' -Message 'End Reset Json Current User Settings' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 
     If (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath) {
 
@@ -3093,8 +3136,9 @@ Function Reset-CurrentUserProgramConfiguration {
         Get-JSONSettingsDefaultUserContent
     }
     Else {
-        Write-Log -Type WARNING -Category 'Program Run' -Name 'Program - Json Current User Settings Importation' -Message "Failed, to find any user settings configuration file, due to : $($_.ToString())"
-        Write-Log -Type INFO -Category 'Program Run' -Name 'Program - Json Current User Settings Importation' -Message 'End Json Current User Settings Importation' -NotDisplay
+        $Name = 
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user settings configuration file has failed' -ErrorAction Stop
     }
 }
@@ -4635,31 +4679,34 @@ Function Get-ConnexionType {
         Default  {$ConnexionTypeChoice = $global:ValuesLANNetworkLocal;Break}
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message "How do you want to connect to the $global:BoxType ?" -NotDisplay
+    $Name = 'Connexion Type'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "How do you want to connect to the $global:BoxType ?" -NotDisplay
 
     $ConnexionType = ''
     While ($ConnexionType -notmatch $ConnexionTypeChoice) {
         
         Switch ($TriggerLANNetwork) {
             
-            '1'        {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
+            '1'        {Write-Log -Type INFO -Category $Category -Name $Name -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
                         $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
                         Break
                     }
             
-            '0'        {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(R) Remotly / (Q) Quit the Program' -NotDisplay
+            '0'        {Write-Log -Type INFO -Category $Category -Name $Name -Message '(R) Remotly / (Q) Quit the Program' -NotDisplay
                         $ConnexionType = Show-WindowsFormDialogBox2ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'R' -SecondOptionButtonText 'Q'
                         Break
                     }
             
-            Default    {Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
+            Default    {Write-Log -Type INFO -Category $Category -Name $Name -Message '(L) Localy / (R) Remotly / (Q) Quit the Program' -NotDisplay
                         $ConnexionType = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle 'Program run - Connexion Type' -LabelMessageText "How do you want to connect to the $global:BoxType ? : `n- (L) Localy`n- (R) Remotly`n- (Q) Quit the Program" -FirstOptionButtonText 'L' -SecondOptionButtonText 'R' -ThirdOptionButtonText 'Q'
                         Break
                     }
         }
     }
      
-    Write-Log -Type INFO -Category 'Program run' -Name 'Connexion Type' -Message "Connexion Type chosen by user : $ConnexionType" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Connexion Type chosen by user : $ConnexionType" -NotDisplay
     
     Return $ConnexionType
 }
@@ -4719,7 +4766,7 @@ Function Get-HostStatus {
         
         While ([String]::IsNullOrEmpty($UrlRoot)) {
             
-            Write-Log -Type WARNING -Category 'Program initialisation' -Name $Name -Message "This field can't be empty or null"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "This field can't be empty or null"
             Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "This field can't be empty or null" -WarnIcon
             $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue    
 
@@ -5128,9 +5175,12 @@ Function Get-BBOXInformation {
         [String]$UrlToGo
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Start retrieve informations requested" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Get informations requested from url : $UrlToGo" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Request status :" -NotDisplay
+    $Name = 'Get Information'
+    $Category = 'Program run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start retrieve informations requested" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Get informations requested from url : $UrlToGo" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Request status :" -NotDisplay
     
     If ($global:PreviousUrlToGo -notcontains $UrlToGo) {
         
@@ -5141,99 +5191,107 @@ Function Get-BBOXInformation {
             Try {
                 # Go to the web page to get information we need
                 $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
-                Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message 'Successful' -NotDisplay
+                Write-Log -Type INFO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Failed, due to : $($_.ToString())"
-                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Please check your local/internet network connection"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Please check your local/internet network connection"
                 Return "0"
                 Break
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "End retrieve informations requested" -NotDisplay
-            Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "Start convert data from Html to plaintxt format" -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Convert HTML' -Message "HTML Conversion status : " -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End retrieve informations requested" -NotDisplay
+            
+            $Name = 'Convert HTML'
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "Start convert data from Html to plaintxt format" -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "HTML Conversion status : " -NotDisplay
             
             Try {
                 # Get Web page Content
                 $Html = $global:ChromeDriver.PageSource
                 # Convert $Html To Text
                 $Plaintxt = ConvertFrom-HtmlToText -Html $Html
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Convert HTML' -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert to HTML, due to : $($_.ToString())"
-                Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End convert data from Html to plaintxt format" -NotDisplay
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed to convert to HTML, due to : $($_.ToString())"
+                Write-Log -Type INFO -Category $Category -Name $Name -Message 'End convert data from Html to plaintxt format' -NotDisplay
                 Return "0"
                 Break
             }
-            Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End convert data from Html to plaintxt format" -NotDisplay
+            
+            Write-Log -Type INFO -Category $Category -Name $Name -Message 'End convert data from Html to plaintxt format' -NotDisplay
+            $Name = "Convert JSON"
+            Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start convert data from plaintxt to Json format' -NotDisplay
+            
             Try {
                 # Convert $Plaintxt as JSON to array
                 $Global:Json = $Plaintxt | ConvertFrom-Json -ErrorAction Stop
-                Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed - Due to : $($_.ToString())"
                 Return "0"
                 Break
             }
-            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End convert data from plaintxt to Json format" -NotDisplay
         }
         Else {
         
+            $Name = 'Get Information'
             Try {
                 # Get Web page Content
                 $Response = Invoke-WebRequest -Uri $UrlToGo -AllowUnencryptedAuthentication -SkipCertificateCheck -SkipHeaderValidation -AllowInsecureRedirect -ConnectionTimeoutSeconds 30 -OperationTimeoutSeconds 30 -RetryIntervalSec 1 -Method Get
-                Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message 'Successful' -NotDisplay
+                Write-Log -Type INFO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
             }
             Catch {
-                
-                Write-Log -Type ERROR -Category 'Program run' -Name 'Get Information' -Message "Failed, due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name "Convert JSON" -Message "JSON Conversion status : " -NotDisplay
+            $Name = "Convert JSON"
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "Start convert data from plaintxt to Json format" -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "JSON Conversion status : " -NotDisplay
             
             Try {
                 # Convert $Plaintxt as JSON to array
                 $Global:Json = $($Response.Content) | ConvertFrom-Json -ErrorAction Stop
-                Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message 'Successful' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed - Due to : $($_.ToString())"
                 Return "0"
                 Break
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End convert data from plaintxt to Json format" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End convert data from plaintxt to Json format" -NotDisplay
         }
 
         If ($Global:Json.exception.domain -and ($Global:Json.exception.domain -ne $global:ErrorExceptiondomain)) {
                 
-            Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start get API error code" -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API Error Code : "
+            $Name = "Get API Error Code"
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "Start get API error code" -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "API Error Code : "
             
             Try {
                 $ErrorCode = Get-BBOXErrorCode -Json $Global:Json
-                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "$($ErrorCode.Code) - $($ErrorCode.Domain) - $($ErrorCode.Name) - $($ErrorCode.ErrorReason)"
                 Return $ErrorCode.String()
                 Break
             }
             Catch {
-                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message $Global:Json -NotDisplay
-                Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message $Global:Json -NotDisplay
+                Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed - Due to : $($_.ToString())"
                 Return $null
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End get API Error Code" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End get API Error Code" -NotDisplay
         }
         Else {
             Return $Global:Json
         }
     }
     Else {
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Information' -Message "Data already loaded in cache" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Data already loaded in cache" -NotDisplay
         Return $Global:Json
     }
 }
@@ -5287,9 +5345,9 @@ Function Get-FREEBOXInformation {
         Break
     }
     Write-Log -Type INFO -Category 'Program run' -Name "Get Information" -Message "End retrieving informations requested" -NotDisplay
-
-    Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "Start converting data from Html to plaintxt format" -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Convert HTML' -Message "HTML Conversion status : " -NotDisplay
+    $Name = 'Convert HTML'
+    Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "Start converting data from Html to plaintxt format" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name $Name -Message "HTML Conversion status : " -NotDisplay
     Try {
         # Get Web page Content
         $Html = $global:ChromeDriver.PageSource
@@ -5297,43 +5355,44 @@ Function Get-FREEBOXInformation {
         # Convert $Html To Text
         $Plaintxt = ConvertFrom-HtmlToText -Html $Html
         
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Convert HTML' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program run' -Name 'Convert HTML' -Message "Failed to convert HTML to plaintxt format, due to : $($_.ToString())"
-        Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End converting data from Html to plaintxt format" -NotDisplay
+        Write-Log -Type ERROR -Category 'Program run' -Name $Name -Message "Failed to convert HTML to plaintxt format, due to : $($_.ToString())"
+        Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "End converting data from Html to plaintxt format" -NotDisplay
         Return "0"
         Break
     }
-    Write-Log -Type INFO -Category 'Program run' -Name 'Convert HTML' -Message "End converting data from Html to plaintxt format" -NotDisplay
-        
-    Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "Start convert data from plaintxt to Json format" -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name "Convert JSON" -Message "JSON Conversion status : " -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "End converting data from Html to plaintxt format" -NotDisplay
+    $Name = "Convert JSON"
+    Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "Start convert data from plaintxt to Json format" -NotDisplay
+    Write-Log -Type INFONO -Category 'Program run' -Name $Name -Message "JSON Conversion status : " -NotDisplay
     Try {
         # Convert $Plaintxt as JSON to array
         $Json = $Plaintxt | ConvertFrom-Json
-        Write-Log -Type VALUE -Category 'Program run' -Name "Convert JSON" -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category 'Program run' -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program run' -Name "Convert JSON" -Message "Failed - Due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category 'Program run' -Name $Name -Message "Failed - Due to : $($_.ToString())"
         Return "0"
     }
-    Write-Log -Type INFO -Category 'Program run' -Name "Convert JSON" -Message "End converting data from plaintxt to Json format" -NotDisplay
+    Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "End converting data from plaintxt to Json format" -NotDisplay
     
     If ($Json.success -eq 'false') {
         
-        Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "Start getting API error code" -NotDisplay
-        Write-Log -Type INFONO -Category 'Program run' -Name "Get API Error Code" -Message "API error code : "
+        $Name = "Get API Error Code"
+        Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "Start getting API error code" -NotDisplay
+        Write-Log -Type INFONO -Category 'Program run' -Name $Name -Message "API error code : "
         Try {
             $ErrorCode = Get-FREEBOXErrorCode -Json $Json -ErrorAction Stop
-            Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "$ErrorCode"
+            Write-Log -Type ERROR -Category 'Program run' -Name $Name -Message "$ErrorCode"
             Return $ErrorCode
         }
         Catch {
-            Write-Log -Type ERROR -Category 'Program run' -Name "Get API Error Code" -Message "Failed - Due to : $($_.ToString())"
+            Write-Log -Type ERROR -Category 'Program run' -Name $Name -Message "Failed - Due to : $($_.ToString())"
         }
         
-        Write-Log -Type INFO -Category 'Program run' -Name "Get API Error Code" -Message "End getting API error code" -NotDisplay
+        Write-Log -Type INFO -Category 'Program run' -Name $Name -Message "End getting API error code" -NotDisplay
     }
     Else {
         Return $Json
@@ -5388,7 +5447,9 @@ Function Set-BBOXInformation {
             [String]$UrlToGo
         )
         
-        Write-Log -Type ERROR -Category 'Program run' -Name 'Set Box Information' -Message "`nConnexion à la Box : "
+        $Name = 'Set Box Information'
+        $Category = 'Program run'
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "`nConnexion à la Box : "
         
         # Add path for ChromeDriver.exe to the environmental variable 
         $env:PATH += $PSScriptRoot
@@ -5414,8 +5475,8 @@ Function Set-BBOXInformation {
         $global:ChromeDriver.FindElementByClassName('cta-1').Submit()
         Start-Sleep $global:SleepChromeDriverNavigation
         
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message  'OK'
-        Write-Log -Type INFO -Category 'Program run' -Name 'Set Box Information' -Message  'Application des modifications souhaitées : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message  'OK'
+        Write-Log -Type INFO -Category $Category -Name $Name -Message  'Application des modifications souhaitées : '
         
         # Go to the web page to get information we need
         $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
@@ -5430,7 +5491,7 @@ Function Set-BBOXInformation {
         
         Get-Process -Name chromedriver -ErrorAction SilentlyContinue | Stop-Process -ErrorAction SilentlyContinue
         
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Set Box Information' -Message 'OK'
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'OK'
         
         Return $Html
 }   
@@ -5477,17 +5538,19 @@ Function Set-ValueToJSONFile {
         [String]$JSONFileContentPath
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Start Save Settings to JSON File" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Try to save settings to JSON File : $JSONFileContentPath" -NotDisplay
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Save Settings to JSON File Status : " -NotDisplay
+    $Name = 'Save Settings to JSON File'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Try to $Name File : $JSONFileContentPath" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "Save $Name Status : " -NotDisplay
     Try {
         $JSONFileContent | ConvertTo-Json -ErrorAction Continue | Out-File -FilePath $JSONFileContentPath -Encoding unicode -Force -ErrorAction Continue
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Save Settings to JSON File' -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())" -NotDisplay
     }
-    Write-Log -Type INFO -Category 'Program run' -Name 'Save Settings to JSON File' -Message "End Save Settings to JSON File" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name File" -NotDisplay
 }
 
 # Used only to select function to get data from Box web API or do actions
@@ -6157,14 +6220,16 @@ Function Switch-DisplayFormat {
     Param()
     
     # Choose Display Format : HTML or Table
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message 'Start data display format' -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
+    $Name = 'Choose Display Format'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start data display format' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Please choose a display format (Can be changed later) : (H) HTML or (T) Table/Gridview" -NotDisplay
     $global:DisplayFormat = ''
     
     While ($global:DisplayFormat[0] -notmatch $global:ValuesDisplayFormat) {
         
         #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Display Format' -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle "$Category - $Name" -LabelMessageText "Please choose a display format (Can be changed later) :`n- (H) HTML`n- (T) Table/Gridview" -FirstOptionButtonText 'H' -SecondOptionButtonText 'T'
         
         Switch ($Temp) {
                 
@@ -6173,8 +6238,8 @@ Function Switch-DisplayFormat {
         }
     }
     
-    Write-Log -Type VALUE -Category 'Program run' -Name 'Choose Display Format' -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Display Format' -Message 'End data display format' -NotDisplay
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message "Value Choosen : $global:DisplayFormat" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End data display format' -NotDisplay
     
     $global:JSONSettingsCurrentUserContent.DisplayFormat.DisplayFormat = $global:DisplayFormat
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
@@ -6211,14 +6276,16 @@ Function Switch-OpenExportFolder {
     Param ()
     
     # Choose Open Export Folder : Y (Yes) or N (No)
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message 'Start switch Open Export Folder' -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message "Please choose if you want to open 'Export' folder at each export (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
+    $Name = 'Choose Open Export Folder'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start switch Open Export Folder' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Please choose if you want to open 'Export' folder at each export (Can be changed later) : Y (Yes) or N (No)" -NotDisplay
     $global:OpenExportFolder = ""
     
     While ($global:OpenExportFolder[0] -notmatch $global:ValuesOpenExportFolder) {
             
         #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Open Export Folder' -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle "$Category - $Name" -LabelMessageText "Please choose if you want to open 'Export' folder (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
         
         Switch ($Temp) {
                 
@@ -6227,8 +6294,8 @@ Function Switch-OpenExportFolder {
         }
     }
     
-    Write-Log -Type VALUE -Category 'Program run' -Name 'Choose Open Export Folder' -Message "Value Choosen : $global:OpenExportFolder" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Open Export Folder' -Message 'End switch Open Export Folder' -NotDisplay
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message "Value Choosen : $global:OpenExportFolder" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End switch Open Export Folder' -NotDisplay
     
     $global:JSONSettingsCurrentUserContent.OpenExportFolder.OpenExportFolder = $global:OpenExportFolder
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
@@ -6264,13 +6331,15 @@ Function Switch-OpenHTMLReport {
 
     Param ()
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Start Switch Open HTML Report' -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
+    $Name = 'Switch Open HTML Report'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Do you want to open HTML Report at each time ? : (Y) Yes or (N) No' -NotDisplay
     $global:OpenHTMLReport = ''
     
     While ($global:OpenHTMLReport[0] -notmatch $global:ValuesOpenHTMLReport) {
         
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Open HTML Report' -LabelMessageText "Do you want to open HTML Report at each time ? :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'        
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle "$Category - $Name" -LabelMessageText "Do you want to open HTML Report at each time ? :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'        
         
         Switch ($Temp) {
                 
@@ -6279,8 +6348,8 @@ Function Switch-OpenHTMLReport {
         }
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Switch Open HTML Report' -Message 'End Switch Open HTML Report' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Value Choosen : $global:OpenHTMLReport" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
     $global:JSONSettingsCurrentUserContent.OpenHTMLReport.OpenHTMLReport = $global:OpenHTMLReport
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
@@ -6317,14 +6386,16 @@ Function Switch-ResolveDnsName {
         Param()
         
         # Switch Resolve Dns Name : Yes or No
-        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message 'Start Switch Resolve Dns Name' -NotDisplay
-        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message "Please choose if you want to resolve IP Address to DNS Hostname (Can be changed later) : (Y) Yes or (N) No" -NotDisplay
+        $Name = 'Switch Resolve Dns Name'
+        $Category = 'Program run'
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Please choose if you want to resolve IP Address to DNS Hostname (Can be changed later) : (Y) Yes or (N) No" -NotDisplay
         $global:ResolveDnsName = ''
         
         While ($global:ResolveDnsName[0] -notmatch $global:ValuesResolveDnsName) {
             
             #$Temp = Read-Host "Enter your choice"
-            $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Switch Resolve Dns Name' -LabelMessageText "Please choose if you want to resolve IP Address to DNS Hostname or not (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
+            $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle "$Category - $Name" -LabelMessageText "Please choose if you want to resolve IP Address to DNS Hostname or not (Can be changed later) :`n- (Y) Yes`n- (N) No" -FirstOptionButtonText 'Y' -SecondOptionButtonText 'N'
             
             Switch ($Temp) {
                     
@@ -6333,8 +6404,8 @@ Function Switch-ResolveDnsName {
             }
         }
         
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message "Value Choosen : $global:ResolveDnsName" -NotDisplay
-        Write-Log -Type INFO -Category 'Program run' -Name 'Switch Resolve Dns Name' -Message 'End Switch Resolve Dns Name' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Value Choosen : $global:ResolveDnsName" -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Category" -NotDisplay
         
         $global:JSONSettingsCurrentUserContent.ResolveDnsName.ResolveDnsName = $global:ResolveDnsName
         Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
@@ -6372,14 +6443,16 @@ Function Switch-ExportFormat {
     Param ()
 
     # Choose Export Format : CSV or JSON
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'Start data export format' -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
+    $Name = 'Choose Export Result'
+    $Category = 'Program run'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start data export format' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Please choose an export format (Can be changed later) : (C) CSV or (J) JSON' -NotDisplay
     $global:ExportFormat = ''
     
     While ($global:ExportFormat[0] -notmatch $global:ValuesExportFormat) {
         
         #$Temp = Read-Host "Enter your choice"
-        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle 'Program run - Choose Export Result' -LabelMessageText "Please choose an export format (Can be changed later) :`n- (C) CSV`n- (J) JSON" -FirstOptionButtonText 'C' -SecondOptionButtonText 'J'
+        $Temp = Show-WindowsFormDialogBox2Choices -MainFormTitle "$Category - $Name" -LabelMessageText "Please choose an export format (Can be changed later) :`n- (C) CSV`n- (J) JSON" -FirstOptionButtonText 'C' -SecondOptionButtonText 'J'
             
         Switch ($Temp) {
             
@@ -6388,8 +6461,8 @@ Function Switch-ExportFormat {
         }
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
-    Write-Log -Type INFO -Category 'Program run' -Name 'Choose Export Result' -Message 'End data export format' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Value Choosen  : $global:ExportFormat" -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End data export format' -NotDisplay
     
     $global:JSONSettingsCurrentUserContent.ExportFormat.ExportFormat = $global:ExportFormat
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
@@ -6810,7 +6883,7 @@ Function Export-HTMLReport {
     $Date = $(Get-Date -Format yyyyMMdd-HHmmss)
     $DateShort = $(Get-Date -UFormat %Y%m%d)
     $FullReportPath = "$ReportPath\$global:BoxType\$DateShort\$Date-$ReportFileName.html"
-    Test-FolderPath -FolderRoot "$ReportPath\$global:BoxType" -FolderPath "$ReportPath\$global:BoxType\$DateShort" -FolderName $DateShort
+    Test-FolderPath -FolderRoot "$ReportPath\$global:BoxType" -FolderPath "$ReportPath\$global:BoxType\$DateShort" -FolderName $DateShort -ErrorAction Stop
     
     If ($DataReported) {
     
@@ -6868,21 +6941,24 @@ Function Export-HTMLReport {
         $ReportAuthor = "Report generated from : $env:COMPUTERNAME, by : $env:USERNAME, at : $Date (Local Time)."
         $HTML = ConvertTo-Html -Body "$Title $PreContent $($DataReported | ConvertTo-Html -As $ReportType)" -Title $ReportTitle -Head $header -PostContent "<br/>$ReportAuthor"
         
-        Write-Log -Type INFO -Category 'Program run' -Name 'Export HTML Report' -Message 'Start export HTML report' -NotDisplay
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Export HTML Report' -Message 'Export HTML report status : ' -NotDisplay
+        $Name = 'Export HTML Report'
+        $Category = 'Program run'
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
         
         Try {
             $HTML | Out-File -FilePath $FullReportPath -Force -Encoding unicode
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Export HTML Report' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Export HTML Report' -Message 'HTML Report has been exported to : '
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Export HTML Report' -Message $FullReportPath
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'HTML Report has been exported to : '
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $FullReportPath
             Open-HTMLReport -Path $FullReportPath
         }
         Catch {
-            Write-Log -Type WARNING -Category 'Program run' -Name 'Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to $($_.tostring())" -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, to $Name : `"$FullReportPath`", due to $($_.tostring())" -NotDisplay
         }
         
-        Write-Log -Type INFO -Category 'Program run' -Name 'Export HTML Report' -Message 'End export HTML report' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
         
         If ($global:TriggerOpenHTMLReport -eq 0) {
             
@@ -6891,10 +6967,10 @@ Function Export-HTMLReport {
             Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath
         }
         
-        Open-ExportFolder -WriteLogName 'Program run - Export Result HTML' -ExportFolderPath $ReportPath
+        Open-ExportFolder -WriteLogName "$Category - $Name" -ExportFolderPath $ReportPath
     }
     Else {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Export HTML Report' -Message "Failed, to export HTML report : `"$FullReportPath`", due to : there is not data to export/Display" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, to $Name : `"$FullReportPath`", due to : there is not data to export/Display" -NotDisplay
     }
 }
 
@@ -7198,7 +7274,10 @@ function Export-BoxConfiguration {
         $UrlToGo = "$UrlRoot/$($APIName.APIName)"
         
         # Get information from Box API
-        Write-Log -Type INFO -Category 'Program run' -Name 'Get Information' -Message "Get $($APIName.Label) configuration ..."
+        $Name = 'Get Information'
+        $Category = 'Program run'
+
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Get $($APIName.Label) configuration ..."
         $Json = Get-BBOXInformation -UrlToGo $UrlToGo
         
         $Date = $(Get-Date -UFormat %Y%m%d_%H%M%S)
@@ -7207,21 +7286,23 @@ function Export-BoxConfiguration {
         # Export result as JSON file
         Test-FolderPath -FolderRoot "$JSONFolderPath\$global:BoxType" -FolderPath "$JSONFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
         
+        $Name = 'Export Box Configuration To JSON'
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+
         $ExportPathJson = "$JSONFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).json"
-        Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Start Export Box Configuration To JSON' -NotDisplay
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Export Box Configuration To JSON status : ' -NotDisplay
         
         Try {
             $Json | ConvertTo-Json -depth 10 | Out-File -FilePath $ExportPathJson -Force
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Successful' -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'Export configuration to : '
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message $ExportPathJson
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Export configuration to : '
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $ExportPathJson
         }
         Catch {
-            Write-Log -Type WARNING -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message "Failed, due to $($_.tostring())"
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to $($_.tostring())"
         }
         
-        Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To JSON' -Message 'End Export Box Configuration To JSON' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
         
         # Export result as CSV file
         Test-FolderPath -FolderRoot "$CSVFolderPath\$global:BoxType" -FolderPath "$CSVFolderPath\$global:BoxType\$DateShort" -FolderName $DateShort
@@ -7229,21 +7310,22 @@ function Export-BoxConfiguration {
         
         If (-not ([String]::IsNullOrEmpty($FormatedData))) {
         
-            Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Start Export Box Configuration To CSV' -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Export Box Configuration To CSV status : ' -NotDisplay 
+            $Name = 'Export Box Configuration To CSV'
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay 
             $ExportPathCSV = "$CSVFolderPath\$global:BoxType\$DateShort\$Date-$($APIName.Exportfile).csv"   
             
             Try {
                 $FormatedData | Export-Csv -Path $ExportPathCSV -Encoding unicode -Force -Delimiter ";" -NoTypeInformation
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Successful' -NotDisplay
-                Write-Log -Type INFONO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'Export configuration to : '
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message $ExportPathCSV
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+                Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Export configuration to : '
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message $ExportPathCSV
             }
             Catch {
-                Write-Log -Type WARNING -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message "Failed, due to $($_.tostring())"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to $($_.tostring())"
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name 'Export Box Configuration To CSV' -Message 'End Export Box Configuration To CSV' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
         }
         
         # Export result as HTML file
@@ -7252,8 +7334,8 @@ function Export-BoxConfiguration {
     }
 
     # Open Export Folder
-    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To JSON' -ExportFolderPath $JSONFolderPath
-    Open-ExportFolder -WriteLogName 'Program run - Export Box Configuration To CSV' -ExportFolderPath $CSVFolderPath
+    Open-ExportFolder -WriteLogName "$Category - Export Box Configuration To CSV" -ExportFolderPath $CSVFolderPath
+    Open-ExportFolder -WriteLogName "$Category - Export Box Configuration To JSON" -ExportFolderPath $JSONFolderPath
 }
 
 # Used only to export Full Box Configuration to JSON files to test the program
@@ -7326,12 +7408,15 @@ function Export-BoxConfigTestingProgram {
         [String]$GitHubUrlSite
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'Start Testing Program'
+    $Category = 'Program run'
+    $Name = 'Testing Program'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name"
     
     Foreach ($APIName in $APISName) {
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Tested action : '
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message $($APIName.Label)   
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Tested action : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $($APIName.Label)   
         
         $UrlToGo = "$UrlRoot/$($APIName.APIName)"
         
@@ -7346,30 +7431,30 @@ function Export-BoxConfigTestingProgram {
         If ($APIName.ExportFile -and $FormatedData) {
             
             Test-FolderPath -FolderRoot "$OutputFolder\$global:BoxType" -FolderPath "$OutputFolder\$global:BoxType\$DateShort" -FolderName $DateShort
-            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'Start Export Box Configuration To CSV' -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Export Box Configuration To CSV status : ' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start Export Box Configuration To CSV' -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Export Box Configuration To CSV status : ' -NotDisplay
             
             Try {
                 $FullPath = "$OutputFolder\$global:BoxType\$DateShort\$Date-$($APIName.ExportFile).csv"
                 $FormatedData | Export-Csv -Path $FullPath -Encoding unicode -Force -NoTypeInformation -Delimiter ";" -ErrorAction Continue
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message 'Successful' -NotDisplay
-                Write-Log -Type INFONO -Category 'Program run' -Name 'Testing Program' -Message 'Export configuration to : '
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Testing Program' -Message $FullPath
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+                Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Export configuration to : '
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message $FullPath
             }
             Catch {
-                Write-Log -Type WARNING -Category 'Program run' -Name 'Testing Program' -Message "Failed, due to $($_.tostring())"
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to $($_.tostring())"
             }
             
-            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'End Export Box Configuration To CSV' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message 'End Export Box Configuration To CSV' -NotDisplay
         }
         Else {
-            Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'No data were found, export cant be possible' -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message 'No data were found, export cant be possible' -NotDisplay
         }
     }
     
-    Open-ExportFolder -WriteLogName 'Program run - Testing Program' -ExportFolderPath $OutputFolder
+    Open-ExportFolder -WriteLogName "$Category - $Name" -ExportFolderPath $OutputFolder
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Testing Program' -Message 'End Testing Program'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name"
 }
 
 # Used only to export Box Journal
@@ -7413,51 +7498,54 @@ Function Get-BoxJournal {
         [String]$JournalPath
     )
         
+    $Category = 'Program run'
+    $Name = 'Download Box Journal to export'
+    
     # Loading Journal Home Page
     $UrlToGo = $UrlToGo -replace $global:APIVersion -replace ('//','/')
     $global:ChromeDriver.Navigate().GoToURL($UrlToGo)
     Start-Sleep $global:SleepChromeDriverLoading
     
     # Download Journal file from Box
-    Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Start download Box Journal' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start download Box Journal' -NotDisplay
     Try {
         $global:ChromeDriver.FindElementByClassName('download').click()
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed to start the download Box Journal, due to : $($_.tostring())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed to start the download Box Journal, due to : $($_.tostring())" -NotDisplay
     }
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message "Download Journal in progress ... : "
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "Download Journal in progress ... : "
     
     # Waiting end of journal's download
     Start-Sleep $global:SleepBoxJournalDownload
     
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'User download folder location : ' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'User download folder location : ' -NotDisplay
     Try {
         $UserDownloadFolderDefault = Get-ItemPropertyValue -Path $global:DownloadShellRegistryFolder -Name $global:DownloadShellRegistryFolderName -ErrorAction Stop
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFolderDefault -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $UserDownloadFolderDefault -NotDisplay
     }
     Catch {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message "Unknown, due to : $($_.tostring())" -NotDisplay
     }
     
-    Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'User download folder status : ' -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'User download folder status : ' -NotDisplay
     If (Test-Path -Path $UserDownloadFolderDefault) {
         
         Try {
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Exists' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Exists' -NotDisplay
             $UserDownloadFolderDefaultFileName = (Get-ChildItem -Path $UserDownloadFolderDefault -Name "$global:JournalName*" | Select-Object -Property PSChildName | Sort-Object PSChildName -Descending)[0].PSChildName
             $UserDownloadFileFullPath          = "$UserDownloadFolderDefault\$UserDownloadFolderDefaultFileName"
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $UserDownloadFileFullPath -NotDisplay
         }
         Catch {
-            Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Unknown, due to : $($_.tostring())" -NotDisplay
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Unknown, due to : $($_.tostring())" -NotDisplay
         }
     }
     Else {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Unable to find user download folder' -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Unable to find user download folder' -NotDisplay
     }
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Download Box Journal status : ' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Download Box Journal status : ' -NotDisplay
     If (-not ([String]::IsNullOrEmpty($UserDownloadFileFullPath))) {
         
         If (Test-Path -Path $UserDownloadFileFullPath) {
@@ -7465,34 +7553,36 @@ Function Get-BoxJournal {
             $DateShort                   = $(Get-Date -UFormat %Y%m%d)
             $ExportJournalFolderRootPath = "$JournalPath\$global:BoxType"
             $ExportJournalFolderPath     = "$ExportJournalFolderRootPath\$DateShort"
+            $Name = 'Journal download location folder creation'
             
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Journal download location folder creation' -Message "Journal download location folder creation to $ExportJournalFolderPath, status : " -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name to $ExportJournalFolderPath, status : " -NotDisplay
             If ($(Test-Path -Path $ExportJournalFolderPath) -eq $false) {
                 
                 Try {
                     $null = New-Item -Path $ExportJournalFolderRootPath -Name $DateShort -ItemType Directory -Force -ErrorAction Stop
-                    Write-Log -Type INFO -Category 'Program run' -Name 'Journal download location folder creation' -Message 'Successful' -NotDisplay
+                    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
                 }
                 Catch {
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Journal download location folder creation' -Message "Failed, to create folder : $ExportJournalFolderPath, due to $($_.ToString())"
+                    Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, to create folder : $ExportJournalFolderPath, due to $($_.ToString())"
                 }
             }
             Else {
-                Write-Log -Type INFO -Category 'Program run' -Name 'Journal download location folder creation' -Message 'Already created' -NotDisplay
+                Write-Log -Type INFO -Category $Category -Name $Name -Message 'Already created' -NotDisplay
             }
             
+            $Name = 'Download Box Journal to export'
             $DownloadedJournalDestinationPath = "$ExportJournalFolderPath\$UserDownloadFolderDefaultFileName"
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been downloaded from : ' -NotDisplay
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $UserDownloadFileFullPath -NotDisplay
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been downloaded to : ' -NotDisplay
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message $DownloadedJournalDestinationPath -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Box Journal has been downloaded from : ' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $UserDownloadFileFullPath -NotDisplay
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Box Journal has been downloaded to : ' -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message $DownloadedJournalDestinationPath -NotDisplay
             Try {
                 # Move Journal file from Download folder to journal folder : "$PSScriptRoot\Journal"
                 Move-Item -Path $UserDownloadFileFullPath -Destination $DownloadedJournalDestinationPath -Force -ErrorAction Stop
-                Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Finish' -NotDisplay
+                Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Finish' -NotDisplay
             }
             Catch {
-                Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.tostring())" -NotDisplay
             }
             
             # Export Journal data as CSV file to the correct folder
@@ -7502,24 +7592,24 @@ Function Get-BoxJournal {
                     $FormatedData = Import-Csv -Path $DownloadedJournalDestinationPath -Delimiter ';' -Encoding unicode
                 }
                 Catch {
-                    Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message "Failed, due to : $($_.tostring())" -NotDisplay
+                    Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.tostring())" -NotDisplay
                 }
             }
             Else {
                 $FormatedData = $null
             }
             
-            Write-Log -Type VALUE -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Successful'
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Box Journal has been saved to : '
-            Write-Log -Type INFONO -Category 'Program run' -Name 'Download Box Journal to export' -Message "$DownloadedJournalDestinationPath"
-            Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message "End download Box Journal" -NotDisplay
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful'
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Box Journal has been saved to : '
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message "$DownloadedJournalDestinationPath"
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End download Box Journal" -NotDisplay
             Return $FormatedData
         }
     }
     Else {
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Failed, due to time out'
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Download Box Journal to export' -Message 'Failed to download Journal' -NotDisplay
-        Write-Log -Type INFO -Category 'Program run' -Name 'Download Box Journal to export' -Message 'End download Box Journal' -NotDisplay
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Failed, due to time out'
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Failed to download Journal' -NotDisplay
+        Write-Log -Type INFO -Category $Category -Name $Name -Message 'End download Box Journal' -NotDisplay
     }
 }
 
@@ -7556,24 +7646,27 @@ Function Get-EmptyFormatedDATA {
         [array]$FormatedData
     )
     
-    Write-Log -Type INFO -Category 'Program run' -Name 'Display / Export Result' -Message 'Start Display / Export Result' -NotDisplay
+    $Category = 'Program run'
+    $Name = 'Display / Export Result'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     
     Switch ($FormatedData) {
         
-        $Null     {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        $Null     {Write-Log -Type INFO -Category $Category -Name $Name -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        ''        {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        ''        {Write-Log -Type INFO -Category $Category -Name $Name -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        ' '       {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
+        ' '       {Write-Log -Type INFO -Category $Category -Name $Name -Message 'No data were found, no need to Export/Display' -NotDisplay;Break}
         
-        'Domain'  {Write-Log -Type WARNING -Category 'Program run' -Name "Display / Export Result" -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
+        'Domain'  {Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Due to error, the result cant be displayed / exported' -NotDisplay;Break}
                 
-        'Program' {Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'No data need to be exported or displayed' -NotDisplay;Break}
+        'Program' {Write-Log -Type INFO -Category $Category -Name $Name -Message 'No data need to be exported or displayed' -NotDisplay;Break}
         
-        Default   {Write-Log -Type WARNING -Category 'Program run' -Name "Display / Export Result" -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
+        Default   {Write-Log -Type WARNING -Category $Category -Name $Name -Message "Unknow Error, seems dev missing, result : $FormatedData";Break}
     }
 
-    Write-Log -Type INFO -Category 'Program run' -Name "Display / Export Result" -Message 'End Display / Export Result' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 
 # Used only to manage data Export/Display
@@ -8236,24 +8329,26 @@ Function Get-BBOXBackupList {
         $Datelastsave              = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastsave)
         $Datelastrestore           = $(Edit-Date -Date $CloudSynchronisationState.$APIName.datelastrestore)
         If ([String]::IsNullOrEmpty($Datelastrestore)) {$Datelastrestore = "Never"}
+        $Category = 'Program run'
+        $Name = 'Get Box Configuration Save'
         
-        Write-Log -Type WARNING -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'No local backups were found'
+        Write-Log -Type WARNING -Category $Category -Name $Name -Message 'No local backups were found'
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation state : '
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Enable
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Checking Box cloud save synchronisation state : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $Enable
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation status : '
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Status
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Checking Box cloud save synchronisation status : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $Status
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Checking Box cloud save synchronisation user consent : '
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Authorized
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Checking Box cloud save synchronisation user consent : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $Authorized
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Last Time Box Configuration save to the cloud : '
-        Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Datelastsave
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Last Time Box Configuration save to the cloud : '
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message $Datelastsave
         
-        Write-Log -Type INFONO -Category 'Program run' -Name 'Get Box Configuration Save' -Message 'Last Time Box Configuration restored from the cloud : '
-        If ($Datelastrestore) {Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message $Datelastrestore}
-        Else {Write-Log -Type VALUE -Category 'Program run' -Name 'Get Box Configuration Save' -Message ''}
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Last Time Box Configuration restored from the cloud : '
+        If ($Datelastrestore) {Write-Log -Type VALUE -Category $Category -Name $Name -Message $Datelastrestore}
+        Else {Write-Log -Type VALUE -Category $Category -Name $Name -Message ''}
         
         $Message = "No local backups in Box configuration were found.`nBox cloud save synchronisation settings :
         - State : $Enable
@@ -15124,19 +15219,22 @@ function Show-BBOXReferentialContact {
     
     Param()
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'Start Show Referential Contact' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'Show Referential Contact Status :' -NotDisplay
+    $Name = 'Show Referential Contact'
+    $Category = 'Program Run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     
     Try {
         # Display contact Information from BBox
         $global:PhoneNumberReferential | Out-GridView -Title "Referential Contact for BBox" -Wait -ErrorAction Stop
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Show Referential Contact' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program Run' -Name 'Show Referential Contact' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Show Referential Contact' -Message 'End Show Referential Contact' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
 }
 
@@ -15179,8 +15277,11 @@ function Add-BBOXNewReferentialContact {
     
     Param()
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'Start Add New Referential Contact' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'Add New Referential Contact Status :' -NotDisplay
+    $Name = 'Add New Referential Contact'
+    $Category = 'Program Run'
+
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     
     Try {
         # Get New contact Information from user inputs
@@ -15189,27 +15290,28 @@ function Add-BBOXNewReferentialContact {
         # Add New contact to the referential
         $global:PhoneNumberReferential += $NewReferentialContact
         
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Add New Referential Contact' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program Run' -Name 'Add New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Add New Referential Contact' -Message 'End Add New Referential Contact' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
     # Export New Phone Number Referential to CSV file
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Start Export New Referential Contact' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Export New Referential Contact Status :' -NotDisplay
+    $Name = 'Export New Referential Contact'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     
     Try { 
         $global:PhoneNumberReferential | Export-Csv -Path $global:PhoneNumberReferentialFileNamePath -Force -Encoding utf8 -Delimiter ";"
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'End Export New Referential Contact' -NotDisplay
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 
 # To Remove Referential Contact for BBox
@@ -15251,37 +15353,41 @@ function Remove-BBOXReferentialContact {
     
     Param()
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'Start Remove Referential Contact' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'Remove Referential Contact Status :' -NotDisplay
+    $Name = 'Remove Referential Contact'
+    $Category = 'Program Run'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     
     Try {
         # Display contact Information from BBox
-        $RemoveReferentialContact = $global:PhoneNumberReferential | Out-GridView -Title "Referential Contact for BBox" -OutputMode Single -ErrorAction Stop
+        $RemoveReferentialContact = $global:PhoneNumberReferential | Out-GridView -Title "$Name for BBox" -OutputMode Single -ErrorAction Stop
         $RemoveReferentialContact
         $KeepReferentialContact = $global:PhoneNumberReferential | Where-Object {$_.Number -notlike $RemoveReferentialContact.Number}
         $KeepReferentialContact
         $global:PhoneNumberReferential = $KeepReferentialContact
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Remove Referential Contact' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program Run' -Name 'Remove Referential Contact' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Remove Referential Contact' -Message 'End Remove Referential Contact' -NotDisplay    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay    
     
     # Export New Phone Number Referential to CSV file
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Start Export New Referential Contact' -NotDisplay
-    Write-Log -Type INFONO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'Export New Referential Contact Status :' -NotDisplay
+    $Name = 'Export New Referential Contact'
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     
     Try { 
         $global:PhoneNumberReferential | Export-Csv -Path $global:PhoneNumberReferentialFileNamePath -Force -Encoding utf8 -Delimiter ";"
-        Write-Log -Type VALUE -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Successful" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
-        Write-Log -Type ERROR -Category 'Program Run' -Name 'Export New Referential Contact' -Message "Failed, due to : $($_.ToString())"
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
     }
     
-    Write-Log -Type INFO -Category 'Program Run' -Name 'Export New Referential Contact' -Message 'End Export New Referential Contact' -NotDisplay    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay    
 }
 
 #endregion Referential Contact for BBox
