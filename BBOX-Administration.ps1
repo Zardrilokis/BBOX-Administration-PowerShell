@@ -597,26 +597,26 @@ Write-Log -Type INFO    -Category $Category -Name $Name -Message 'Program loadin
 
 $Name     = 'Logs Folder Creation'
 $Category = 'Program initialisation'
-Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Step 1/10) : Logs Folder Creation'
+Write-Log -Type VALUE -Category $Category -Name $Name -Message "Step 1/10) : $Name"
 
 If (-not (Test-Path -Path $ScriptRootFolderPath)) {
     
-    Write-Log -Type INFO   -Category $Category -Name $Name -Message 'Start Logs Folder Creation' -NotDisplay
-    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Logs Folder Creation status : ' -NotDisplay
+    Write-Log -Type INFO   -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
 
     Try {
         $Null = New-Item -Path $ScriptRootFolderPath -Name $global:LogFolderName -ItemType Directory -Force -ErrorAction Stop
         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
-        Write-Log -Type INFO  -Category $Category -Name $Name -Message 'End Logs Folder Creation' -NotDisplay
+        Write-Log -Type INFO  -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     }
     Catch {
         Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to :$($_.string())" -NotDisplay
-        Write-Log -Type INFO  -Category $Category -Name $Name -Message 'End Logs Folder Creation' -NotDisplay
+        Write-Log -Type INFO  -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     }
 }
 Else {
     Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Already exist' -NotDisplay
-    Write-Log -Type INFO  -Category $Category -Name $Name -Message 'End Logs Folder Creation' -NotDisplay
+    Write-Log -Type INFO  -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 
 #endregion Create logs folder
@@ -743,14 +743,14 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         $global:UrlPrefixe                  = $global:JSONSettingsProgramContent.Box.UrlPrefixe
         
         # Various
-        $Mail          = $global:JSONSettingsProgramContent.various.mail
-        $GitHubUrlSite = $global:JSONSettingsProgramContent.various.GitHubUrlSite
+        $Mail                               = $global:JSONSettingsProgramContent.various.mail
+        $GitHubUrlSite                      = $global:JSONSettingsProgramContent.various.GitHubUrlSite
         
         # Notification Events
-        $global:NotificationEventType = $global:JSONSettingsProgramContent.Notification.Event.Type
+        $global:NotificationEventType       = $global:JSONSettingsProgramContent.Notification.Event.Type
         
         # FormatedData
-        $global:FormatedDataExcludedValues = $global:JSONSettingsProgramContent.FormatedData.ExcludedValues
+        $global:FormatedDataExcludedValues  = $global:JSONSettingsProgramContent.FormatedData.ExcludedValues
         $global:FormatedDataGlobalOutputDataExclusion = $global:JSONSettingsProgramContent.FormatedData.GlobalOutputDataExclusion
         
         # Start-Sleep
@@ -1371,7 +1371,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
         }
         Catch {
             Write-Log -Type WARNING -Category $Category -Name $Name -Message "Password can't be set, du to : $($_.ToString())" -NotDisplay
-            Write-Log -Type INFO    -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
             Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Password can not be set' -ErrorAction Stop
         }
     }
