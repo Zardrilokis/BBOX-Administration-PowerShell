@@ -15,6 +15,11 @@
     Examples :
     - $global:BoxType
     - $global:TriggerExitSystem
+    - $global:CredentialsTarget
+    - $global:LogDateFolderNamePath
+    - $global:LogFileName
+    - $Global:journal
+    - $global:TriggerDialogBox
 
 .EXAMPLE
     To import this module :
@@ -33,7 +38,7 @@
 .NOTES
     Version : 2.7
     Creation Date : 2020/04/30
-    Updated Date  : 2024/10/30
+    Updated Date  : 2024/01/29
     Updated By    : @Zardrilokis => Tom78_91_45@yahoo.fr
     Author        : @Zardrilokis => Tom78_91_45@yahoo.fr
 
@@ -408,7 +413,7 @@ Function Show-BoxCredential {
             Write-Log -Type VALUE -Category $Category -Name $Name -Message $Password -NotDisplay
         }
         
-        $null = Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Actual $global:BoxType Password stored in Windows Credential Manager : $Password" -InfoIcon
+        $null = Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Actual $global:BoxType stored Password in Windows Credential Manager is : $Password" -InfoIcon
         Clear-Variable -Name Password
     }
     Catch {
@@ -469,7 +474,7 @@ function Add-BoxCredential {
         $Comment = $global:CredentialsComment + " - Last modification : $(Get-Date -Format yyyyMMdd-HHmmss) - By : $(whoami)"
         $Password = $Credential.Password | ConvertFrom-SecureString -AsPlainText
         $Credentialbuild = New-StoredCredential -Target $global:CredentialsTarget -UserName $global:CredentialsUserName -Password $Password -Comment $Comment -Type Generic -Persist Session | Out-Null
-        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Set - $Comment' -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "Set - $Comment" -NotDisplay
         Clear-Variable -Name Password
     }
     Catch {
@@ -546,7 +551,7 @@ Function Get-BoxCredential {
 #region User Input Box
 
 # Used only to get user's 1 input
-function Show-WindowsFormDialogBoxInuput {
+function Show-WindowsFormDialogBoxInput {
 
     <#
     .SYNOPSIS
@@ -571,7 +576,7 @@ function Show-WindowsFormDialogBoxInuput {
         Value set by default in the input field
     
     .EXAMPLE
-        Show-WindowsFormDialogBoxInuput -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
+        Show-WindowsFormDialogBoxInput -MainFormTitle "This is my Window Header text" -LabelMessageText "This is the body text " -OkButtonText "OK" -CancelButtonText "Cancel"
     
     .INPUTS
         $MainFormTitle
@@ -2110,6 +2115,128 @@ function Show-WindowsFormDialogBox6ChoicesCancel {
 
 #endregion Windows Form Dialog Box
 
+#region Manage Freebox Certificates
+
+# Used only to import FreeBox Root Certificates
+Function Import-FreeboxRootCertificates {
+
+    <#
+    .SYNOPSIS
+        To import Freebox Root Certificates
+    
+    .DESCRIPTION
+        To import Freebox Root Certificates
+    
+    .EXAMPLE
+        Import-FreeboxRootCertificates
+    
+    .INPUTS
+        $global:JSONSettingsProgramContent.Certificate.CertStoreLocation
+    
+    .OUTPUTS
+        Certificates import as Root in user context only
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Write-Log'
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+        
+        Param ()
+        
+        $Category = 'Program initialisation'
+        $Name     = 'Getting the list of certificates already stored in the certificates library'
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        
+        # Getting the list of certificates already stored in the certificates library
+        Write-Log -Type INFO    -Category $Category -Name $Name -Message $Name -NotDisplay
+        Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+        Try {
+            $CertificatesList = Get-ChildItem -Path $global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.CertStoreLocation
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+            Stop-Program -Context System -ErrorMessage "$($_.ToString())" -Reason $($_.ToString()) -ErrorAction Stop
+        }
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+        
+        $Name = 'Import Freebox Root Certificates'
+        Write-Log -Type INFO    -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+        
+        If (($CertificatesList.Thumbprint -notmatch $global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxECCRootCA.Thumbprint) -or ($CertificatesList.Thumbprint -notmatch $global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxRootCA.Thumbprint)) {
+            
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Freebox Certificates not yet installed" -NotDisplay
+            Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+            
+            Try {
+                Import-Certificate -FilePath ".\$($global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxECCRootCA.FreeboxECCRootCAName)$($global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.Extention)" -CertStoreLocation $global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.CertStoreLocation -Confirm:$false -ErrorAction Stop
+                Import-Certificate -FilePath ".\$($global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxRootCA.FreeboxRootCAName)$($global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.Extention)" -CertStoreLocation $global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.CertStoreLocation -Confirm:$false -ErrorAction Stop
+                Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+            }
+            Catch {
+                Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+                Stop-Program -Context System -ErrorMessage "$($_.ToString())" -Reason $($_.ToString()) -ErrorAction Stop
+            }
+        }
+        Else {
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message "Freebox Certificates Already installed" -NotDisplay
+        }
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+}
+
+# Used only to remove FreeBox Root Certificates
+Function Remove-FreeboxRootCertificates {
+
+    <#
+    .SYNOPSIS
+        To remove Freebox Root Certificates
+    
+    .DESCRIPTION
+        To remove Freebox Root Certificates
+    
+    .EXAMPLE
+       Remove-FreeboxRootCertificates
+    
+    .INPUTS
+        $global:JSONSettingsProgramContent.Certificate.CertStoreLocation
+    
+    .OUTPUTS
+        Certificates removed from Root in user context only
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): 'Write-Log'
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+        
+        Param ()
+        
+        $Category = 'Program initialisation'
+        $Name     = 'Remove Freebox Root Certificates'
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+        
+        Try {
+            Get-ChildItem -Path Cert:\LocalMachine\My\$global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxECCRootCA.Thumbprint -Force -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
+            Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+            Stop-Program -Context System -ErrorMessage "$($_.ToString())" -Reason $($_.ToString()) -ErrorAction Stop
+        }
+        
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+}
+
+#endregion Manage Freebox Certificates
+
 #region Program
 
 # Used only to stop and quit the Program
@@ -2241,9 +2368,12 @@ Function Uninstall-Program {
         Remove-StoredCredential -Target 'AdminFREEBox' -ErrorAction Continue
         
         # Remove / Uninstall Modules
-        remove-module -Name BOX-Module -ErrorAction Continue
-        remove-module -Name TUN.CredentialManager -ErrorAction Continue
+        Remove-Module -Name BOX-Module -ErrorAction Continue
+        Remove-Module -Name TUN.CredentialManager -ErrorAction Continue
         Uninstall-TUNCredentialManager -ModuleName 'TUN.CredentialManager' -ErrorAction Continue
+        
+        # Remove Freebox Root Certificates
+        Remove-FreeboxRootCertificates -ErrorAction Continue
         
         # Stop-Transcript Logs
         Stop-Transcript -ErrorAction Continue
@@ -2990,7 +3120,7 @@ Function Get-JSONSettingsCurrentUserContent {
 
 #>
 
-    Param(    )
+    Param()
 
     Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Start Json Current User Settings Importation' -NotDisplay
     Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Json Current User Settings Importation' -Message 'Json Current User Settings Importation Status : ' -NotDisplay
@@ -3048,7 +3178,7 @@ Function Get-JSONSettingsDefaultUserContent {
 
 #>
 
-    Param(    )
+    Param()
 
     Write-Log -Type INFO -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Start Json Default User Settings Importation' -NotDisplay
     Write-Log -Type INFONO -Category 'Program initialisation' -Name 'Json Default User Settings Importation' -Message 'Json Default User Settings Importation Status : '
@@ -3109,7 +3239,7 @@ Function Reset-CurrentUserProgramConfiguration {
 
 #>
 
-    Param(    )
+    Param()
     
     $Name = 'Reset Json Current User Settings'
     $Category = 'Program run'
@@ -3142,6 +3272,70 @@ Function Reset-CurrentUserProgramConfiguration {
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user settings configuration file has failed' -ErrorAction Stop
     }
 }
+#endregion Reset User Json Configuration files
+
+#region Reset User Json Configuration files
+Function Reset-CurrentUserFreeboxConfiguration {
+
+    <#
+    .SYNOPSIS
+        Reset User Json Freebox Configuration files
+    
+    .DESCRIPTION
+        Reset User Json Freebox Configuration files
+    
+    .PARAMETER 
+        
+    
+    .EXAMPLE
+        Reset-CurrentUserFreeboxConfiguration
+    
+    .INPUTS
+        None
+    
+    .OUTPUTS
+        Current User Freebox Configuration is reset
+    
+    .NOTES
+        Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+        Linked to function(s): '', ''
+        Linked to script(s): '.\Box-Administration.psm1'
+    
+    #>
+    
+        Param()
+        
+        $Name = 'Reset Json Current User Freebox Settings'
+        $Category = 'Program run'
+        
+        Write-Log -Type INFO -Category $Nam -Name $Name -Message "Start $Name" -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
+        Try {
+            Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force
+            Start-Sleep -Seconds $global:SleepDefault
+            Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+        }
+        Catch {
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+            Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason "Reset Json Current User Freebox Settings file has failed" -ErrorAction Stop
+        }
+        Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+    
+        If (Test-Path -Path $global:JSONSettingsCurrentUserFileNamePath) {
+    
+            Get-JSONSettingsCurrentUserContent
+        }
+        Elseif (Test-Path -Path $global:JSONSettingsDefaultUserFileNamePath) {
+            
+            Get-JSONSettingsDefaultUserContent
+        }
+        Else {
+            $Name = 
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())"
+            Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+            Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Find any user Freebox settings configuration file has failed' -ErrorAction Stop
+        }
+    }
 #endregion Reset User Json Configuration files
 
 #endregion Program
@@ -4736,7 +4930,7 @@ Function Get-HostStatus {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Test-Connection', 'Show-WindowsFormDialogBox', 'Set-ValueToJSONFile'
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInput', 'Test-Connection', 'Show-WindowsFormDialogBox', 'Set-ValueToJSONFile'
     Linked to script(s): '.\Box-Administration.psm1'
 
 #>
@@ -4762,13 +4956,13 @@ Function Get-HostStatus {
     
     While ($null -eq $BoxDnsStatus) {
         
-        $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+        $UrlRoot = Show-WindowsFormDialogBoxInput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:DialogueBoxTextButtonOk -CancelButtonText $global:DialogueBoxTextButtonCancel -DefaultValue $DefaultValue
         
         While ([String]::IsNullOrEmpty($UrlRoot)) {
             
             Write-Log -Type WARNING -Category $Category -Name $Name -Message "This field can't be empty or null"
             Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "This field can't be empty or null" -WarnIcon
-            $UrlRoot = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue    
+            $UrlRoot = Show-WindowsFormDialogBoxInput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external $global:BoxType IP/DNS Address, Example : example.com" -OkButtonText $global:DialogueBoxTextButtonOk -CancelButtonText $global:DialogueBoxTextButtonCancel -DefaultValue $DefaultValue    
 
             If ($global:TriggerDialogBox -eq 1) {
                         
@@ -4812,7 +5006,8 @@ Function Get-HostStatus {
             Write-Log -Type WARNING -Category $Category -Name $Name -Message "- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)"
             Write-Log -Type WARNING -Category $Category -Name $Name -Message "- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)"
             Write-Log -Type WARNING -Category $Category -Name $Name -Message "- If you use a proxy, that do not block the connection to your public dyndns"
-            Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns" -WarnIcon
+            Write-Log -Type WARNING -Category $Category -Name $Name -Message "- If you use a intermediary router between your computer and the $global:BoxType router check forwading port is activated and configured"
+            Show-WindowsFormDialogBox -Title "$Category - $Name" -Message "Host : $UrlRoot , seems OffLine ; please make sure :`n`n- You are connected to internet`n- You enter a valid DNS address or IP address`n- The `"PingResponder`" service is enabled ($global:BoxUrlFirewall)`n- The `"DYNDNS`" service is enabled and properly configured ($global:BoxUrlDynDns)`n- The `"Remote`" service is enabled and properly configured ($global:BoxUrlRemote)`n- If you use a proxy, that do not block the connection to your public dyndns`n- If you use a intermediary router between your computer and the $global:BoxType router check forwading port is activated and configured" -WarnIcon
             $BoxDnsStatus = $null
             $UrlRoot = $null
         }
@@ -4849,7 +5044,7 @@ Function Get-PortStatus {
 
 .NOTES
     Author: @Zardrilokis => Tom78_91_45@yahoo.fr
-    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInuput', 'Show-WindowsFormDialogBox', 'Test-NetConnection', 'Set-ValueToJSONFile'
+    Linked to function(s): 'Stop-Program', 'Show-WindowsFormDialogBoxInput', 'Show-WindowsFormDialogBox', 'Test-NetConnection', 'Set-ValueToJSONFile'
     Linked to script(s): '.\Box-Administration.psm1'
 
 #>
@@ -4876,7 +5071,7 @@ Function Get-PortStatus {
     
     While ([String]::IsNullOrEmpty($PortStatus) -or [String]::IsNullOrEmpty($Port)) {
         
-        [Int]$Port = Show-WindowsFormDialogBoxInuput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Ok -CancelButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -DefaultValue $DefaultValue
+        [Int]$Port = Show-WindowsFormDialogBoxInput -MainFormTitle "$Category - $Name" -LabelMessageText "Enter your external remote $global:BoxType port`nValid range port is from : 1 to : 65535`nDefault is : $global:DefaultRemotePort`nExample : 80,443" -OkButtonText $global:DialogueBoxTextButtonOk -CancelButtonText $global:DialogueBoxTextButtonCancel -DefaultValue $DefaultValue
         Write-Log -Type INFONO -Category $Category -Name $Name -Message "Port `"$Port`" status : " -NotDisplay
         
         If ($global:TriggerDialogBox -eq 1) {
@@ -5399,6 +5594,71 @@ Function Get-FREEBOXInformation {
     }
 }
 
+function Get-FREEBOXAPIVersionInformation {
+    
+    <#
+.SYNOPSIS
+    To get information from API page version content
+
+.DESCRIPTION
+    To get information from API page version content
+
+.EXAMPLE
+    Get-FREEBOXAPIVersionInformation
+
+.INPUTS
+    $Uri
+
+.OUTPUTS
+    $FbxUrl
+
+.NOTES
+    Author: @Zardrilokis => Tom78_91_45@yahoo.fr
+    Linked to function(s): 'ConvertFrom-HtmlToText', 'Get-FREEBOXErrorCode', 'ConvertFrom-Json'
+    linked to many functions in the module : '.\Box-Module.psm1'
+
+#>
+
+    Param (
+        [Parameter(Mandatory=$True)]
+        [String]$Uri
+    )
+    
+    $Category = 'Program run'
+    $Name     = 'Get API Informations from the FreeBox'
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Start Get API Informations from the FreeBox' -NotDisplay
+    
+    # Read FreeBox API version Informations
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "Read FreeBox API version Informations status : " -NotDisplay
+    
+    Try {
+        $FbxApiInfo = Invoke-RestMethod -Uri $Uri -Method Get -ErrorAction Stop
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, due to : $($_.ToString())" -NotDisplay
+        Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'FreeBox API version Informations can not be read' -ErrorAction Stop
+    }
+    
+    # Extract Freebox API informations
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'Freebox Url : ' -NotDisplay
+    
+    If ($FbxApiInfo.https_available) {
+        
+        $FbxUrl = "$($global:JSONSettingsProgramContent.Protocols.HTTPS)$($FbxApiInfo.api_domain):$($FbxApiInfo.https_port)"
+    }
+    Else {
+        $FbxUrl = "$($global:JSONSettingsProgramContent.Protocols.HTTP)$($FbxApiInfo.api_domain)"
+    }
+    
+    # Display Freebox API informations
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message "$FbxUrl" -NotDisplay
+    Return $FbxUrl
+
+    Write-Log -Type INFO -Category $Category -Name $Name -Message 'End Get API Informations from the FreeBox' -NotDisplay
+}
+
 # Used only to set (PUT/POST) information
 Function Set-BBOXInformation {
 
@@ -5624,394 +5884,395 @@ Function Switch-Info {
         [String]$GitHubUrlSite
     )
     
+        $ErrorMessage = 'User want to quit the program'
         Switch ($Label) {
             
             # Error Code 
-            Get-BBOXErrorCode        {$FormatedData = Get-BBOXErrorCode -UrlToGo $UrlToGo;Break}
+            Get-BBOXErrorCode         {$FormatedData = Get-BBOXErrorCode -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXErrorCodeTest    {$FormatedData = Get-BBOXErrorCodeTest -UrlToGo $UrlToGo;Break}
+            Get-BBOXErrorCodeTest     {$FormatedData = Get-BBOXErrorCodeTest -UrlToGo $UrlToGo;Break}
             
             # API Version 
-            Get-FREEBOXAPIVersion    {$FormatedData = Get-FREEBOXAPIVersion -UrlToGo $UrlToGo;Break}
+            Get-FREEBOXAPIVersion     {$FormatedData = Get-FREEBOXAPIVersion -UrlToGo $UrlToGo;Break}
             
             # Contact 
-            Get-FREEBOXContact       {$FormatedData = Get-FREEBOXContact -UrlToGo $UrlToGo;Break}
+            Get-FREEBOXContact        {$FormatedData = Get-FREEBOXContact -UrlToGo $UrlToGo;Break}
             
             # Call Log
-            Get-FREEBOXCalllog       {$FormatedData = Get-FREEBOXCalllog -UrlToGo $UrlToGo;Break}
+            Get-FREEBOXCalllog        {$FormatedData = Get-FREEBOXCalllog -UrlToGo $UrlToGo;Break}
             
             # Call Log Summary
-            Get-FREEBOXCalllogS      {$FormatedData = Get-FREEBOXCalllogSummary -UrlToGo $UrlToGo;Break}
+            Get-FREEBOXCalllogS       {$FormatedData = Get-FREEBOXCalllogSummary -UrlToGo $UrlToGo;Break}
             
             # Airties
-            Get-BBOXAirties          {$FormatedData = Get-BBOXAirties -UrlToGo $UrlToGo;Break}
+            Get-BBOXAirties           {$FormatedData = Get-BBOXAirties -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXAirtiesL         {$FormatedData = Get-BBOXAirtiesLANmode -UrlToGo $UrlToGo;Break}
+            Get-BBOXAirtiesL          {$FormatedData = Get-BBOXAirtiesLANmode -UrlToGo $UrlToGo;Break}
             
             # Backup
-            Get-BBOXCONFIGSL         {$FormatedData = Get-BBOXBackupList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXCONFIGSL          {$FormatedData = Get-BBOXBackupList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # DHCP
-            Get-BBOXDHCP             {$FormatedData = Get-BBOXDHCP -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXDHCP              {$FormatedData = Get-BBOXDHCP -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXDHCPC            {$FormatedData = Get-BBOXDHCPClients -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPC             {$FormatedData = Get-BBOXDHCPClients -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPCID          {$FormatedData = Get-BBOXDHCPClientsID -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPCID           {$FormatedData = Get-BBOXDHCPClientsID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPAO           {$FormatedData = Get-BBOXDHCPActiveOptions -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPAO            {$FormatedData = Get-BBOXDHCPActiveOptions -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPO            {$FormatedData = Get-BBOXDHCPOptions -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPO             {$FormatedData = Get-BBOXDHCPOptions -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPOID          {$FormatedData = Get-BBOXDHCPOptionsID -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPOID           {$FormatedData = Get-BBOXDHCPOptionsID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPSTBO         {$FormatedData = Get-BBOXDHCPSTBOptions -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPSTBO          {$FormatedData = Get-BBOXDHCPSTBOptions -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDHCPv6PFD        {$FormatedData = Get-BBOXDHCPv6PrefixDelegation -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPv6PFD         {$FormatedData = Get-BBOXDHCPv6PrefixDelegation -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXDHCPv6O          {$FormatedData = Get-BBOXDHCPv6Options -UrlToGo $UrlToGo;Break}
+            Get-BBOXDHCPv6O           {$FormatedData = Get-BBOXDHCPv6Options -UrlToGo $UrlToGo;Break}
             
             # DNS
-            Get-BBOXDNSS             {$FormatedData = Get-BBOXDNSStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXDNSS              {$FormatedData = Get-BBOXDNSStats -UrlToGo $UrlToGo;Break}
             
             # DEVICE
-            Get-BBOXDEVICE           {$FormatedData = Get-BBOXDevice -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXDEVICE            {$FormatedData = Get-BBOXDevice -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXDEVICELOG        {$FormatedData = Get-BBOXDeviceLog -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICELOG         {$FormatedData = Get-BBOXDeviceLog -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXDEVICEFLOG       {$FormatedData = Get-BBOXDeviceFullLog -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEFLOG        {$FormatedData = Get-BBOXDeviceFullLog -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICEFTLOG      {$FormatedData = Get-BBOXDeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEFTLOG       {$FormatedData = Get-BBOXDeviceFullTechnicalLog -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICECHLOG      {$FormatedData = Get-BBOXDeviceConnectionHistoryLog -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICECHLOG       {$FormatedData = Get-BBOXDeviceConnectionHistoryLog -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICECHLOGID    {$FormatedData = Get-BBOXDeviceConnectionHistoryLogID -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICECHLOGID     {$FormatedData = Get-BBOXDeviceConnectionHistoryLogID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICEC          {$FormatedData = Get-BBOXDeviceCpu -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEC           {$FormatedData = Get-BBOXDeviceCpu -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICEM          {$FormatedData = Get-BBOXDeviceMemory -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEM           {$FormatedData = Get-BBOXDeviceMemory -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICELED        {$FormatedData = Get-BBOXDeviceLED -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICELED         {$FormatedData = Get-BBOXDeviceLED -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICES          {$FormatedData = Get-BBOXDeviceSummary -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICES           {$FormatedData = Get-BBOXDeviceSummary -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICET          {$FormatedData = Get-BBOXDeviceToken -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICET           {$FormatedData = Get-BBOXDeviceToken -UrlToGo $UrlToGo;Break}
             
-            Set-BBOXDEVICER          {Set-BBOXDeviceReboot -UrlToGo $UrlToGo;Break}
+            Set-BBOXDEVICER           {Set-BBOXDeviceReboot -UrlToGo $UrlToGo;Break}
             
-            Set-BBOXDEVICEFR         {Set-BBOXDeviceResetFactory -UrlToGo $UrlToGo;Break}
+            Set-BBOXDEVICEFR          {Set-BBOXDeviceResetFactory -UrlToGo $UrlToGo;Break}
             
             # DYNDNS
-            Get-BBOXDYNDNS           {$FormatedData = Get-BBOXDYNDNS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXDYNDNS            {$FormatedData = Get-BBOXDYNDNS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXDYNDNSPL         {$FormatedData = Get-BBOXDYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXDYNDNSPL          {$FormatedData = Get-BBOXDYNDNSProviderList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXDYNDNSC          {$FormatedData = Get-BBOXDYNDNSClient -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXDYNDNSC           {$FormatedData = Get-BBOXDYNDNSClient -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXDYNDNSCID        {$FormatedData = Get-BBOXDYNDNSClientID -UrlToGo $UrlToGo;Break}
+            Get-BBOXDYNDNSCID         {$FormatedData = Get-BBOXDYNDNSClientID -UrlToGo $UrlToGo;Break}
 
             # FIREWALL
-            Get-BBOXFIREWALL         {$FormatedData = Get-BBOXFIREWALL -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXFIREWALL          {$FormatedData = Get-BBOXFIREWALL -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXFIREWALLR        {$FormatedData = Get-BBOXFIREWALLRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLR         {$FormatedData = Get-BBOXFIREWALLRules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLRID      {$FormatedData = Get-BBOXFIREWALLRulesID -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLRID       {$FormatedData = Get-BBOXFIREWALLRulesID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLGM       {$FormatedData = Get-BBOXFIREWALLGamerMode -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLGM        {$FormatedData = Get-BBOXFIREWALLGamerMode -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLPR       {$FormatedData = Get-BBOXFIREWALLPingResponder -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLPR        {$FormatedData = Get-BBOXFIREWALLPingResponder -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLv6R      {$FormatedData = Get-BBOXFIREWALLv6Rules -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLv6R       {$FormatedData = Get-BBOXFIREWALLv6Rules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLv6RID    {$FormatedData = Get-BBOXFIREWALLv6RulesID -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLv6RID     {$FormatedData = Get-BBOXFIREWALLv6RulesID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXFIREWALLv6L      {$FormatedData = Get-BBOXFIREWALLv6Level -UrlToGo $UrlToGo;Break}
+            Get-BBOXFIREWALLv6L       {$FormatedData = Get-BBOXFIREWALLv6Level -UrlToGo $UrlToGo;Break}
             
             # API
-            Get-BBOXAPIRM            {$FormatedData = Get-BBOXAPIRessourcesMap -UrlToGo $UrlToGo;Break}
+            Get-BBOXAPIRM             {$FormatedData = Get-BBOXAPIRessourcesMap -UrlToGo $UrlToGo;Break}
             
             # HOST
-            Get-BBOXHOSTSDTH         {$FormatedData = Get-BBOXHOSTSDownloadThreshold -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSDTH          {$FormatedData = Get-BBOXHOSTSDownloadThreshold -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXHOSTS            {$FormatedData = Get-BBOXHOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXHOSTS             {$FormatedData = Get-BBOXHOSTS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXHOSTSID          {$FormatedData = Get-BBOXHOSTSID -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSID           {$FormatedData = Get-BBOXHOSTSID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXHOSTSW           {$FormatedData = Get-BBOXHOSTSWireless -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSW            {$FormatedData = Get-BBOXHOSTSWireless -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXHOSTSME          {$FormatedData = Get-BBOXHOSTSME -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSME           {$FormatedData = Get-BBOXHOSTSME -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXHOSTSL           {$FormatedData = Get-BBOXHOSTSLite -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSL            {$FormatedData = Get-BBOXHOSTSLite -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXHOSTSP           {$FormatedData = Get-BBOXHOSTSPAUTH -UrlToGo $UrlToGo;Break}
+            Get-BBOXHOSTSP            {$FormatedData = Get-BBOXHOSTSPAUTH -UrlToGo $UrlToGo;Break}
             
             # LAN
-            Get-BBOXLANIPC           {$FormatedData = Get-BBOXLANIPConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXLANIPC            {$FormatedData = Get-BBOXLANIPConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXLANIPSC          {$FormatedData = Get-BBOXLANIPSwitchConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXLANIPSC           {$FormatedData = Get-BBOXLANIPSwitchConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXLANS             {$FormatedData = Get-BBOXLANStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXLANS              {$FormatedData = Get-BBOXLANStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXLANPS            {$FormatedData = Get-BBOXLANPortStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXLANPS             {$FormatedData = Get-BBOXLANPortStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXLANA             {$FormatedData = Get-BBOXLANAlerts -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXLANA              {$FormatedData = Get-BBOXLANAlerts -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # NAT
-            Get-BBOXNAT              {$FormatedData = Get-BBOXNAT -UrlToGo $UrlToGo;Break}
+            Get-BBOXNAT               {$FormatedData = Get-BBOXNAT -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNATDMZ           {$FormatedData = Get-BBOXNATDMZ -UrlToGo $UrlToGo;Break}
+            Get-BBOXNATDMZ            {$FormatedData = Get-BBOXNATDMZ -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNATR             {$FormatedData = Get-BBOXNATRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXNATR              {$FormatedData = Get-BBOXNATRules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNATRID           {$FormatedData = Get-BBOXNATRulesID -UrlToGo $UrlToGo;Break}
+            Get-BBOXNATRID            {$FormatedData = Get-BBOXNATRulesID -UrlToGo $UrlToGo;Break}
             
             # Parental Control
-            Get-BBOXPARENTALCONTROL  {$FormatedData = Get-BBOXParentalControl -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXPARENTALCONTROL   {$FormatedData = Get-BBOXParentalControl -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXPARENTALCONTROLS {$FormatedData = Get-BBOXParentalControlScheduler -UrlToGo $UrlToGo;Break}
+            Get-BBOXPARENTALCONTROLS  {$FormatedData = Get-BBOXParentalControlScheduler -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXPARENTALCONTROLSR{$FormatedData = Get-BBOXParentalControlSchedulerRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXPARENTALCONTROLSR {$FormatedData = Get-BBOXParentalControlSchedulerRules -UrlToGo $UrlToGo;Break}
             
             # PROFILE
-            Get-BBOXPROFILEC         {$FormatedData = Get-BBOXProfileConsumption -UrlToGo $UrlToGo;Break}
+            Get-BBOXPROFILEC          {$FormatedData = Get-BBOXProfileConsumption -UrlToGo $UrlToGo;Break}
             
             # REMOTE
-            Get-BBOXREMOTEPWOL       {$FormatedData = Get-BBOXREMOTEProxyWOL -UrlToGo $UrlToGo;Break}
+            Get-BBOXREMOTEPWOL        {$FormatedData = Get-BBOXREMOTEProxyWOL -UrlToGo $UrlToGo;Break}
             
             # SERVICES
-            Get-BBOXSERVICES         {$FormatedData = Get-BBOXSERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXSERVICES          {$FormatedData = Get-BBOXSERVICES -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # IP TV
-            Get-BBOXIPTV             {$FormatedData = Get-BBOXIPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXIPTV              {$FormatedData = Get-BBOXIPTV -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXIPTVD            {$FormatedData = Get-BBOXIPTVDiags -UrlToGo $UrlToGo;Break}
+            Get-BBOXIPTVD             {$FormatedData = Get-BBOXIPTVDiags -UrlToGo $UrlToGo;Break}
             
             # NOTIFICATION
-            Get-BBOXNOTIFICATION     {$FormatedData = Get-BBOXNOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXNOTIFICATION      {$FormatedData = Get-BBOXNOTIFICATIONConfig -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXNOTIFICATIONCA   {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONCA    {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNOTIFICATIONCC   {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONCC    {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNOTIFICATIONCE   {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONCE    {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNOTIFICATIONA    {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONA     {$FormatedData = Get-BBOXNOTIFICATIONAlerts -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNOTIFICATIONC    {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONC     {$FormatedData = Get-BBOXNOTIFICATIONContacts -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXNOTIFICATIONE    {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
+            Get-BBOXNOTIFICATIONE     {$FormatedData = Get-BBOXNOTIFICATIONEvents -UrlToGo $UrlToGo;Break}
             
             # UPNP IGD
-            Get-BBOXUPNPIGD          {$FormatedData = Get-BBOXUPNPIGD -UrlToGo $UrlToGo;Break}
+            Get-BBOXUPNPIGD           {$FormatedData = Get-BBOXUPNPIGD -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXUPNPIGDR         {$FormatedData = Get-BBOXUPNPIGDRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXUPNPIGDR          {$FormatedData = Get-BBOXUPNPIGDRules -UrlToGo $UrlToGo;Break}
             
             # USB
-            Get-BBOXDEVICEUSBP       {$FormatedData = Get-BBOXDeviceUSBPrinter -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEUSBP        {$FormatedData = Get-BBOXDeviceUSBPrinter -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXDEVICEUSBD       {$FormatedData = Get-BBOXDeviceUSBDevices -UrlToGo $UrlToGo;Break}
+            Get-BBOXDEVICEUSBD        {$FormatedData = Get-BBOXDeviceUSBDevices -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXUSBS             {$FormatedData = Get-BBOXUSBStorage -UrlToGo $UrlToGo;Break}
+            Get-BBOXUSBS              {$FormatedData = Get-BBOXUSBStorage -UrlToGo $UrlToGo;Break}
             
             # VOIP
-            Get-BBOXVOIP             {$FormatedData = Get-BBOXVOIP -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXVOIP              {$FormatedData = Get-BBOXVOIP -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXVOIPDC           {$FormatedData = Get-BBOXVOIPDiagConfig -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPDC            {$FormatedData = Get-BBOXVOIPDiagConfig -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPDL           {$FormatedData = Get-BBOXVOIPDiagLine -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPDL            {$FormatedData = Get-BBOXVOIPDiagLine -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPDU           {$FormatedData = Get-BBOXVOIPDiagUSB -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPDU            {$FormatedData = Get-BBOXVOIPDiagUSB -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPDH           {$FormatedData = Get-BBOXVOIPDiagHost -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPDH            {$FormatedData = Get-BBOXVOIPDiagHost -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPS            {$FormatedData = Get-BBOXVOIPScheduler -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPS             {$FormatedData = Get-BBOXVOIPScheduler -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPSR           {$FormatedData = Get-BBOXVOIPSchedulerRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPSR            {$FormatedData = Get-BBOXVOIPSchedulerRules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPCL           {$FormatedData = Get-BBOXVOIPCallLogLine -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPCL            {$FormatedData = Get-BBOXVOIPCallLogLine -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPCLPN         {$FormatedData = Get-BBOXVOIPCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPCLPN          {$FormatedData = Get-BBOXVOIPCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPCLS          {$FormatedData = Get-BBOXVOIPCallLogLineXSummary -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPCLS           {$FormatedData = Get-BBOXVOIPCallLogLineXSummary -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPFCL          {$FormatedData = Get-BBOXVOIPFullCallLogLine -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPFCL           {$FormatedData = Get-BBOXVOIPFullCallLogLine -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPFCLPN        {$FormatedData = Get-BBOXVOIPFullCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPFCLPN         {$FormatedData = Get-BBOXVOIPFullCallLogLineXPhoneNumber -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPFCLS         {$FormatedData = Get-BBOXVOIPFullCallLogLineXSummary -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPFCLS          {$FormatedData = Get-BBOXVOIPFullCallLogLineXSummary -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXVOIPALN          {$FormatedData = Get-BBOXVOIPAllowedListNumber -UrlToGo $UrlToGo;Break}
+            Get-BBOXVOIPALN           {$FormatedData = Get-BBOXVOIPAllowedListNumber -UrlToGo $UrlToGo;Break}
             
             # CPL
-            Get-BBOXCPL              {$FormatedData = Get-BBOXCPL -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXCPL               {$FormatedData = Get-BBOXCPL -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXCPLDL            {$FormatedData = Get-BBOXCPLDeviceList -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXCPLDL             {$FormatedData = Get-BBOXCPLDeviceList -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # WAN
-            Get-BBOXWANAC            {$FormatedData = Get-BBOXWANAutowanConfig -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANAC             {$FormatedData = Get-BBOXWANAutowanConfig -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANAP            {$FormatedData = Get-BBOXWANAutowanProfiles -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANAP             {$FormatedData = Get-BBOXWANAutowanProfiles -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWAND             {$FormatedData = Get-BBOXWANDiags -UrlToGo $UrlToGo;Break}
+            Get-BBOXWAND              {$FormatedData = Get-BBOXWANDiags -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANDS            {$FormatedData = Get-BBOXWANDiagsSessions -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANDS             {$FormatedData = Get-BBOXWANDiagsSessions -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXWANDSHAS         {$FormatedData = Get-BBOXWANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANDSHAS          {$FormatedData = Get-BBOXWANDiagsSummaryHostsActiveSessions -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANDAAS          {$FormatedData = Get-BBOXWANDiagsAllActiveSessions -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANDAAS           {$FormatedData = Get-BBOXWANDiagsAllActiveSessions -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXWANDAASH         {$FormatedData = Get-BBOXWANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANDAASH          {$FormatedData = Get-BBOXWANDiagsAllActiveSessionsHost -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANFS            {$FormatedData = Get-BBOXWANFTTHStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANFS             {$FormatedData = Get-BBOXWANFTTHStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANIP            {$FormatedData = Get-BBOXWANIP -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANIP             {$FormatedData = Get-BBOXWANIP -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANIPS           {$FormatedData = Get-BBOXWANIPStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANIPS            {$FormatedData = Get-BBOXWANIPStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWANXDSL          {$FormatedData = Get-BBOXWANXDSL -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANXDSL           {$FormatedData = Get-BBOXWANXDSL -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXWANXDSLS         {$FormatedData = Get-BBOXWANXDSLStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANXDSLS          {$FormatedData = Get-BBOXWANXDSLStats -UrlToGo $UrlToGo;Break}
 
-            Get-BBOXWANSFF           {$FormatedData = Get-BBOXWANSFF -UrlToGo $UrlToGo;Break}
+            Get-BBOXWANSFF            {$FormatedData = Get-BBOXWANSFF -UrlToGo $UrlToGo;Break}
             
             # WIRELESS
-            Get-BBOXWIRELESS         {$FormatedData = Get-BBOXWIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXWIRELESS          {$FormatedData = Get-BBOXWIRELESS -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXWIRELESSSTD      {$FormatedData = Get-BBOXWIRELESSSTANDARD -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSSTD       {$FormatedData = Get-BBOXWIRELESSSTANDARD -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESS24       {$FormatedData = Get-BBOXWIRELESS24Ghz -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESS24        {$FormatedData = Get-BBOXWIRELESS24Ghz -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESS24S      {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESS24S       {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESS5        {$FormatedData = Get-BBOXWIRELESS5Ghz -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESS5         {$FormatedData = Get-BBOXWIRELESS5Ghz -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESS5S       {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESS5S        {$FormatedData = Get-BBOXWIRELESSStats -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSACL      {$FormatedData = Get-BBOXWIRELESSACL -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSACL       {$FormatedData = Get-BBOXWIRELESSACL -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSACLR     {$FormatedData = Get-BBOXWIRELESSACLRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSACLR      {$FormatedData = Get-BBOXWIRELESSACLRules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSACLRID   {$FormatedData = Get-BBOXWIRELESSACLRulesID -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSACLRID    {$FormatedData = Get-BBOXWIRELESSACLRulesID -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSWPS      {$FormatedData = Get-BBOXWIRELESSWPS -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSWPS       {$FormatedData = Get-BBOXWIRELESSWPS -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSFBNH     {$FormatedData = Get-BBOXWIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXWIRELESSFBNH      {$FormatedData = Get-BBOXWIRELESSFrequencyNeighborhoodScan -UrlToGo $UrlToGo -APIName $APIName;Break}
             
-            Get-BBOXWIRELESSFSM      {$FormatedData = Get-BBOXWIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSFSM       {$FormatedData = Get-BBOXWIRELESSFastScanMe -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSS        {$FormatedData = Get-BBOXWIRELESSScheduler -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSS         {$FormatedData = Get-BBOXWIRELESSScheduler -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSSR       {$FormatedData = Get-BBOXWIRELESSSchedulerRules -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSSR        {$FormatedData = Get-BBOXWIRELESSSchedulerRules -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSR        {$FormatedData = Get-BBOXWIRELESSRepeater -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSR         {$FormatedData = Get-BBOXWIRELESSRepeater -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSVBSTB    {$FormatedData = Get-BBOXWIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSVBSTB     {$FormatedData = Get-BBOXWIRELESSVideoBridgeSetTopBoxes -UrlToGo $UrlToGo;Break}
             
-            Get-BBOXWIRELESSVBR      {$FormatedData = Get-BBOXWIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo;Break}
+            Get-BBOXWIRELESSVBR       {$FormatedData = Get-BBOXWIRELESSVideoBridgeRepeaters -UrlToGo $UrlToGo;Break}
             
             # SUMMARY
-            Get-BBOXSUMMARY          {$FormatedData = Get-BBOXSUMMARY -UrlToGo $UrlToGo;Break}
+            Get-BBOXSUMMARY           {$FormatedData = Get-BBOXSUMMARY -UrlToGo $UrlToGo;Break}
             
             # USERSAVE
-            Get-BBOXUSERSAVE         {$FormatedData = Get-BBOXUSERSAVE -UrlToGo $UrlToGo -APIName $APIName;Break}
+            Get-BBOXUSERSAVE          {$FormatedData = Get-BBOXUSERSAVE -UrlToGo $UrlToGo -APIName $APIName;Break}
             
             # Password Recovery Verify
-            Get-BBOXPASSRECOVERV     {$FormatedData = Get-BBOXPasswordRecoveryVerify -UrlToGo $UrlToGo;Break}
+            Get-BBOXPASSRECOVERV      {$FormatedData = Get-BBOXPasswordRecoveryVerify -UrlToGo $UrlToGo;Break}
             
             # BoxJournal
-            Get-BBOXBoxJournal       {$FormatedData = Get-BBOXBoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath;Break}
+            Get-BBOXBoxJournal        {$FormatedData = Get-BBOXBoxJournal -UrlToGo $UrlToGo -JournalPath $JournalPath;Break}
             
             # BBox Referential Contact
-            Show-BBOXRC              {$FormatedData = Show-BBOXReferentialContact;Break}
+            Show-BBOXRC               {$FormatedData = Show-BBOXReferentialContact;Break}
             
-            Add-BBOXNewRC            {$FormatedData = Add-BBOXNewReferentialContact;Break}
+            Add-BBOXNewRC             {$FormatedData = Add-BBOXNewReferentialContact;Break}
             
-            Remove-BBOXRC            {$FormatedData = Remove-BBOXReferentialContact;Break}
+            Remove-BBOXRC             {$FormatedData = Remove-BBOXReferentialContact;Break}
             
             # Export Program files Number
-            Export-PFC           {$FormatedData = Export-ProgramFilesCount -FolderRoot $PSScriptRoot;Break}
+            Export-PFC                {$FormatedData = Export-ProgramFilesCount -FolderRoot $PSScriptRoot -ExcludeFolder $global:RessourcesFolderName;Break}
             
             # Remove-FolderContent
-            Remove-FCAll         {$FormatedData = Remove-FolderContentAll -FolderRoot $PSScriptRoot -FoldersName $APIName;Break}
+            Remove-FCAll              {$FormatedData = Remove-FolderContentAll -FolderRoot $PSScriptRoot -FoldersName $APIName;Break}
             
-            Remove-FCLogs        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCLogs             {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCExportCSV   {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCExportCSV        {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCExportJSON  {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCExportJSON       {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCJournal     {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCJournal          {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCJBC         {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCJBC              {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCReport      {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCReport           {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
-            Remove-FCH           {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
+            Remove-FCH                {$FormatedData = Remove-FolderContent -FolderRoot $PSScriptRoot -FolderName $APIName;Break}
             
             # DisplayFormat
-            Switch-DF            {$FormatedData = Switch-DisplayFormat;Break}
+            Switch-DF                 {$FormatedData = Switch-DisplayFormat;Break}
             
             # ExportFormat
-            Switch-EF            {$FormatedData = Switch-ExportFormat;Break}
+            Switch-EF                 {$FormatedData = Switch-ExportFormat;Break}
             
             # OpenExportFormat
-            SWITCH-OEF           {$FormatedData = Switch-OpenExportFolder;Break}
+            SWITCH-OEF                {$FormatedData = Switch-OpenExportFolder;Break}
             
             # OpenHTMLReport
-            Switch-OHR           {$FormatedData = Switch-OpenHTMLReport;Break}
+            Switch-OHR                {$FormatedData = Switch-OpenHTMLReport;Break}
             
             # Switch Resolved Dns Name
-            Switch-RDN           {$FormatedData = Switch-ResolveDnsName;Break}
+            Switch-RDN                {$FormatedData = Switch-ResolveDnsName;Break}
             
             # Remove Box Windows Password Manager
-            Remove-BoxC          {$FormatedData = Remove-BoxCredential;Break}
+            Remove-BoxC               {$FormatedData = Remove-BoxCredential;Break}
             
             # Show Box Windows Password Manager
-            Get-BoxC             {$FormatedData = Get-BoxCredential;Break}
+            Get-BoxC                  {$FormatedData = Get-BoxCredential;Break}
             
             # Show Box Windows Password Manager
-            Show-BoxC            {$FormatedData = Show-BoxCredential;Break}
+            Show-BoxC                 {$FormatedData = Show-BoxCredential;Break}
             
             # Set Box Windows Password Manager
-            Add-BoxC             {$FormatedData = Add-BoxCredential;Break}
+            Add-BoxC                  {$FormatedData = Add-BoxCredential;Break}
             
             # Reset-Current User Program Configuration
-            Reset-CUPC           {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
+            Reset-CUPC                {$FormatedData = Reset-CurrentUserProgramConfiguration;Break}
             
             # Export-ModuleHelp
-            Export-MH            {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath;Break}
+            Export-MH                 {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath;Break}
             
             # Export-Module Function
-            Export-MF            {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath;Break}
+            Export-MF                 {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath;Break}
             
-            Export-MFS           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport;Break}
+            Export-MFS                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport;Break}
             
-            Export-MFD           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport;Break}
+            Export-MFD                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport;Break}
             
-            Export-MFF           {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -FullDetailedExport;Break}
+            Export-MFF                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -FullDetailedExport;Break}
             
-            Export-MFSD          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport;Break}
+            Export-MFSD               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport;Break}
             
-            Export-MFSF          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -FullDetailedExport;Break}
+            Export-MFSF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -FullDetailedExport;Break}
             
-            Export-MFDF          {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport -FullDetailedExport;Break}
+            Export-MFDF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport -FullDetailedExport;Break}
             
-            Export-MFSDF         {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport -FullDetailedExport;Break}
+            Export-MFSDF              {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport -FullDetailedExport;Break}
                         
             # Exit
-            Q                    {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
+            Q                         {Stop-Program -Context User -ErrorMessage $ErrorMessage -Reason $ErrorMessage -ErrorAction Stop;Break}
             
             # Quit/Close Program
-            Stop-Program         {Stop-Program -Context User -ErrorMessage 'User want to quit the program' -Reason 'User want to quit the program' -ErrorAction Stop;Break}
+            Stop-Program              {Stop-Program -Context User -ErrorMessage $ErrorMessage -Reason $ErrorMessage -ErrorAction Stop;Break}
             
             # Uninstall Program
-            Uninstall-Program    {Uninstall-Program -ErrorAction Stop;Break}
+            Uninstall-Program         {Uninstall-Program -ErrorAction Stop;Break}
             
             # Default
-            Default              {Write-log WARNING -Category 'Program run' -Name "Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
-                                  Show-WindowsFormDialogBox -Title "Program run - Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
-                                  $FormatedData = 'Program'
-                                  Break
-                                 }
+            Default                   {Write-log WARNING -Category 'Program run' -Name "Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite"
+                                       Show-WindowsFormDialogBox -Title "Program run - Action : $Label not yet developed" -Message "Selected Action is not yet developed, please chose another one, for more information contact me by mail : $Mail or post on github : $GitHubUrlSite" -WarnIcon
+                                       $FormatedData = 'Program'
+                                       Break
+                                      }
         }
     
         Return $FormatedData
@@ -7806,7 +8067,7 @@ function Export-ProgramFilesCount {
         This is the root folder where files data are stored
     
     .EXAMPLE
-        Export-ProgramFilesCount -FolderRoot 'C:\Temp'
+        Export-ProgramFilesCount -FolderRoot 'C:\Temp' -ExcludeFolder 'Test'
 
     .INPUTS
         $FolderRoot
@@ -7822,16 +8083,18 @@ function Export-ProgramFilesCount {
     #>
     
         Param (
-            [Parameter(Mandatory=$False)]
-            [String]$FolderRoot
+            [Parameter(Mandatory=$True)]
+            [String]$FolderRoot,
+            
+            [Parameter(Mandatory=$True)]
+            [String]$ExcludeFolder
         )
         
         # Create array
         $Array = @()
         
-        $global:RessourcesFolderName = 'Ressources'
-        $FolderRoot = "D:\OneDrive\Scripting\Projets\BBOX-Administration\Version-2.7"
-        $FolderList = Get-ChildItem -Path $FolderRoot -Exclude $global:RessourcesFolderName -Directory
+        # Get all folders in $FolderRoot
+        $FolderList = Get-ChildItem -Path $FolderRoot -Exclude $ExcludeFolder -Directory
         
         Foreach ($Folder in $FolderList) {
             

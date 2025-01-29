@@ -310,9 +310,9 @@
     Update       : Add foreach custom function their functions dependencies if exist in the header. Use 'get-help' for more details (https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help)
     Update       : Update function : 'Get-PortStatus' - Add more help to diagnostize
     Update       : Update 'Site.CurrentLocalUrl' parameter in Json files : '.\Ressources\Settings-Default-User.json' and '.\Ressources\Settings-Current-User.json'
-    Update       : Add 'Box.UrlPrefixe' parameter in Json file : '.\Ressources\Settings-Program.json' and remplace 'https://' by '$global:UrlPrefixe'
+    Update       : Add 'Box.UrlPrefixe' parameter in Json file : '.\Ressources\Settings-Program.json' and remplace 'https://' by '$global:BoxUrlPrefixe'
     Update       : Update File : '.\API-Summary.csv' - Correct wrong function association and syntaxe
-    Update       : Update function : 'Show-WindowsFormDialogBoxInuput' - Add new parameter : 'DefaultValue' - Define Default value in the input field
+    Update       : Update function : 'Show-WindowsFormDialogBoxInput' - Add new parameter : 'DefaultValue' - Define Default value in the input field
     Update       : Switch settings between in Json files : '.\Ressources\Settings-Default-User.json' and '.\Ressources\Settings-Current-User.json'
     Update       : Update variables linked to JSON files and convert it from 'Local:' to 'Global:'
     Update       : Correct some minor bugs
@@ -427,6 +427,9 @@
     Update       : Add new function : 'Show-WindowsFormDialogBox6ChoicesCancel' - New WindowsForm with 6 Choices (Last is Cancel)
     Update       : Add new button 'Program' to have access only to 'program' actions without box action in the same toolbox
     Update       : Update wrong log syntaxe (Category and Name)
+    Update       : Add 2 new functions : 'Import-FreeboxRootCertificates' and 'Remove-FreeboxRootCertificates' - to manage Root Freebox Certificates and Https:// connections
+    Update       : Update function : 'Uninstall-Program' - Add function : 'Remove-FreeboxRootCertificates' to remove Root Freebox Certificates from computer
+
     
 .LINKS
     
@@ -442,6 +445,9 @@
     https://www.powershellgallery.com/packages/TUN.CredentialManager
     http://winstonfassett.com/blog/2010/09/21/html-to-text-conversion-in-powershell/
     https://learn.microsoft.com/fr-fr/powershell/module/microsoft.powershell.core/get-help
+    https://www.canaletto.fr/post/surveiller-et-redemarrer-une-freebox-a-distance
+    https://github.com/mycanaletto/Reboot-Freebox
+    https://p0w3rsh3ll.wordpress.com/2013/07/04/piloter-sa-freebox
     
 #>
 
@@ -584,12 +590,12 @@ Start-Transcript -Path $TranscriptFileNamePath -Append -Force -NoClobber
 $Name     = 'Start Initialisation'
 $Category = 'Program initialisation'
 Write-Log -Type WARNING -Category $Category -Name $Name -Message '#################################################### Initialisation #####################################################'
-Write-Log -Type INFO    -Category $Category -Name $Name -Message "Start $Category" -NotDisplay
-Write-Log -Type INFO    -Category $Category -Name $Name -Message 'Program Initialisation takes times due to :'
-Write-Log -Type INFO    -Category $Category -Name $Name -Message '- If Standalone Chrome Driver and Google Chrome version need to be updated or not'
-Write-Log -Type INFO    -Category $Category -Name $Name -Message '- Your internet speed connexion'
-Write-Log -Type INFO    -Category $Category -Name $Name -Message '- Your computer performance'
-Write-Log -Type INFO    -Category $Category -Name $Name -Message 'Program loading ...'
+Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Category" -NotDisplay
+Write-Log -Type INFO -Category $Category -Name $Name -Message 'Program Initialisation takes times due to :'
+Write-Log -Type INFO -Category $Category -Name $Name -Message '- If Standalone Chrome Driver and Google Chrome version need to be updated or not'
+Write-Log -Type INFO -Category $Category -Name $Name -Message '- Your internet speed connexion'
+Write-Log -Type INFO -Category $Category -Name $Name -Message '- Your computer performance'
+Write-Log -Type INFO -Category $Category -Name $Name -Message 'Program loading ...'
 
 #endregion Start Program initialisation
 
@@ -658,39 +664,49 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
     Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
 
     Try {        
-        # Paths
+        # Paths Program
         $global:JournalName                        = $global:JSONSettingsProgramContent.Path.JournalName
         $global:HelpFolderNamePath                 = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.HelpFolderName
         $BoxModuleFileNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.BoxModuleFileName + $global:JSONSettingsProgramContent.Values.PowershellModuleFileExtention
         $TUNCredentialManagerModuleFileName        = $global:JSONSettingsProgramContent.Path.TUNCredentialManagerModuleFileName
         $JournalFolderNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JournalFolderName
-        $BBOXJournalFolderNamePath                 = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXJournalFolderNamePath              = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
         $JsonBoxconfigFolderNamePath               = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JsonBoxconfigFolderName
-        $BBOXJsonBoxconfigFolderNamePath           = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXJsonBoxconfigFolderNamePath        = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
         $ReportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ReportFolderName
-        $BBOXReportFolderNamePath                  = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXReportFolderNamePath               = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
         $global:RessourcesFolderNamePath           = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.RessourcesFolderName
         $ProgramRessourcesFolderNamePath           = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ProgramFolderName
         $TestedEnvironnementFileNamePath           = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.TestedEnvironnementFileName
         $CommonFunctionsFileNamePath               = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.CommonFunctionsFileName
         $BoxRessourcesFolderNamePath               = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.BoxFolderName
-        $FREEBOXResssourcesFolderNamePath          = "$BoxRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $ExportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ExportFolderName
+        $ExportJSONFolderNamePath                  = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportJSONFolderName
+        $ExportCSVFolderNamePath                   = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportCSVFolderName
+        $global:DownloadShellRegistryFolder        = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder
+        $global:DownloadShellRegistryFolderName    = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
+
+        # Paths BBox
+        $BBOXJournalFolderNamePath                 = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $BBOXJsonBoxconfigFolderNamePath           = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
+        $BBOXReportFolderNamePath                  = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
         $BBoxResssourcesFolderNamePath             = "$BoxRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
         $BBoxAPISummaryFileNamePath                = "$BBoxResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.BBox.APISummaryFileName
         $global:PhoneNumberReferentialFileNamePath = "$BBoxResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.BBox.PhoneNumberReferentialFileName
-        $FREEBOXAPISummaryFileNamePath             = "$FREEBOXResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.Freebox.APISummaryFileName
-        $ExportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ExportFolderName
-        $ExportJSONFolderNamePath                  = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportJSONFolderName
         $BBOXExportJSONFolderNamePath              = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXExportJSONFolderNamePath           = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $ExportCSVFolderNamePath                   = "$ExportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.ExportCSVFolderName
         $BBOXExportCSVFolderNamePath               = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.BBox.Name
-        $FREEBOXExportCSVFolderNamePath            = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
-        $global:DownloadShellRegistryFolder        = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolder
-        $global:DownloadShellRegistryFolderName    = $global:JSONSettingsProgramContent.Path.DownloadShellRegistryFolderName
+
+        # Paths FreeBox
+        $FREEBOXJournalFolderNamePath              = "$JournalFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $FREEBOXJsonBoxconfigFolderNamePath        = "$JsonBoxconfigFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $FREEBOXReportFolderNamePath               = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $FREEBOXResssourcesFolderNamePath          = "$BoxRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $FREEBOXAPISummaryFileNamePath             = "$FREEBOXResssourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Box.Freebox.APISummaryFileName
+        $FREEBOXExportJSONFolderNamePath           = "$ExportJSONFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name
+        $FREEBOXExportCSVFolderNamePath            = "$ExportCSVFolderNamePath\" + $global:JSONSettingsProgramContent.Box.Freebox.Name        
+        
+        # Paths OrangeBox
+        
+        
+        # Paths SFRBox
+        
         
         # JSON User Configuration File Paths
         $global:JSONSettingsDefaultUserFileNamePath = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.UserConfigurationFile.DefaultFileName
@@ -740,7 +756,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         
         # Box
         $BoxTypeList                        = $global:JSONSettingsProgramContent.Box.TypeList
-        $global:UrlPrefixe                  = $global:JSONSettingsProgramContent.Box.UrlPrefixe
+        $global:BoxUrlPrefixe               = $global:JSONSettingsProgramContent.Box.UrlPrefixe
         
         # Various
         $Mail                               = $global:JSONSettingsProgramContent.various.mail
@@ -777,6 +793,17 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         # Error
         $global:ErrorResolveDNSMessage = $global:JSONSettingsProgramContent.Error.ResolveDNS.Message
         $global:ErrorExceptiondomain   = $global:JSONSettingsProgramContent.Error.Exception.domain
+        
+        # Dialog Box Button
+        $global:DialogueBoxTextButtonOk        = $global:JSONSettingsProgramContent.DialogueBox.TextButton.Ok
+        $global:DialogueBoxTextButtonNo        = $global:JSONSettingsProgramContent.DialogueBox.TextButton.No
+        $global:DialogueBoxTextButtonYes       = $global:JSONSettingsProgramContent.DialogueBox.TextButton.Yes
+        $global:DialogueBoxTextButtonCancel    = $global:JSONSettingsProgramContent.DialogueBox.TextButton.Cancel
+        $global:DialogueBoxTextButtonBBox      = $global:JSONSettingsProgramContent.DialogueBox.TextButton.BBox
+        $global:DialogueBoxTextButtonFreeBox   = $global:JSONSettingsProgramContent.DialogueBox.TextButton.FreeBox
+        $global:DialogueBoxTextButtonOrangeBox = $global:JSONSettingsProgramContent.DialogueBox.TextButton.OrangeBox
+        $global:DialogueBoxTextButtonSFRBox    = $global:JSONSettingsProgramContent.DialogueBox.TextButton.SFRBox
+        $global:DialogueBoxTextButtonProgram   = $global:JSONSettingsProgramContent.DialogueBox.TextButton.Program
         
         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
         Write-Log -Type INFO  -Category $Category -Name $Name -Message "End $Name" -NotDisplay
@@ -902,7 +929,7 @@ If ($Null -eq $global:TriggerExitSystem) {
     Test-FolderPath -FolderRoot $ApplicationsFolderNamePath                  -FolderPath $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeRessourcesFolderNamePath -ErrorAction Stop
     Test-FolderPath -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath    -ErrorAction Stop
-    
+        
     # Export folder by Box Type
     Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $BBOXJsonBoxconfigFolderNamePath    -FolderName $BBOXJsonBoxconfigFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $FREEBOXJsonBoxconfigFolderNamePath -FolderName $FREEBOXJsonBoxconfigFolderNamePath -ErrorAction Stop
@@ -914,17 +941,17 @@ If ($Null -eq $global:TriggerExitSystem) {
     Test-FolderPath -FolderRoot $ExportJSONFolderNamePath        -FolderPath $FREEBOXExportJSONFolderNamePath    -FolderName $FREEBOXExportJSONFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $BBOXJournalFolderNamePath          -FolderName $BBOXJournalFolderNamePath          -ErrorAction Stop
     Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $FREEBOXJournalFolderNamePath       -FolderName $FREEBOXJournalFolderNamePath       -ErrorAction Stop
-    
+
     # Files test
-    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $TestedEnvironnementFileNamePath                        -FileName $TestedEnvironnementFileNamePath                        -ErrorAction Stop
-    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $CommonFunctionsFileNamePath                            -FileName $CommonFunctionsFileNamePath                            -ErrorAction Stop
-    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $global:JSONSettingsDefaultUserFileNamePath             -FileName $global:JSONSettingsDefaultUserFileNamePath             -ErrorAction Stop
-    Test-FilePath   -FileRoot $ProgramRessourcesFolderNamePath -FilePath $global:ProgramConfigurationFileSettingsPath            -FileName $global:ProgramConfigurationFileSettingsPath            -ErrorAction Stop
-    Test-FilePath   -FileRoot $BBoxResssourcesFolderNamePath   -FilePath $BBoxAPISummaryFileNamePath                             -FileName $BBoxAPISummaryFileNamePath                             -ErrorAction Stop
-    Test-FilePath   -FileRoot $BBoxResssourcesFolderNamePath   -FilePath $global:PhoneNumberReferentialFileNamePath              -FileName $global:PhoneNumberReferentialFileNamePath              -ErrorAction Stop
-    Test-FilePath   -FileRoot $FREEBOXAPISummaryFileNamePath   -FilePath $FreeboxAPISummaryFileNamePath                          -FileName $FreeboxAPISummaryFileNamePath                          -ErrorAction Stop
-    Test-FilePath   -FileRoot $ChromeDriverDLLFolderNamePath   -FilePath $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -FileName $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -ErrorAction Stop
-    Test-FilePath   -FileRoot $ChromeDriverDLLFolderNamePath   -FilePath $global:ChromeDriverDefaultWebDriverSupportFileNamePath -FileName $global:ChromeDriverDefaultWebDriverSupportFileNamePath -ErrorAction Stop    
+    Test-FilePath -FileRoot $ProgramRessourcesFolderNamePath  -FilePath $TestedEnvironnementFileNamePath                        -FileName $TestedEnvironnementFileNamePath                        -ErrorAction Stop
+    Test-FilePath -FileRoot $ProgramRessourcesFolderNamePath  -FilePath $CommonFunctionsFileNamePath                            -FileName $CommonFunctionsFileNamePath                            -ErrorAction Stop
+    Test-FilePath -FileRoot $ProgramRessourcesFolderNamePath  -FilePath $global:JSONSettingsDefaultUserFileNamePath             -FileName $global:JSONSettingsDefaultUserFileNamePath             -ErrorAction Stop
+    Test-FilePath -FileRoot $ProgramRessourcesFolderNamePath  -FilePath $global:ProgramConfigurationFileSettingsPath            -FileName $global:ProgramConfigurationFileSettingsPath            -ErrorAction Stop
+    Test-FilePath -FileRoot $BBoxResssourcesFolderNamePath    -FilePath $BBoxAPISummaryFileNamePath                             -FileName $BBoxAPISummaryFileNamePath                             -ErrorAction Stop
+    Test-FilePath -FileRoot $BBoxResssourcesFolderNamePath    -FilePath $global:PhoneNumberReferentialFileNamePath              -FileName $global:PhoneNumberReferentialFileNamePath              -ErrorAction Stop
+    Test-FilePath -FileRoot $FREEBOXAPISummaryFileNamePath    -FilePath $FreeboxAPISummaryFileNamePath                          -FileName $FreeboxAPISummaryFileNamePath                          -ErrorAction Stop
+    Test-FilePath -FileRoot $ChromeDriverDLLFolderNamePath    -FilePath $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -FileName $global:ChromeDriverDefaultWebDriverDLLFileNamePath     -ErrorAction Stop
+    Test-FilePath -FileRoot $ChromeDriverDLLFolderNamePath    -FilePath $global:ChromeDriverDefaultWebDriverSupportFileNamePath -FileName $global:ChromeDriverDefaultWebDriverSupportFileNamePath -ErrorAction Stop
     
     Write-Log -Type INFO -Category $Category -Name $Name -Message 'End Program Folders/Files check' -NotDisplay
 }
@@ -932,7 +959,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 #endregion Create folders/files if not yet existing
 
 #region Check Internet connection
-Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
+#Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
 #endregion Check Internet connection
 
 #region Get Lastest Stable Chrome Version Online
@@ -1161,7 +1188,7 @@ $Name = 'User Box Selection'
 Write-Log -Type WARNING -Category $Category -Name $Name -Message '################################################## User Box Selection ###################################################'
 Write-Log -Type INFO    -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
 Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name : "
-$global:BoxType = Show-WindowsFormDialogBox6ChoicesCancel -MainFormTitle "$Name" -LabelMessageText "Please select your box below :" -FirstOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Bbox -SecondOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Freebox -ThirdOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.OrangeBox -FourOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.SFRBox -FiveOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Program -SixOptionButtonText $global:JSONSettingsProgramContent.DialogueBox.ButtonText.Cancel -ErrorAction Stop
+$global:BoxType = Show-WindowsFormDialogBox6ChoicesCancel -MainFormTitle "$Name" -LabelMessageText "Please select your box below :" -FirstOptionButtonText $global:DialogueBoxTextButtonBBox -SecondOptionButtonText $global:DialogueBoxTextButtonFreebox -ThirdOptionButtonText $global:DialogueBoxTextButtonOrangeBox -FourOptionButtonText $global:DialogueBoxTextButtonSFRBox -FiveOptionButtonText $global:DialogueBoxTextButtonProgram -SixOptionButtonText $global:DialogueBoxTextButtonCancel -ErrorAction Stop
 Write-Log -Type VALUE   -Category $Category -Name $Name -Message "$global:BoxType"
 Write-Log -Type INFO    -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 Write-Log -Type WARNING -Category $Category -Name $Name -Message '################################################## User Box Selection ###################################################'
@@ -1180,6 +1207,7 @@ If (($Null -eq $global:TriggerExitSystem) -and (Test-Path -Path $global:JSONSett
 Else {
     Write-Log -Type INFO   -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
+    
     Try {
         Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force  -ErrorAction Stop
         Start-Sleep -Seconds $global:SleepChromeDriverNavigation
@@ -1189,6 +1217,7 @@ Else {
         Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, to create Json Current User Settings file, due to : $($_.ToString())"
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'Json Current User Settings file was not be created' -ErrorAction Stop
     }
+    
     Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     $Name = 'Json Current/Default User Settings Importation'
     Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
@@ -1206,6 +1235,7 @@ Else {
         Write-Log -Type INFO  -Category $Category -Name $Name -Message "End $Name" -NotDisplay
         Stop-Program -Context System -ErrorMessage $($_.ToString()) -Reason 'User settings configuration file can not be found' -ErrorAction Stop
     }
+    
     Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
 }
 #endregion Import User Json Configuration files
@@ -1224,6 +1254,7 @@ If ($global:BoxType -match $BoxTypeList) {
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath -ErrorAction Stop
 
     # Box
+    $global:BoxName               = $global:JSONSettingsProgramContent.Box.$global:BoxType.Name
     $global:APIVersion            = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIVersion
     $global:DefaultRemotePort     = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultRemotePort
     $global:DefaultLocalUrl       = $global:JSONSettingsProgramContent.Box.$global:BoxType.DefaultLocalUrl
@@ -1234,11 +1265,23 @@ If ($global:BoxType -match $BoxTypeList) {
     $global:BoxUrlDynDns          = $global:JSONSettingsProgramContent.Box.$global:BoxType.BoxUrlDynDns
     $BoxAPIUrlDocumentation       = $global:JSONSettingsProgramContent.Box.$global:BoxType.APIUrlDocumentation
     
-    # User Credentials
-    $global:CredentialsTarget     = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Target
-    $global:CredentialsUserName   = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.UserName
-    $global:CredentialsComment    = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Comment
+    # Freebox
+    $FreeboxApplicationName                 = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationName
+    $FreeboxApplicationParameters           = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationParameters
+    $FreeboxApplicationParametersAppID      = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationParameters.AppID
+    $FreeboxApplicationParametersAppName    = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationParameters.AppName
+    $FreeboxApplicationParametersAppVersion = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationParameters.AppVersion
+    $FreeboxApplicationParametersDeviceName = $global:JSONSettingsProgramContent.Box.$global:BoxType.FreeboxApplicationParameters.DeviceName
     
+    # User Credentials
+    $global:CredentialsTarget                = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Target
+    $global:CredentialsUserName              = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.UserName
+    $global:CredentialsComment               = $global:JSONSettingsProgramContent.Credentials.$global:BoxType.Comment
+    $APIFreeboxCredentialsLocalUrl           = $global:JSONSettingsCurrentUserContent.Box.$global:BoxType.Credentials.LocalUrl
+    $APIFreeboxCredentialsRemoteUrl          = $global:JSONSettingsCurrentUserContent.Box.$global:BoxType.Credentials.RemoteUrl
+    $APIFreeboxCredentialsApplicationName    = $global:JSONSettingsCurrentUserContent.Box.$global:BoxType.Credentials.ApplicationName
+    $APIFreeboxCredentialsApplicationTokenID = $global:JSONSettingsCurrentUserContent.Box.$global:BoxType.Credentials.ApplicationTokenID
+
     # APIName
     $APINameExclusionsBoxTypeFull = $global:JSONSettingsProgramContent.APIName.Exclusions.$global:BoxType.Full
     
@@ -1247,8 +1290,8 @@ If ($global:BoxType -match $BoxTypeList) {
 }
 Else {
     Write-Log -Type ERROR -Category $Category -Name $Name -Message 'No' -NotDisplay
-    Write-Log -Type ERROR -Category $Category -Name $Name -Message "The Box : $global:BoxType is not take in charge by the program."
-    $Null = Show-WindowsFormDialogBox -Title "Box selection result" -Message "The Box : $global:BoxType is not take in charge by the program." -WarnIcon
+    Write-Log -Type ERROR -Category $Category -Name $Name -Message "The Box : $global:BoxType is not take in charge by the program for the moment."
+    $Null = Show-WindowsFormDialogBox -Title "Box selection result" -Message "The Box : $global:BoxType is not take in charge by the program for the moment." -WarnIcon
     $global:JSONSettingsCurrentUserContent.Box.OldType     = $global:JSONSettingsCurrentUserContent.Box.CurrentType
     $global:JSONSettingsCurrentUserContent.Box.CurrentType = "Box Type not found in the referential"
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath -ErrorAction Stop
@@ -1268,7 +1311,7 @@ If ($Null -eq $global:TriggerExitSystem) {
     
     $Actions += Import-Referential -ReferentialPath $CommonFunctionsFileNamePath -LogCategory $LogCategory -LogName $Name -ErrorAction Stop
     
-    If ($global:BoxType -notmatch 'Program') {
+    If ($global:BoxType -notmatch $global:DialogueBoxTextButtonProgram) {
         $Actions += Import-Referential -ReferentialPath $APISummaryFileNamePath -LogCategory $LogCategory -LogName $Name -ErrorAction Stop
     }
 }
@@ -1277,7 +1320,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 
 #region Import Phone Number referential
 
-If ($Null -eq $global:TriggerExitSystem) {
+If ($Null -eq $global:TriggerExitSystem -and $global:BoxType -eq $global:DialogueBoxTextButtonBBox) {
     
     $Category = 'Program initialisation'
     $Name  = 'Referentiel Phone Number Importation'
@@ -1354,7 +1397,7 @@ Write-Host '##################################################### Description ##
 
 #region Check if password already exist in Windows Credential Manager
 
-If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonProgram)) {
     
     $Category = 'Program run'
     $Name     = 'Password Status'
@@ -1365,6 +1408,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
     If ($null -eq ($(Get-StoredCredential -Target $global:CredentialsTarget -ErrorAction SilentlyContinue | Select-Object -Property Password -ErrorAction SilentlyContinue).password | ConvertFrom-SecureString -AsPlainText -ErrorAction SilentlyContinue)) {
         
         Write-Log -Type WARNING -Category $Category -Name $Name -Message 'Not yet set' -NotDisplay
+        
         Try {
             Add-BoxCredential -ErrorAction Stop
             $UserPasswordAction = 'Define new password'
@@ -1402,7 +1446,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
     }
     
     $Name = 'User Password Action'
-    Write-Log -Type INFONO  -Category $Category -Name $Name -Message "User $Name : "
+    Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name : "
     Write-Log -Type VALUE   -Category $Category -Name $Name -Message $UserPasswordAction
     Write-Log -Type INFO    -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     Write-Log -Type WARNING -Category $Category -Name $Name -Message '################################################ User Password Action ##################################################'
@@ -1412,7 +1456,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
 
 #region Check if user connect on the correct LAN Network
 
-If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonProgram)) {
     
     $Category = 'Program run'
     $Name  = 'Network connection'
@@ -1439,7 +1483,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
         $TriggerLANNetwork = 1
     }
     Else {
-        $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working" -InfoIcon
+        $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working`n- Also check if API Application is configured, else you will not able to have access to your $global:BoxType configuration by the API, but only by web interface" -InfoIcon
         Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE  -Category $Category -Name $Name -Message 'Remotely' -NotDisplay
         $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentLocalUrl = $global:ErrorResolveDNSMessage
@@ -1454,7 +1498,7 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
 
 #region Ask to the user how he want to connect to the Box
 
-If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonProgram) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonFreeBox)) {
     
     $Category = 'Program run'
     $Name     = 'Connexion Type'
@@ -1466,9 +1510,22 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
 
 #endregion Ask to the user how he want to connect to the Box
 
+#region Get API Informations from the FreeBox
+
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -match $global:DialogueBoxTextButtonFreeBox) -and ($TriggerLANNetwork -eq 1)) {
+    
+    $Answer = Show-WindowsFormDialogBox3ChoicesCancel -MainFormTitle "How do you want to access to your $globalBboxType" -LabelMessageText "How do you want to access to your $globalBboxType" -FirstOptionButtonText 'Web Interface' -SecondOptionButtonText 'API' -ThirdOptionButtonText 'Quit the program' -ErrorAction Stop
+    
+    $FreeBoxAPIVersionInformation = Get-FREEBOXAPIVersionInformation -Url $global:DefaultLocalUrl -ErrorAction Stop
+    $FreeBoxAPIVersionInformation
+    -and ($Null -eq $APIFreeboxCredentialsLocalUrl) -and ($Null -eq $APIFreeboxCredentialsFreeboxRemoteUrl) -and ($Null -eq $APIFreeboxCredentialsApplicationName) -and ($Null -eq $APIFreeboxCredentialsApplicationTokenID)
+}
+
+#endregion Get API Informations from the FreeBox
+
 #region Set Box connexion settings regarding user selection
 
-If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Program')) {
+If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonProgram) -and ($global:BoxType -notmatch $global:DialogueBoxTextButtonFreeBox)) {
     
     $Category = 'Program run'
     
@@ -1477,16 +1534,16 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
     Switch ($ConnexionType[0]) {
         
         L   {$UserConnexionTypeChosen = 'Localy'
-             $UrlRoot = "$global:UrlPrefixe$BoxDns/$global:APIVersion"
+             $UrlRoot = "$global:BoxUrlPrefixe$BoxDns/$global:APIVersion"
              
              Switch ($global:BoxType) {
             
-                BBOX    {$UrlAuth = "$global:UrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.Bbox.BoxUrlLogin
-                         $UrlHome = "$global:UrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.Bbox.BoxUrlHomePage
+                BBOX    {$UrlAuth = "$global:BoxUrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.Bbox.BoxUrlLogin
+                         $UrlHome = "$global:BoxUrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.Bbox.BoxUrlHomePage
                          Break
                         }
-                FREEBOX {$UrlAuth = "$global:UrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.freebox.BoxUrlLogin
-                         $UrlHome = "$global:UrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.freebox.BoxUrlHomePage
+                FREEBOX {$UrlAuth = "$global:BoxUrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.freebox.BoxUrlLogin
+                         $UrlHome = "$global:BoxUrlPrefixe$BoxDns" + $global:JSONSettingsProgramContent.Box.freebox.BoxUrlHomePage
                          Break
                         }
              }
@@ -1503,16 +1560,16 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
              Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
              $Port = $($(Get-PortStatus -UrlRoot $DYNDNS) -split(" "))[-1]
              Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
-             $UrlRoot = "$global:UrlPrefixe$DYNDNS`:$Port/$global:APIVersion"
+             $UrlRoot = "$global:BoxUrlPrefixe$DYNDNS`:$Port/$global:APIVersion"
             
                 Switch ($global:BoxType) {
                 
-                    BBOX    {$UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.html"
-                             $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port/index.html"
+                    BBOX    {$UrlAuth = "$global:BoxUrlPrefixe$DYNDNS`:$Port/login.html"
+                             $UrlHome = "$global:BoxUrlPrefixe$DYNDNS`:$Port/index.html"
                              Break
                             }
-                    FREEBOX {$UrlAuth = "$global:UrlPrefixe$DYNDNS`:$Port/login.php"
-                             $UrlHome = "$global:UrlPrefixe$DYNDNS`:$Port"
+                    FREEBOX {$UrlAuth = "$global:BoxUrlPrefixe$DYNDNS`:$Port/login.php"
+                             $UrlHome = "$global:BoxUrlPrefixe$DYNDNS`:$Port"
                              Break
                             }
                 }
@@ -1545,11 +1602,11 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch 'Progr
         Write-Log -Type INFO -Category $Category -Name $Name -Message "Root $global:BoxType Url : $UrlRoot"-NotDisplay
         Write-Log -Type INFO -Category $Category -Name $Name -Message "Login $global:BoxType Url : $UrlAuth" -NotDisplay
         Write-Log -Type INFO -Category $Category -Name $Name -Message "Home $global:BoxType Url : $UrlHome" -NotDisplay
-
+        
         If ($Port) {
             Write-Log -Type INFO -Category $Category -Name $Name -Message "Remote $global:BoxType - Port : $Port" -NotDisplay
         }
-
+        
         Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     }
 
