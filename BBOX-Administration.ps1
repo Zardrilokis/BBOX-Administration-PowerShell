@@ -271,7 +271,7 @@
     Update       : Debug function : Switch-OpenExportFolder
 
     Version 2.7 - Box version 23.7.12
-    Updated Date : 2024/10/17
+    Updated Date : 2025/02/25
     Update       : Update function : 'Get-WANIP' - Add Resolution IPV6 dns servers
     Update       : Create function : 'Get-WIRELESSSTANDARD' - Get Wireless standard available configuration
     Update       : Update function : 'Get-WIRELESSACL' - Add parameter 'Rules Count'
@@ -429,8 +429,11 @@
     Update       : Update wrong log syntaxe (Category and Name)
     Update       : Add 2 new functions : 'Import-FreeboxRootCertificates' and 'Remove-FreeboxRootCertificates' - to manage Root Freebox Certificates and Https:// connections
     Update       : Update function : 'Uninstall-Program' - Add function : 'Remove-FreeboxRootCertificates' to remove Root Freebox Certificates from computer
+    Update       : Add new Parameters in Json file : '.\Ressources\Settings-Program.json' - 'Module.Global.Functions' and 'Module.Box.$global:BoxType.Functions' - to load only functions needed for the program and the Box type
+    Update       : Add new settings in function Export-ModuleFunctions to manage if folders or files need to be opened or not after export
+    Update       : Add new parameter 'ReportFolderPath' in function 'Export-ModuleFunctions' to manage where Summary report files are exported
+    Update       : Add the parameter '-function' from 'import-module' function to load only the functions needed for the program and function of the Box type
 
-    
 .LINKS
     
     https://maBBox.bytel.fr/
@@ -663,15 +666,17 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
     Write-Log -Type INFO   -Category $Category -Name $Name -Message "$Name file path : $global:ProgramConfigurationFileSettingsPath" -NotDisplay
     Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
 
-    Try {        
+    Try {
+        
         # Paths Program
         $global:JournalName                        = $global:JSONSettingsProgramContent.Path.JournalName
         $global:HelpFolderNamePath                 = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.HelpFolderName
+        $ReportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ReportFolderName
+        $global:ProgramReportFolderNamePath        = "$ReportFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ProgramFolderName
         $BoxModuleFileNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.BoxModuleFileName + $global:JSONSettingsProgramContent.Values.PowershellModuleFileExtention
         $TUNCredentialManagerModuleFileName        = $global:JSONSettingsProgramContent.Path.TUNCredentialManagerModuleFileName
         $JournalFolderNamePath                     = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JournalFolderName
         $JsonBoxconfigFolderNamePath               = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.JsonBoxconfigFolderName
-        $ReportFolderNamePath                      = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.ReportFolderName
         $global:RessourcesFolderNamePath           = "$ScriptRootFolderPath\" + $global:JSONSettingsProgramContent.Path.RessourcesFolderName
         $ProgramRessourcesFolderNamePath           = "$global:RessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.ProgramFolderName
         $TestedEnvironnementFileNamePath           = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.TestedEnvironnementFileName
@@ -711,7 +716,11 @@ If (($Null -eq $global:TriggerExitSystem) -and ($Null -ne $global:JSONSettingsPr
         # JSON User Configuration File Paths
         $global:JSONSettingsDefaultUserFileNamePath = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.UserConfigurationFile.DefaultFileName
         $global:JSONSettingsCurrentUserFileNamePath = "$ProgramRessourcesFolderNamePath\" + $global:JSONSettingsProgramContent.Path.Ressources.Program.UserConfigurationFile.CurrentFileName
-                
+        
+        # Loading Box function from module 
+        $ModuleGlobalFunctions = $($(get-Module -Name $BoxModuleFileNamePath -ListAvailable).ExportedCommands.values | Where-Object {($_.Name -notmatch $global:JSONSettingsProgramContent.Box.BBox.Name) -and ($_.Name -notmatch $global:JSONSettingsProgramContent.Box.Freebox.Name)}).name | Sort-Object
+        $ModuleBoxTypeFunctions = $($(get-Module -Name $BoxModuleFileNamePath -ListAvailable).ExportedCommands.values | Where-Object {$_.Name -match $global:BoxType}).name | Sort-Object
+        
         # Chrome Driver Paths
         $global:ChromeDriver                                    = $Null
         $global:ChromeDriverLastStableVersion                   = $Null
@@ -826,7 +835,7 @@ Else {
 
 If ($Null -eq $global:TriggerExitSystem) {
     
-    $Name     = 'Powershell Module Importation'
+    $Name     = 'Powershell Module Global functions Importation'
     $Category = 'Program initialisation'
     
     Write-Log -Type VALUE  -Category $Category -Name $Name -Message "Step 4/10) : $Name"
@@ -845,11 +854,14 @@ If ($Null -eq $global:TriggerExitSystem) {
     Start-Sleep $global:SleepDefault
     
     Try {
-        Import-Module -Name $BoxModuleFileNamePath -ErrorAction Stop
+        Import-Module -Name $BoxModuleFileNamePath -Function $ModuleGlobalFunctions -ErrorAction Stop #-Verbose
         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "Loaded functions :" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "`"$($ModuleGlobalFunctions -join "`",`"")`"" -NotDisplay
     }
     Catch {
         Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be imported due to : $($_.ToString())"
+        Stop-Program -Context System -ErrorMessage "$($_.ToString())" -Reason "Failed, Powershell Module $BoxModuleFileNamePath can't be imported due to : $($_.ToString())" -ErrorAction Stop
         $global:TriggerExitSystem = 1
     }
     
@@ -859,6 +871,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 If ($Null -eq $global:TriggerExitSystem) {
 
     $ModuleName = $TUNCredentialManagerModuleFileName
+    #$ModuleName = "C:\Program Files\PowerShell\Modules\TUN.CredentialManager"
     Write-Log -Type INFO   -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     Write-Log -Type INFO   -Category $Category -Name $Name -Message "Powershell Module Path : $ModuleName" -NotDisplay
     Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
@@ -929,18 +942,18 @@ If ($Null -eq $global:TriggerExitSystem) {
     Test-FolderPath -FolderRoot $ApplicationsFolderNamePath                  -FolderPath $global:GoogleChromeRessourcesFolderNamePath -FolderName $global:GoogleChromeRessourcesFolderNamePath -ErrorAction Stop
     Test-FolderPath -FolderRoot $global:ChromeDriverRessourcesFolderNamePath -FolderPath $global:ChromeDriverDefaultFolderNamePath    -FolderName $global:ChromeDriverDefaultFolderNamePath    -ErrorAction Stop
     Test-FolderPath -FolderRoot $global:GoogleChromeRessourcesFolderNamePath -FolderPath $global:GoogleChromeDefaultFolderNamePath    -FolderName $global:GoogleChromeDefaultFolderNamePath    -ErrorAction Stop
-        
+    
     # Export folder by Box Type
-    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $BBOXJsonBoxconfigFolderNamePath    -FolderName $BBOXJsonBoxconfigFolderNamePath    -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath     -FolderPath $FREEBOXJsonBoxconfigFolderNamePath -FolderName $FREEBOXJsonBoxconfigFolderNamePath -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ReportFolderNamePath            -FolderPath $BBOXReportFolderNamePath           -FolderName $BBOXReportFolderNamePath           -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ReportFolderNamePath            -FolderPath $FREEBOXReportFolderNamePath        -FolderName $FREEBOXReportFolderNamePath        -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath         -FolderPath $BBOXExportCSVFolderNamePath        -FolderName $BBOXExportCSVFolderNamePath        -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath         -FolderPath $FREEBOXExportCSVFolderNamePath     -FolderName $FREEBOXExportCSVFolderNamePath     -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath        -FolderPath $BBOXExportJSONFolderNamePath       -FolderName $BBOXExportJSONFolderNamePath       -ErrorAction Stop
-    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath        -FolderPath $FREEBOXExportJSONFolderNamePath    -FolderName $FREEBOXExportJSONFolderNamePath    -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $BBOXJournalFolderNamePath          -FolderName $BBOXJournalFolderNamePath          -ErrorAction Stop
-    Test-FolderPath -FolderRoot $JournalFolderNamePath           -FolderPath $FREEBOXJournalFolderNamePath       -FolderName $FREEBOXJournalFolderNamePath       -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath -FolderPath $BBOXJsonBoxconfigFolderNamePath    -FolderName $BBOXJsonBoxconfigFolderNamePath    -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JsonBoxconfigFolderNamePath -FolderPath $FREEBOXJsonBoxconfigFolderNamePath -FolderName $FREEBOXJsonBoxconfigFolderNamePath -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ReportFolderNamePath        -FolderPath $BBOXReportFolderNamePath           -FolderName $BBOXReportFolderNamePath           -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ReportFolderNamePath        -FolderPath $FREEBOXReportFolderNamePath        -FolderName $FREEBOXReportFolderNamePath        -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath     -FolderPath $BBOXExportCSVFolderNamePath        -FolderName $BBOXExportCSVFolderNamePath        -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportCSVFolderNamePath     -FolderPath $FREEBOXExportCSVFolderNamePath     -FolderName $FREEBOXExportCSVFolderNamePath     -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath    -FolderPath $BBOXExportJSONFolderNamePath       -FolderName $BBOXExportJSONFolderNamePath       -ErrorAction Stop
+    Test-FolderPath -FolderRoot $ExportJSONFolderNamePath    -FolderPath $FREEBOXExportJSONFolderNamePath    -FolderName $FREEBOXExportJSONFolderNamePath    -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JournalFolderNamePath       -FolderPath $BBOXJournalFolderNamePath          -FolderName $BBOXJournalFolderNamePath          -ErrorAction Stop
+    Test-FolderPath -FolderRoot $JournalFolderNamePath       -FolderPath $FREEBOXJournalFolderNamePath       -FolderName $FREEBOXJournalFolderNamePath       -ErrorAction Stop
 
     # Files test
     Test-FilePath -FileRoot $ProgramRessourcesFolderNamePath  -FilePath $TestedEnvironnementFileNamePath                        -FileName $TestedEnvironnementFileNamePath                        -ErrorAction Stop
@@ -959,7 +972,7 @@ If ($Null -eq $global:TriggerExitSystem) {
 #endregion Create folders/files if not yet existing
 
 #region Check Internet connection
-#Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
+Write-Log -Type VALUE -Category 'Program initialisation' -Name 'Check Internet connection' -Message 'Step 7/10) : Check Internet connection'
 #endregion Check Internet connection
 
 #region Get Lastest Stable Chrome Version Online
@@ -1195,6 +1208,33 @@ Write-Log -Type WARNING -Category $Category -Name $Name -Message '##############
 
 #endregion Box user selection
 
+#region Import box functions from module : 'Box-Module.psm1'
+
+If ($Null -eq $global:TriggerExitSystem) {
+    
+    $Name     = 'Powershell Module box functions Importation'
+    $Category = 'Program initialisation'
+    
+    Write-Log -Type INFO   -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
+    Write-Log -Type INFO   -Category $Category -Name $Name -Message "Powershell Module Path : $BoxModuleFileNamePath" -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
+    
+    Try {
+        Import-Module -Name $BoxModuleFileNamePath -Function $ModuleBoxTypeFunctions -ErrorAction Stop #-Verbose
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
+        Write-Log -Type INFONO -Category $Category -Name $Name -Message "Loaded functions :" -NotDisplay
+        Write-Log -Type VALUE -Category $Category -Name $Name -Message "`"$($ModuleBoxTypeFunctions -join "`",`"")`"" -NotDisplay
+    }
+    Catch {
+        Write-Log -Type ERROR -Category $Category -Name $Name -Message "Failed, Powershell Module $BoxModuleFileNamePath can't be imported due to : $($_.ToString())"
+        $global:TriggerExitSystem = 1
+    }
+    
+    Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
+}
+
+#endregion Import box functions from module : 'Box-Module.psm1'
+
 #region Import User Json Configuration files
 
 $Category = 'Program initialisation'
@@ -1209,7 +1249,7 @@ Else {
     Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
     
     Try {
-        Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force  -ErrorAction Stop
+        Copy-Item -Path $global:JSONSettingsDefaultUserFileNamePath -Destination $global:JSONSettingsCurrentUserFileNamePath -Force -ErrorAction Stop
         Start-Sleep -Seconds $global:SleepChromeDriverNavigation
         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
     }
@@ -1483,11 +1523,19 @@ If (($Null -eq $global:TriggerExitSystem) -and ($global:BoxType -notmatch $globa
         $TriggerLANNetwork = 1
     }
     Else {
-        $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working`n- Also check if API Application is configured, else you will not able to have access to your $global:BoxType configuration by the API, but only by web interface" -InfoIcon
+        
         Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Recommanded connection : ' -NotDisplay
         Write-Log -Type VALUE  -Category $Category -Name $Name -Message 'Remotely' -NotDisplay
         $global:JSONSettingsCurrentUserContent.Site.$global:BoxType.CurrentLocalUrl = $global:ErrorResolveDNSMessage
         $TriggerLANNetwork = 0
+        
+        If ($global:BoxType -eq $global:JSONSettingsProgramContent.Box.Freebox.Name) {
+            
+            $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working`n- Also check if API Application is configured, else you will not able to have access to your $global:BoxType configuration by the API, but only by web interface" -InfoIcon
+        }
+        Else {
+            $null = Show-WindowsFormDialogBox -Title 'Program run - Network connection' -Message "It seems you are not connected to your Local $global:BoxType Network`n`n- If you are connected on your local network, make sure you are connected on the $global:BoxType's Wifi or ethernet network`n- If you use a intermediary router between your computer and the $global:BoxType router, it will not working" -InfoIcon
+        }
     }
     
     Set-ValueToJSONFile -JSONFileContent $global:JSONSettingsCurrentUserContent -JSONFileContentPath $global:JSONSettingsCurrentUserFileNamePath

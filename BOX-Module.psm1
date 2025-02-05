@@ -1,11 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    Powershell module that contains all function used.
+    Powershell module that contains all function used by program
 
 .DESCRIPTION
-    Powershell module that contains all function used.
-    This module is lincked to script file : .\BBOX-Administration.ps1
-    Be carefull some variables are linked from main script Box-Administration.ps1 to :
+    Powershell module that contains all function used by program
+    This module is lincked to script file : '.\BBOX-Administration.ps1'
+    Be carefull some variables are cross linked from main script : '.\Box-Administration.ps1' to :
     - $global:JSONSettingsProgramContent
     - $global:JSONSettingsCurrentUserContent
     - $global:JSONSettingsDefaultUserContent
@@ -38,7 +38,7 @@
 .NOTES
     Version : 2.7
     Creation Date : 2020/04/30
-    Updated Date  : 2024/01/29
+    Updated Date  : 2025/02/05
     Updated By    : @Zardrilokis => Tom78_91_45@yahoo.fr
     Author        : @Zardrilokis => Tom78_91_45@yahoo.fr
 
@@ -2224,6 +2224,7 @@ Function Remove-FreeboxRootCertificates {
         Write-Log -Type INFONO  -Category $Category -Name $Name -Message "$Name status : " -NotDisplay
         
         Try {
+            Get-ChildItem -Path Cert:\LocalMachine\My\$global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxRootCA.Thumbprint -Force -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
             Get-ChildItem -Path Cert:\LocalMachine\My\$global:JSONSettingsProgramContentBox.$global:BoxType.Certificate.FreeboxECCRootCA.Thumbprint -Force -ErrorAction Stop | Remove-Item -Force -ErrorAction Stop
             Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Successful' -NotDisplay
         }
@@ -2805,7 +2806,10 @@ function Export-ModuleFunctions {
         This is the file extention for module, must be : .psm1
     
     .PARAMETER ExportFolderPath
-        This is the path where for all functions have got a dedicated file will be create.
+        This is the path where for all functions have got a dedicated file will be create
+    
+    .PARAMETER ReportFolderPath
+        This is the path where for all Summary file will be create
     
     .PARAMETER SummaryExport
         Add this parameter if you want to get only a CSV file with Function summary details
@@ -2820,34 +2824,35 @@ function Export-ModuleFunctions {
         Can be combined with SummaryExport and DetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp"
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report"
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -SummaryExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -DetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -DetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -FullDetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -FullDetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -DetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -SummaryExport -DetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -FullDetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -SummaryExport -FullDetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -DetailedExport -FullDetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -DetailedExport -FullDetailedExport
     
     .EXAMPLE
-        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -SummaryExport -DetailedExport -FullDetailedExport
+        Export-ModuleFunctions -ModuleFolderPath "C:\Temp" -ModuleFileName "BOX-Module" -FileExtention ".psm1" -ExportFolderPath "C:\Temp\GetHelp" -ReportFolderPath "C:\Temp\Report" -SummaryExport -DetailedExport -FullDetailedExport
     
         .INPUTS
         $ModuleFolderPath
         $ModuleFileName
         $FileExtention
         $ExportFolderPath
+        $ReportFolderPath
         $SummaryExport
         $DetailedExport
         $FullDetailedExport
@@ -2875,6 +2880,9 @@ function Export-ModuleFunctions {
         [Parameter(Mandatory=$True)]
         [String]$ExportFolderPath,
         
+        [Parameter(Mandatory=$True)]
+        [String]$ReportFolderPath,
+        
         [Parameter(Mandatory=$False)]
         [switch]$SummaryExport,
         
@@ -2891,17 +2899,19 @@ function Export-ModuleFunctions {
     $Date = Get-Date -Format yyyyMMdd-hhmmss
     $FolderDate = Get-Date -Format yyyyMMdd
     $ExportFolderFullPath = "$ExportFolderPath\$FolderDate"
+    $ReportFolderFullPath = "$ReportFolderPath\$FolderDate"
     $Name = "Import module : $ModuleFileName"
     $Category = 'Program run'
     
     # Build Full Module Folder Path
     $FullModuleFolderPath = "$ModuleFolderPath\$ModuleFileName$FileExtention"
     
+    Write-Log -Type WARNING -Category $Category -Name $Name -Message "This action can take a long time, please wait until the end"
     Write-Log -Type VALUE -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     Write-Log -Type  VALUE -Category $Category -Name $Name -Message "$Name Status :" -NotDisplay
     # Import Module
     Try {
-        Import-Module $FullModuleFolderPath -Force -ErrorAction Stop
+        Import-Module -Name $FullModuleFolderPath -Force -ErrorAction Stop
         Write-Log -Type VALUE -Category $Category -Name $Name -Message 'Successful' -NotDisplay
     }
     Catch {
@@ -2914,6 +2924,11 @@ function Export-ModuleFunctions {
     If ($(Test-Path -Path $ExportFolderFullPath) -eq $False) {
         
         $null = New-Item -Path $ExportFolderPath -Name $FolderDate -ItemType Directory -Force -ErrorAction Stop
+    }
+    
+    If ($(Test-Path -Path $ReportFolderFullPath) -eq $False) {
+        
+        $null = New-Item -Path $ReportFolderFullPath -Name $FolderDate -ItemType Directory -Force -ErrorAction Stop
     }
     
     # Get all function associated to the module
@@ -3067,8 +3082,13 @@ function Export-ModuleFunctions {
     
     If ($SummaryExport) {
         
-        $AllFunctionsSummaryFilePath = "$ExportFolderFullPath\$Date-Get-Help-Summary-All-Functions.csv"
+        $AllFunctionsSummaryFilePath = "$ReportFolderFullPath\$Date-Get-Help-Summary-All-Functions.csv"
         $Array | Export-Csv -Path $AllFunctionsSummaryFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
+        
+        If ($global:TriggerOpenExportFolder) {
+            
+            Invoke-Item -Path $AllFunctionsSummaryFilePath
+        }
         
         Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Summary Get-Help details for all Functions are saved to : ' -NotDisplay
         Write-Log -Type VALUE -Category $Category -Name $Name -Message $AllFunctionsSummaryFilePath -NotDisplay
@@ -3076,8 +3096,13 @@ function Export-ModuleFunctions {
     
     If ($FullDetailedExport) {
         
-        $AllFunctionsAllDetailsFilePath = "$ExportFolderFullPath\$Date-Get-Help-Full-Details-All-Functions.csv"
+        $AllFunctionsAllDetailsFilePath = "$ReportFolderFullPath\$Date-Get-Help-Full-Details-All-Functions.csv"
         $Array1 | Export-Csv -Path $AllFunctionsAllDetailsFilePath -Force -Encoding utf8 -Delimiter ";" -NoTypeInformation
+        
+        If ($global:TriggerOpenExportFolder) {
+            
+            Invoke-Item -Path $AllFunctionsAllDetailsFilePath
+        }
         
         Write-Log -Type INFONO -Category $Category -Name $Name -Message 'Full Get-Help details for all Functions are saved to : ' -NotDisplay
         Write-Log -Type VALUE -Category $Category -Name $Name -Message $AllFunctionsAllDetailsFilePath -NotDisplay
@@ -3085,6 +3110,15 @@ function Export-ModuleFunctions {
     
     Write-Log -Type INFONO -Category $Category -Name $Name -Message 'All files are save to the folder : '
     Write-Log -Type VALUE -Category $Category -Name $Name -Message $ExportFolderFullPath
+    
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message 'All Summary files are save to the folder : '
+    Write-Log -Type VALUE -Category $Category -Name $Name -Message $ReportFolderFullPath
+    
+    If ($global:TriggerOpenExportFolder) {
+        
+        Invoke-Item -Path $ExportFolderFullPath
+        Invoke-Item -Path $ReportFolderFullPath
+    }
     Write-Log -Type INFO -Category $Category -Name $Name -Message "End $Name" -NotDisplay
     
     Return $Array1
@@ -5802,9 +5836,9 @@ Function Set-ValueToJSONFile {
     $Category = 'Program run'
     Write-Log -Type INFO -Category $Category -Name $Name -Message "Start $Name" -NotDisplay
     Write-Log -Type INFO -Category $Category -Name $Name -Message "Try to $Name File : $JSONFileContentPath" -NotDisplay
-    Write-Log -Type INFONO -Category $Category -Name $Name -Message "Save $Name Status : " -NotDisplay
+    Write-Log -Type INFONO -Category $Category -Name $Name -Message "$Name Status : " -NotDisplay
     Try {
-        $JSONFileContent | ConvertTo-Json -ErrorAction Continue | Out-File -FilePath $JSONFileContentPath -Encoding unicode -Force -ErrorAction Continue
+        $JSONFileContent | ConvertTo-Json -Depth 10 -ErrorAction Continue | Out-File -FilePath $JSONFileContentPath -Encoding unicode -Force -ErrorAction Continue
         Write-Log -Type VALUE -Category $Category -Name $Name -Message "Successful" -NotDisplay
     }
     Catch {
@@ -6242,21 +6276,21 @@ Function Switch-Info {
             Export-MH                 {$FormatedData = Export-ModuleHelp -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -ExportFolderPath $global:HelpFolderNamePath;Break}
             
             # Export-Module Function
-            Export-MF                 {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath;Break}
+            Export-MF                 {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath;Break}
             
-            Export-MFS                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport;Break}
+            Export-MFS                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -SummaryExport;Break}
             
-            Export-MFD                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport;Break}
+            Export-MFD                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -DetailedExport;Break}
             
-            Export-MFF                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -FullDetailedExport;Break}
+            Export-MFF                {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -FullDetailedExport;Break}
             
-            Export-MFSD               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport;Break}
+            Export-MFSD               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -SummaryExport -DetailedExport;Break}
             
-            Export-MFSF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -FullDetailedExport;Break}
+            Export-MFSF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -SummaryExport -FullDetailedExport;Break}
             
-            Export-MFDF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -DetailedExport -FullDetailedExport;Break}
+            Export-MFDF               {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -DetailedExport -FullDetailedExport;Break}
             
-            Export-MFSDF              {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -SummaryExport -DetailedExport -FullDetailedExport;Break}
+            Export-MFSDF              {$FormatedData = Export-ModuleFunctions -ModuleFolderPath $PSScriptRoot -ModuleFileName $global:JSONSettingsProgramContent.Path.BoxModuleFileName -FileExtention $global:ValuesPowershellModuleFileExtention -ExportFolderPath $global:HelpFolderNamePath -ReportFolderPath $global:ProgramReportFolderNamePath -SummaryExport -DetailedExport -FullDetailedExport;Break}
                         
             # Exit
             Q                         {Stop-Program -Context User -ErrorMessage $ErrorMessage -Reason $ErrorMessage -ErrorAction Stop;Break}
